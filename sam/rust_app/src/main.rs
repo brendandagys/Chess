@@ -1,6 +1,10 @@
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 
 use serde::{Deserialize, Serialize};
+use serde_json;
+use types::GameState;
+
+mod types;
 
 /// This is a made-up example. Requests come into the runtime as unicode
 /// strings in json format, which can map to any structure that implements `serde::Deserialize`
@@ -25,10 +29,12 @@ struct Response {
 /// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
 /// - https://github.com/aws-samples/serverless-rust-demo/
 async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Error> {
+    let game_state = GameState::new("game_1".to_string());
+
     // Prepare the response
     let resp = Response {
         status_code: 200,
-        body: "Hello World!".to_string(),
+        body: serde_json::to_string(&game_state).unwrap(),
     };
 
     // Return `Response` (it will be serialized to JSON automatically by the runtime)
