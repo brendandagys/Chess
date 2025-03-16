@@ -9,16 +9,6 @@ Globals:
     Timeout: 10
     MemorySize: 128
 
-Parameters:
-  TableName:
-    Type: String
-    Default: chess
-    Description: The name of the DynamoDB table to use for storing game data.
-    MinLength: 3
-    MaxLength: 50
-    AllowedPattern: ^[A-Za-z_]+$
-    ConstraintDescription: "Required. Can be characters and underscore only. No numbers or special characters allowed."
-
 Resources:
   # API
   WebSocketApi:
@@ -56,7 +46,9 @@ Resources:
         - arm64
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TableName
+            TableName: game
+        - DynamoDBCrudPolicy:
+            TableName: user
 
   ConnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
@@ -88,7 +80,9 @@ Resources:
         - arm64
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TableName
+            TableName: game
+        - DynamoDBCrudPolicy:
+            TableName: user
 
   DisconnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
@@ -120,7 +114,9 @@ Resources:
         - arm64
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !Ref TableName
+            TableName: game
+        - DynamoDBCrudPolicy:
+            TableName: user
   
   GameIntegration:
     Type: AWS::ApiGatewayV2::Integration
