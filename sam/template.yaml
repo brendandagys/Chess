@@ -137,6 +137,38 @@ Resources:
       RouteKey: "game"
       Target: !Sub "integrations/${GameIntegration}"
 
+  GameTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: game
+      KeySchema:
+        - AttributeName: game_id
+          KeyType: HASH
+        - AttributeName: created
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: game_id
+          AttributeType: S
+        - AttributeName: created
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+
+  UserTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: user
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: created
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: created
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+
 Outputs:
   WebSocketApiUrl:
     Value: !Sub "wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
