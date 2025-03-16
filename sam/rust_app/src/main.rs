@@ -23,11 +23,6 @@ struct Response {
     body: String,
 }
 
-/// This is the main body for the function.
-/// Write your code inside it.
-/// There are some code example in the following URLs:
-/// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-/// - https://github.com/aws-samples/serverless-rust-demo/
 async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Error> {
     let game_state = GameState::new("game_1".to_string());
 
