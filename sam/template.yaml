@@ -74,9 +74,10 @@ Resources:
       Architectures:
         - arm64
       Environment:
-        DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
-        GAME_TABLE: !Ref GameTableName
-        USER_TABLE: !Ref UserTableName
+        Variables:
+          DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
+          GAME_TABLE: !Ref GameTableName
+          USER_TABLE: !Ref UserTableName
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref GameTableName
@@ -119,9 +120,10 @@ Resources:
       Architectures:
         - arm64
       Environment:
-        DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
-        GAME_TABLE: !Ref GameTableName
-        USER_TABLE: !Ref UserTableName
+        Variables:
+          DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
+          GAME_TABLE: !Ref GameTableName
+          USER_TABLE: !Ref UserTableName
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref GameTableName
@@ -164,9 +166,10 @@ Resources:
       Architectures:
         - arm64
       Environment:
-        DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
-        GAME_TABLE: !Ref GameTableName
-        USER_TABLE: !Ref UserTableName
+        Variables:
+          DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
+          GAME_TABLE: !Ref GameTableName
+          USER_TABLE: !Ref UserTableName
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref GameTableName
