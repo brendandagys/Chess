@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   SAM Template for chess serverless API.
@@ -14,22 +14,26 @@ Resources:
   WebSocketApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
-      Name: ChessWebSocketApi
+      Name: !Ref AWS::StackName
       ProtocolType: WEBSOCKET
-      RouteSelectionExpression: '$request.body.action'
+      RouteSelectionExpression: "$request.body.action"
+
+  WebSocketDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - ConnectRoute
+      - DisconnectRoute
+      - GameRoute
+    Properties:
+      ApiId: !Ref WebSocketApi
 
   WebSocketStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
-      ApiId: !Ref WebSocketApi
       StageName: Prod
+      DeploymentId: !Ref WebSocketDeployment
+      ApiId: !Ref WebSocketApi
       AutoDeploy: true
-
-  WebSocketDeployment:
-    Type: AWS::ApiGatewayV2::Deployment
-    Properties:
-      ApiId: !Ref WebSocketApi
-      StageName: Prod
 
   # CONNECT
   ConnectFunction:
@@ -56,7 +60,7 @@ Resources:
       ApiId: !Ref WebSocketApi
       IntegrationUri: !GetAtt ConnectFunction.Arn
       IntegrationType: AWS_PROXY
-      PayloadFormatVersion: '2.0'
+      PayloadFormatVersion: "1.0"
 
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -90,7 +94,7 @@ Resources:
       ApiId: !Ref WebSocketApi
       IntegrationUri: !GetAtt DisconnectFunction.Arn
       IntegrationType: AWS_PROXY
-      PayloadFormatVersion: '2.0'
+      PayloadFormatVersion: "1.0"
 
   DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -117,20 +121,20 @@ Resources:
             TableName: game
         - DynamoDBCrudPolicy:
             TableName: user
-  
+
   GameIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketApi
       IntegrationUri: !GetAtt GameFunction.Arn
       IntegrationType: AWS_PROXY
-      PayloadFormatVersion: '2.0'
+      PayloadFormatVersion: "1.0"
 
   GameRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketApi
-      RouteKey: "game"
+      RouteKey: game
       Target: !Sub "integrations/${GameIntegration}"
 
   GameTable:
@@ -148,6 +152,9 @@ Resources:
         - AttributeName: created
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: project
+          Value: !Ref AWS::StackName
 
   UserTable:
     Type: AWS::DynamoDB::Table
@@ -164,6 +171,9 @@ Resources:
         - AttributeName: created
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: project
+          Value: !Ref AWS::StackName
 
 Outputs:
   WebSocketApiUrl:
