@@ -14,7 +14,8 @@ struct Request {}
 /// to the contents of the response payload.
 #[derive(Serialize)]
 struct Response {
-    statusCode: i32,
+    #[serde(rename = "statusCode")]
+    status_code: i32,
     body: String,
 }
 
@@ -26,7 +27,7 @@ struct Response {
 async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Error> {
     // Prepare the response
     let resp = Response {
-        statusCode: 200,
+        status_code: 200,
         body: "Hello World!".to_string(),
     };
 
