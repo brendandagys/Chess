@@ -1,10 +1,8 @@
-use lambda_runtime::{run, service_fn, Error, LambdaEvent};
+mod types;
 
+use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 use serde::{Deserialize, Serialize};
 use serde_json;
-use types::GameState;
-
-mod types;
 
 /// This is a made-up example. Requests come into the runtime as unicode
 /// strings in json format, which can map to any structure that implements `serde::Deserialize`
@@ -24,7 +22,7 @@ struct Response {
 }
 
 async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Error> {
-    let game_state = GameState::new("game_1".to_string());
+    let game_state = types::game::GameState::new("game_1".to_string());
 
     // Prepare the response
     let resp = Response {
