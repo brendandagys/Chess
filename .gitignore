@@ -224,3 +224,4 @@ $RECYCLE.BIN/
 sam/template.yaml
 sam/events
 sam/.aws-sam
+extras
