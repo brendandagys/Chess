@@ -13,7 +13,21 @@ Parameters:
   ApiGatewayCloudWatchRoleArn:
     Type: String
     Default: arn:aws:iam::708746137251:role/allow-api-gateway-to-push-to-cloudwatch-logs
-    Description: "CloudWatch role ARN for API Gateway to push logs"
+    Description: CloudWatch role ARN for API Gateway to push logs
+
+  DynamoDBEndpoint:
+    Type: String
+    Default: https://dynamodb.us-east-1.amazonaws.com
+
+  GameTableName:
+    Type: String
+    Default: game
+    Description: Name of the DynamoDB table for games
+
+  UserTableName:
+    Type: String
+    Default: user
+    Description: Name of the DynamoDB table for users
 
 Resources:
   # API
@@ -59,11 +73,15 @@ Resources:
       Runtime: provided.al2023
       Architectures:
         - arm64
+      Environment:
+        DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
+        GAME_TABLE: !Ref GameTableName
+        USER_TABLE: !Ref UserTableName
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: game
+            TableName: !Ref GameTableName
         - DynamoDBCrudPolicy:
-            TableName: user
+            TableName: !Ref UserTableName
 
   ConnectFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -100,11 +118,15 @@ Resources:
       Runtime: provided.al2023
       Architectures:
         - arm64
+      Environment:
+        DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
+        GAME_TABLE: !Ref GameTableName
+        USER_TABLE: !Ref UserTableName
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: game
+            TableName: !Ref GameTableName
         - DynamoDBCrudPolicy:
-            TableName: user
+            TableName: !Ref UserTableName
 
   DisconnectFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -141,11 +163,15 @@ Resources:
       Runtime: provided.al2023
       Architectures:
         - arm64
+      Environment:
+        DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
+        GAME_TABLE: !Ref GameTableName
+        USER_TABLE: !Ref UserTableName
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: game
+            TableName: !Ref GameTableName
         - DynamoDBCrudPolicy:
-            TableName: user
+            TableName: !Ref UserTableName
 
   GameFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -172,7 +198,7 @@ Resources:
   GameTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: game
+      TableName: !Ref GameTableName
       KeySchema:
         - AttributeName: game_id
           KeyType: HASH
@@ -191,7 +217,7 @@ Resources:
   UserTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: user
+      TableName: !Ref UserTableName
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
