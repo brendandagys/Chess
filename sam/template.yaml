@@ -9,6 +9,12 @@ Globals:
     Timeout: 10
     MemorySize: 128
 
+Parameters:
+  ApiGatewayCloudWatchRoleArn:
+    Type: String
+    Default: arn:aws:iam::708746137251:role/allow-api-gateway-to-push-to-cloudwatch-logs
+    Description: "CloudWatch role ARN for API Gateway to push logs"
+
 Resources:
   # API
   WebSocketApi:
@@ -17,6 +23,11 @@ Resources:
       Name: !Ref AWS::StackName
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
+
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !Ref ApiGatewayCloudWatchRoleArn
 
   WebSocketDeployment:
     Type: AWS::ApiGatewayV2::Deployment
@@ -54,6 +65,13 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: user
 
+  ConnectFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ConnectFunction
+      Principal: apigateway.amazonaws.com
+
   ConnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
@@ -88,6 +106,13 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: user
 
+  DisconnectFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref DisconnectFunction
+      Principal: apigateway.amazonaws.com
+
   DisconnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
@@ -121,6 +146,13 @@ Resources:
             TableName: game
         - DynamoDBCrudPolicy:
             TableName: user
+
+  GameFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref GameFunction
+      Principal: apigateway.amazonaws.com
 
   GameIntegration:
     Type: AWS::ApiGatewayV2::Integration
