@@ -6,8 +6,7 @@ use serde::{Deserialize, Serialize};
 /// strings in json format, which can map to any structure that implements `serde::Deserialize`
 /// The runtime pays no attention to the contents of the request payload.
 #[derive(Deserialize)]
-struct Request {
-}
+struct Request {}
 
 /// This is a made-up example of what a response structure may look like.
 /// There is no restriction on what it can be. The runtime requires responses
@@ -15,7 +14,7 @@ struct Request {
 /// to the contents of the response payload.
 #[derive(Serialize)]
 struct Response {
-    statusCode: i32,
+    status_code: i32,
     body: String,
 }
 
@@ -24,10 +23,10 @@ struct Response {
 /// There are some code example in the following URLs:
 /// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
 /// - https://github.com/aws-samples/serverless-rust-demo/
-async fn function_handler(event: LambdaEvent<Request>) -> Result<Response, Error> {
+async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Error> {
     // Prepare the response
     let resp = Response {
-        statusCode: 200,
+        status_code: 200,
         body: "Hello World!".to_string(),
     };
 
