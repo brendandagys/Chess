@@ -1,15 +1,34 @@
 use crate::types::board::{Board, Position};
 use crate::types::pieces::{Color, Piece, PieceType};
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
+pub enum GameEnding {
+    Checkmate(Color),
+    Resignation(Color),
+    OutOfTime(Color),
+    Stalemate,
+    DrawByThreefoldRepetition,
+    DrawByFiftyMoveRule,
+    DrawByInsufficientMaterial,
+    DrawByMutualAgreement,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum State {
+    NotStarted,
+    InProgress,
+    Finished(GameEnding),
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct GameState {
+    pub game_id: String,
+    pub state: State,
     pub board: Board,
     pub current_turn: Color,
     pub move_history: Vec<(Position, Position)>,
-    pub is_over: bool,
-    pub winner: Option<Color>,
-    pub game_id: String,
 }
 
 impl GameState {
