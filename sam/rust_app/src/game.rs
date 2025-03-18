@@ -1,4 +1,5 @@
 mod types;
+mod utils;
 
 use lambda_runtime::{run, service_fn, Error, LambdaEvent};
 use serde::{Deserialize, Serialize};
