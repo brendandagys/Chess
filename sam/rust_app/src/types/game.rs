@@ -120,12 +120,11 @@ impl GameState {
         });
 
         GameState {
+            game_id,
+            state: State::NotStarted,
             board: Board { squares },
             current_turn: Color::White,
             move_history: Vec::new(),
-            is_over: false,
-            winner: None,
-            game_id,
         }
     }
 }
