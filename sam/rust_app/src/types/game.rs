@@ -26,8 +26,8 @@ pub enum State {
 pub struct GameState {
     pub game_id: String,
     pub state: State,
-    pub board: Board,
     pub current_turn: Color,
+    pub board: Board,
     pub move_history: Vec<(Position, Position)>,
 }
 
@@ -122,8 +122,8 @@ impl GameState {
         GameState {
             game_id,
             state: State::NotStarted,
-            board: Board { squares },
             current_turn: Color::White,
+            board: Board { squares },
             move_history: Vec::new(),
         }
     }
