@@ -15,9 +15,9 @@ Parameters:
     Default: arn:aws:iam::708746137251:role/allow-api-gateway-to-push-to-cloudwatch-logs
     Description: CloudWatch role ARN for API Gateway to push logs
 
-  DynamoDBEndpoint:
-    Type: String
-    Default: https://dynamodb.us-east-1.amazonaws.com
+  # DynamoDBEndpoint:
+  #   Type: String
+  #   Default: https://dynamodb.us-east-1.amazonaws.com
 
   GameTableName:
     Type: String
@@ -75,7 +75,7 @@ Resources:
         - arm64
       Environment:
         Variables:
-          DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
+          # DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
           GAME_TABLE: !Ref GameTableName
           USER_TABLE: !Ref UserTableName
       Policies:
@@ -121,7 +121,7 @@ Resources:
         - arm64
       Environment:
         Variables:
-          DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
+          # DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
           GAME_TABLE: !Ref GameTableName
           USER_TABLE: !Ref UserTableName
       Policies:
@@ -167,7 +167,7 @@ Resources:
         - arm64
       Environment:
         Variables:
-          DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
+          # DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
           GAME_TABLE: !Ref GameTableName
           USER_TABLE: !Ref UserTableName
       Policies:
@@ -205,12 +205,8 @@ Resources:
       KeySchema:
         - AttributeName: game_id
           KeyType: HASH
-        - AttributeName: created
-          KeyType: RANGE
       AttributeDefinitions:
         - AttributeName: game_id
-          AttributeType: S
-        - AttributeName: created
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
       Tags:
@@ -222,15 +218,24 @@ Resources:
     Properties:
       TableName: !Ref UserTableName
       KeySchema:
-        - AttributeName: PK
+        - AttributeName: username
           KeyType: HASH
-        - AttributeName: created
+        - AttributeName: sk
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: PK
+        - AttributeName: username
           AttributeType: S
-        - AttributeName: created
+        - AttributeName: sk
           AttributeType: S
+        - AttributeName: connection_id
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: find-games-upon-disconnect
+          KeySchema:
+            - AttributeName: connection_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: project
