@@ -1,46 +1,99 @@
+mod helpers;
 mod types;
 mod utils;
 
-use lambda_runtime::{run, service_fn, Error, LambdaEvent};
-use serde::{Deserialize, Serialize};
+use helpers::game::{get_game, save_game};
+use helpers::user::{get_user_game_from_connection_id, save_user_record};
+use utils::api_gateway::post_to_connection;
 
-/// This is a made-up example. Requests come into the runtime as unicode
-/// strings in json format, which can map to any structure that implements `serde::Deserialize`
-/// The runtime pays no attention to the contents of the request payload.
-#[derive(Deserialize)]
-struct Request {}
+use aws_config::BehaviorVersion;
+use aws_lambda_events::apigw::ApiGatewayProxyResponse;
+use aws_sdk_apigatewaymanagement as apigw;
+use aws_sdk_dynamodb::Client;
+use lambda_http::aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequest;
+use lambda_http::LambdaEvent;
+use lambda_runtime::{run, service_fn, Error};
 
-/// This is a made-up example of what a response structure may look like.
-/// There is no restriction on what it can be. The runtime requires responses
-/// to be serialized into json. The runtime pays no attention
-/// to the contents of the response payload.
-#[derive(Serialize)]
-struct Response {
-    #[serde(rename = "statusCode")]
-    status_code: i32,
-    body: String,
-}
+async fn function_handler(
+    event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
+    dynamo_db_client: &Client,
+    api_gateway_client: &apigw::Client,
+) -> Result<ApiGatewayProxyResponse, Error> {
+    let request_context = event.payload.request_context;
 
-async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Error> {
-    // Prepare the response
-    let resp = Response {
+    let user_table = std::env::var("USER_TABLE").unwrap();
+    let game_table = std::env::var("GAME_TABLE").unwrap();
+
+    let connection_id = request_context
+        .connection_id
+        .ok_or_else(|| Error::from("Missing connection ID"))?;
+
+    let mut user_game =
+        get_user_game_from_connection_id(dynamo_db_client, &user_table, &connection_id).await?;
+
+    // Get the game ID from the user-game record sort key
+    let game_id = user_game.sort_key.trim_start_matches("GAME-");
+    let username = &user_game.username;
+
+    // Disassociate this connection from the user's game and the game itself
+    user_game.connection_id = None;
+    save_user_record(dynamo_db_client, &user_table, &user_game).await?;
+
+    // Fetch the game using the user-game record's game ID from the sort key
+    let mut game = get_game(dynamo_db_client, &game_table, game_id).await?;
+
+    // Remove the respective connection ID from the game record.
+    // Notify the other player about the disconnect, if they are connected.
+    match game.white_username == Some(username.clone()) {
+        true => {
+            game.white_connection_id = None;
+            save_game(dynamo_db_client, &game_table, &game).await?;
+
+            if let Some(black_connection_id) = &game.black_connection_id {
+                post_to_connection(api_gateway_client, &black_connection_id, &game).await?;
+                tracing::info!("Notified black player of disconnection for game (ID: {game_id})",);
+            }
+        }
+        false => {
+            game.black_connection_id = None;
+            save_game(dynamo_db_client, &game_table, &game).await?;
+
+            if let Some(white_connection_id) = &game.white_connection_id {
+                post_to_connection(api_gateway_client, &white_connection_id, &game).await?;
+                tracing::info!("Notified white player of disconnection for game (ID: {game_id})",);
+            }
+        }
+    }
+
+    tracing::info!("USER {username} DISCONNECTED FROM GAME (ID: {game_id})");
+
+    Ok(ApiGatewayProxyResponse {
         status_code: 200,
-        body: "Disconnected".to_string(),
-    };
-
-    // Return `Response` (it will be serialized to JSON automatically by the runtime)
-    Ok(resp)
+        body: Some((format!("{username} disconnected from game (ID: {})", game_id)).into()),
+        ..Default::default()
+    })
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    let sdk_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+    let dynamo_db_client: Client = Client::new(&sdk_config);
+    let api_gateway_client: apigw::Client = apigw::Client::new(&sdk_config);
+
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
-        // disable printing the name of the module in every log line.
-        .with_target(false)
-        // disabling time is handy because CloudWatch will add the ingestion time.
+        // Include the name of the module in every log line
+        .with_target(true)
+        // CloudWatch will add the ingestion time
         .without_time()
         .init();
 
-    run(service_fn(function_handler)).await
+    run(service_fn(
+        |event: LambdaEvent<ApiGatewayWebsocketProxyRequest>| async {
+            function_handler(event, &dynamo_db_client, &api_gateway_client).await
+        },
+    ))
+    .await?;
+
+    Ok(())
 }
