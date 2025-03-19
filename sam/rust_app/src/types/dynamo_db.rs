@@ -16,7 +16,9 @@ pub struct GameRecord {
 #[derive(Serialize, Deserialize)]
 pub struct UserRecord {
     pub username: String, // PK
+    #[serde(rename = "sk")]
     pub sort_key: String, // SK: INFO | GAME-<game-id>
+    pub connection_id: Option<String>,
     pub winner: Option<String>,
     pub created: String,
 }
