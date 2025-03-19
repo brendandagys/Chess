@@ -1,5 +1,6 @@
 use crate::types::dynamo_db::GameRecord;
 use crate::types::game::GameState;
+use crate::types::pieces::Color;
 use crate::utils::dynamo_db::{get_item, put_item};
 
 use aws_sdk_dynamodb::types::AttributeValue;
@@ -26,18 +27,18 @@ pub async fn get_game(client: &Client, table: &str, game_id: &str) -> Result<Gam
 /// 4) The username for the black player, if applicable.
 ///
 /// This tuple will be applied to a `GameRecord` struct
-fn determine_player_slots(
-    color: Option<&str>,
-    connection_id: &str,
+pub fn determine_player_color(
+    color_preference: Option<Color>,
     username: &str,
+    connection_id: &str,
 ) -> (
     Option<String>,
     Option<String>,
     Option<String>,
     Option<String>,
 ) {
-    match color {
-        Some("black") => (
+    match color_preference {
+        Some(Color::Black) => (
             None,
             None,
             Some(connection_id.to_string()),
@@ -52,33 +53,43 @@ fn determine_player_slots(
     }
 }
 
-async fn create_and_save_game(
-    client: &Client,
-    table: &str,
+pub fn assign_player_to_remaining_slot(
+    mut game: GameRecord,
+    username: &str,
     connection_id: &str,
+) -> Result<GameRecord, Error> {
+    if game.white_username.is_none() {
+        game.white_connection_id = Some(connection_id.to_string());
+        game.white_username = Some(username.to_string());
+    } else if game.black_username.is_none() {
+        game.black_connection_id = Some(connection_id.to_string());
+        game.black_username = Some(username.to_string());
+    } else {
+        return Err(Error::from("Game is full"));
+    }
+
+    Ok(game)
+}
+
+pub fn create_game(
     game_id: Option<&str>,
     username: &str,
-    color: Option<&str>,
-) -> Result<GameRecord, Error> {
-    let timestamp = chrono::Utc::now().to_rfc3339();
-
-    let (white_connection_id, white_username, black_connection_id, black_username) =
-        determine_player_slots(color, connection_id, username);
-
+    color_preference: Option<Color>,
+    connection_id: &str,
+) -> GameRecord {
     let game_id = game_id.map_or_else(generate_id, |id| id.to_string());
     let game_state = GameState::new(game_id.clone());
 
-    let game_record = GameRecord {
+    let (white_connection_id, white_username, black_connection_id, black_username) =
+        determine_player_color(color_preference, username, connection_id);
+
+    GameRecord {
         game_id,
         white_connection_id,
         white_username,
         black_connection_id,
         black_username,
         game_state,
-        created: timestamp.clone(),
-    };
-
-    save_game(client, table, &game_record).await?;
-
-    Ok(game_record)
+        created: chrono::Utc::now().to_rfc3339(),
+    }
 }

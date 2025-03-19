@@ -6,6 +6,18 @@ pub enum Color {
     Black,
 }
 
+impl std::str::FromStr for Color {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "white" => Ok(Color::White),
+            "black" => Ok(Color::Black),
+            _ => Err(format!("'{s}' is not a valid color")),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Serialize, Deserialize)]
 pub enum PieceType {
     Pawn,

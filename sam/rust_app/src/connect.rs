@@ -1,38 +1,70 @@
+mod helpers;
 mod types;
+mod utils;
 
-use lambda_runtime::{run, service_fn, Error, LambdaEvent};
-use serde::{Deserialize, Serialize};
+use helpers::game::{assign_player_to_remaining_slot, create_game, get_game, save_game};
+use helpers::user::{create_user_game, get_user_game};
 
-/// This is a made-up example. Requests come into the runtime as unicode
-/// strings in json format, which can map to any structure that implements `serde::Deserialize`
-/// The runtime pays no attention to the contents of the request payload.
-#[derive(Deserialize)]
-struct Request {}
+use aws_config::BehaviorVersion;
+use aws_sdk_dynamodb::Client;
+use lambda_http::aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequest;
+use lambda_http::LambdaEvent;
+use lambda_runtime::{run, service_fn, Error};
+use std::env;
+use types::lambda_runtime::CustomResponse;
+use types::pieces::Color;
 
-/// This is a made-up example of what a response structure may look like.
-/// There is no restriction on what it can be. The runtime requires responses
-/// to be serialized into json. The runtime pays no attention
-/// to the contents of the response payload.
-#[derive(Serialize)]
-struct Response {
-    #[serde(rename = "statusCode")]
-    status_code: i32,
-    body: String,
-}
+async fn function_handler(
+    event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
+    client: &Client,
+) -> Result<CustomResponse, Error> {
+    let request_context = event.payload.request_context;
+    let query_params = event.payload.query_string_parameters;
 
-async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Error> {
-    // Prepare the response
-    let resp = Response {
-        status_code: 200,
-        body: "Connected".to_string(),
+    // Mandatory
+    let username = query_params
+        .first("username")
+        .ok_or_else(|| Error::from("Username is required"))?;
+
+    // Optional
+    let game_id = query_params.first("game_id");
+    let color_preference = query_params
+        .first("color")
+        .and_then(|color| color.parse::<Color>().ok());
+
+    // Get the connection ID from the WebSocket context
+    let connection_id = request_context
+        .connection_id
+        .ok_or_else(|| Error::from("Missing connection ID"))?;
+
+    // Initialize DynamoDB client
+    let game_table = env::var("GAME_TABLE").unwrap();
+    let user_table = env::var("USER_TABLE").unwrap();
+
+    let game = match game_id {
+        Some(game_id) => match get_game(&client, &game_table, game_id).await {
+            Ok(game) => assign_player_to_remaining_slot(game, username, &connection_id)?,
+            Err(_) => create_game(Some(game_id), username, color_preference, &connection_id),
+        },
+        None => create_game(None, username, color_preference, &connection_id),
     };
 
-    // Return `Response` (it will be serialized to JSON automatically by the runtime)
-    Ok(resp)
+    save_game(&client, &game_table, &game).await?;
+
+    if let Err(_) = get_user_game(&client, &user_table, username, &game.game_id).await {
+        create_user_game(&game.game_id, username);
+    }
+
+    Ok(CustomResponse {
+        status_code: 200,
+        body: format!("{username} joined game (ID: {}) successfully", game.game_id),
+    })
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    let client: Client = Client::new(&aws_config::load_defaults(BehaviorVersion::latest()).await);
+
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         // disable printing the name of the module in every log line.
@@ -41,5 +73,12 @@ async fn main() -> Result<(), Error> {
         .without_time()
         .init();
 
-    run(service_fn(function_handler)).await
+    run(service_fn(
+        |event: LambdaEvent<ApiGatewayWebsocketProxyRequest>| async {
+            function_handler(event, &client).await
+        },
+    ))
+    .await?;
+
+    Ok(())
 }
