@@ -2,14 +2,18 @@ use std::collections::HashMap;
 
 use crate::{
     types::dynamo_db::UserRecord,
-    utils::dynamo_db::{get_item, put_item},
+    utils::dynamo_db::{get_item, put_item, query_items},
 };
 
 use aws_sdk_dynamodb::{types::AttributeValue, Client};
 use lambda_runtime::Error;
 
-pub async fn save_user(client: &Client, table: &str, user: &UserRecord) -> Result<(), Error> {
-    put_item(client, table, user).await
+pub async fn save_user_record(
+    client: &Client,
+    table: &str,
+    user_record: &UserRecord,
+) -> Result<(), Error> {
+    put_item(client, table, user_record).await
 }
 
 async fn get_user_record(
@@ -24,7 +28,11 @@ async fn get_user_record(
     Ok(get_item(client, table, key).await?)
 }
 
-pub async fn get_user(client: &Client, table: &str, username: &str) -> Result<UserRecord, Error> {
+pub async fn get_user_info(
+    client: &Client,
+    table: &str,
+    username: &str,
+) -> Result<UserRecord, Error> {
     get_user_record(client, table, username, "INFO").await
 }
 
@@ -37,12 +45,67 @@ pub async fn get_user_game(
     get_user_record(client, table, username, &format!("GAME-{game_id}")).await
 }
 
-pub fn create_user_game(game_id: &str, username: &str) -> UserRecord {
+pub async fn get_all_user_games(
+    client: &Client,
+    table: &str,
+    username: &str,
+) -> Result<Vec<UserRecord>, Error> {
+    let key_condition_expression = "username
+        = :username AND begins_with(sk, :game_prefix)";
+    let mut expression_attribute_values = HashMap::new();
+    expression_attribute_values.insert(
+        ":username".to_string(),
+        AttributeValue::S(username.to_string()),
+    );
+    expression_attribute_values.insert(
+        ":game_prefix".to_string(),
+        AttributeValue::S("GAME-".to_string()),
+    );
+
+    let items = query_items(
+        client,
+        table,
+        key_condition_expression,
+        expression_attribute_values,
+    )
+    .await?;
+
+    Ok(items)
+}
+
+pub async fn get_user_game_from_connection_id(
+    client: &Client,
+    table: &str,
+    connection_id: &str,
+) -> Result<UserRecord, Error> {
+    let key_condition_expression = "connection_id = :connection_id";
+    let mut expression_attribute_values = HashMap::new();
+    expression_attribute_values.insert(
+        ":connection_id".to_string(),
+        AttributeValue::S(connection_id.to_string()),
+    );
+
+    let items = query_items(
+        client,
+        table,
+        key_condition_expression,
+        expression_attribute_values,
+    )
+    .await?;
+
+    items
+        .into_iter()
+        .next() // A connection should only have up to 1 game
+        .ok_or_else(|| Error::from("No user game found for the given connection ID"))
+}
+
+pub fn create_user_game(game_id: &str, username: &str, connection_id: &str) -> UserRecord {
     let sort_key = format!("GAME-{game_id}");
 
     UserRecord {
         username: username.to_string(),
         sort_key,
+        connection_id: Some(connection_id.to_string()),
         winner: None,
         created: chrono::Utc::now().to_rfc3339(),
     }
