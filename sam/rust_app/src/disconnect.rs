@@ -22,21 +22,27 @@ async fn function_handler(
     let request_context = event.payload.request_context;
 
     let user_table = std::env::var("USER_TABLE").unwrap();
+    let user_table_gsi = std::env::var("USER_TABLE_GSI").unwrap();
     let game_table = std::env::var("GAME_TABLE").unwrap();
 
     let connection_id = request_context
         .connection_id
         .ok_or_else(|| Error::from("Missing connection ID"))?;
 
-    let mut user_game =
-        get_user_game_from_connection_id(dynamo_db_client, &user_table, &connection_id).await?;
+    let mut user_game = get_user_game_from_connection_id(
+        dynamo_db_client,
+        &user_table,
+        &user_table_gsi,
+        &connection_id,
+    )
+    .await?;
 
     // Get the game ID from the user-game record sort key
     let game_id = user_game.sort_key.trim_start_matches("GAME-");
     let username = &user_game.username;
 
     // Disassociate this connection from the user's game and the game itself
-    user_game.connection_id = None;
+    user_game.connection_id = Some("<disconnected>".to_string());
     save_user_record(dynamo_db_client, &user_table, &user_game).await?;
 
     // Fetch the game using the user-game record's game ID from the sort key
