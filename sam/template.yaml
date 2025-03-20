@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: |
   SAM Template for chess serverless API.
@@ -15,10 +15,6 @@ Parameters:
     Default: arn:aws:iam::708746137251:role/allow-api-gateway-to-push-to-cloudwatch-logs
     Description: CloudWatch role ARN for API Gateway to push logs
 
-  # DynamoDBEndpoint:
-  #   Type: String
-  #   Default: https://dynamodb.us-east-1.amazonaws.com
-
   GameTableName:
     Type: String
     Default: game
@@ -29,7 +25,56 @@ Parameters:
     Default: user
     Description: Name of the DynamoDB table for users
 
+  UserTableGsi:
+    Type: String
+    Default: find-games-upon-disconnect
+    Description: Name of the DynamoDB Global Secondary Index for the users table
+
 Resources:
+  # DATABASE
+  GameTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref GameTableName
+      KeySchema:
+        - AttributeName: game_id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: game_id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: project
+          Value: !Ref AWS::StackName
+
+  UserTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref UserTableName
+      KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: username
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: connection_id
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: find-games-upon-disconnect
+          KeySchema:
+            - AttributeName: connection_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: project
+          Value: !Ref AWS::StackName
+
   # API
   WebSocketApi:
     Type: AWS::ApiGatewayV2::Api
@@ -75,7 +120,6 @@ Resources:
         - arm64
       Environment:
         Variables:
-          # DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
           GAME_TABLE: !Ref GameTableName
           USER_TABLE: !Ref UserTableName
       Policies:
@@ -97,7 +141,7 @@ Resources:
       ApiId: !Ref WebSocketApi
       IntegrationUri: !GetAtt ConnectFunction.Arn
       IntegrationType: AWS_PROXY
-      PayloadFormatVersion: '1.0'
+      PayloadFormatVersion: "1.0"
 
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -128,9 +172,9 @@ Resources:
         - arm64
       Environment:
         Variables:
-          # DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
           GAME_TABLE: !Ref GameTableName
           USER_TABLE: !Ref UserTableName
+          USER_TABLE_GSI: !Ref UserTableGsi
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref GameTableName
@@ -150,7 +194,7 @@ Resources:
       ApiId: !Ref WebSocketApi
       IntegrationUri: !GetAtt DisconnectFunction.Arn
       IntegrationType: AWS_PROXY
-      PayloadFormatVersion: '1.0'
+      PayloadFormatVersion: "1.0"
 
   DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -181,7 +225,6 @@ Resources:
         - arm64
       Environment:
         Variables:
-          # DYNAMODB_ENDPOINT: !Ref DynamoDBEndpoint
           GAME_TABLE: !Ref GameTableName
           USER_TABLE: !Ref UserTableName
       Policies:
@@ -203,7 +246,7 @@ Resources:
       ApiId: !Ref WebSocketApi
       IntegrationUri: !GetAtt GameFunction.Arn
       IntegrationType: AWS_PROXY
-      PayloadFormatVersion: '1.0'
+      PayloadFormatVersion: "1.0"
 
   GameRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -218,50 +261,6 @@ Resources:
       ApiId: !Ref WebSocketApi
       RouteId: !Ref GameRoute
       RouteResponseKey: $default
-
-  # DATABASE
-  GameTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Ref GameTableName
-      KeySchema:
-        - AttributeName: game_id
-          KeyType: HASH
-      AttributeDefinitions:
-        - AttributeName: game_id
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      Tags:
-        - Key: project
-          Value: !Ref AWS::StackName
-
-  UserTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Ref UserTableName
-      KeySchema:
-        - AttributeName: username
-          KeyType: HASH
-        - AttributeName: sk
-          KeyType: RANGE
-      AttributeDefinitions:
-        - AttributeName: username
-          AttributeType: S
-        - AttributeName: sk
-          AttributeType: S
-        - AttributeName: connection_id
-          AttributeType: S
-      GlobalSecondaryIndexes:
-        - IndexName: find-games-upon-disconnect
-          KeySchema:
-            - AttributeName: connection_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-      BillingMode: PAY_PER_REQUEST
-      Tags:
-        - Key: project
-          Value: !Ref AWS::StackName
 
 Outputs:
   WebSocketApiUrl:
