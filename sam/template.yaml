@@ -1,6 +1,6 @@
-AWSTemplateFormatVersion: "2010-09-09"
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
+Description: |
   SAM Template for chess serverless API.
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
@@ -36,7 +36,7 @@ Resources:
     Properties:
       Name: !Ref AWS::StackName
       ProtocolType: WEBSOCKET
-      RouteSelectionExpression: "$request.body.action"
+      RouteSelectionExpression: $request.body.action
 
   ApiGatewayAccount:
     Type: AWS::ApiGateway::Account
@@ -97,21 +97,21 @@ Resources:
       ApiId: !Ref WebSocketApi
       IntegrationUri: !GetAtt ConnectFunction.Arn
       IntegrationType: AWS_PROXY
-      PayloadFormatVersion: "1.0"
+      PayloadFormatVersion: '1.0'
 
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketApi
-      RouteKey: "$connect"
-      Target: !Sub "integrations/${ConnectIntegration}"
+      RouteKey: $connect
+      Target: !Sub integrations/${ConnectIntegration}
 
   ConnectRouteResponse:
     Type: AWS::ApiGatewayV2::RouteResponse
     Properties:
       ApiId: !Ref WebSocketApi
       RouteId: !Ref ConnectRoute
-      RouteResponseKey: "$default"
+      RouteResponseKey: $default
 
   # DISCONNECT
   DisconnectFunction:
@@ -150,21 +150,21 @@ Resources:
       ApiId: !Ref WebSocketApi
       IntegrationUri: !GetAtt DisconnectFunction.Arn
       IntegrationType: AWS_PROXY
-      PayloadFormatVersion: "1.0"
+      PayloadFormatVersion: '1.0'
 
   DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketApi
-      RouteKey: "$disconnect"
-      Target: !Sub "integrations/${DisconnectIntegration}"
+      RouteKey: $disconnect
+      Target: !Sub integrations/${DisconnectIntegration}
 
   DisconnectRouteResponse:
     Type: AWS::ApiGatewayV2::RouteResponse
     Properties:
       ApiId: !Ref WebSocketApi
       RouteId: !Ref DisconnectRoute
-      RouteResponseKey: "$default"
+      RouteResponseKey: $default
 
   # GAME
   GameFunction:
@@ -203,21 +203,21 @@ Resources:
       ApiId: !Ref WebSocketApi
       IntegrationUri: !GetAtt GameFunction.Arn
       IntegrationType: AWS_PROXY
-      PayloadFormatVersion: "1.0"
+      PayloadFormatVersion: '1.0'
 
   GameRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketApi
       RouteKey: game
-      Target: !Sub "integrations/${GameIntegration}"
+      Target: !Sub integrations/${GameIntegration}
 
   GameRouteResponse:
     Type: AWS::ApiGatewayV2::RouteResponse
     Properties:
       ApiId: !Ref WebSocketApi
       RouteId: !Ref GameRoute
-      RouteResponseKey: "$default"
+      RouteResponseKey: $default
 
   # DATABASE
   GameTable:
@@ -265,4 +265,4 @@ Resources:
 
 Outputs:
   WebSocketApiUrl:
-    Value: !Sub "wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+    Value: !Sub wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
