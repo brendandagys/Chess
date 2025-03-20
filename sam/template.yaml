@@ -106,6 +106,13 @@ Resources:
       RouteKey: "$connect"
       Target: !Sub "integrations/${ConnectIntegration}"
 
+  ConnectRouteResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteId: !Ref ConnectRoute
+      RouteResponseKey: "$default"
+
   # DISCONNECT
   DisconnectFunction:
     Type: AWS::Serverless::Function
@@ -151,6 +158,13 @@ Resources:
       ApiId: !Ref WebSocketApi
       RouteKey: "$disconnect"
       Target: !Sub "integrations/${DisconnectIntegration}"
+
+  DisconnectRouteResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteId: !Ref DisconnectRoute
+      RouteResponseKey: "$default"
 
   # GAME
   GameFunction:
@@ -198,6 +212,14 @@ Resources:
       RouteKey: game
       Target: !Sub "integrations/${GameIntegration}"
 
+  GameRouteResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteId: !Ref GameRoute
+      RouteResponseKey: "$default"
+
+  # DATABASE
   GameTable:
     Type: AWS::DynamoDB::Table
     Properties:
