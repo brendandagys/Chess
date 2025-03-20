@@ -128,3 +128,10 @@ impl GameState {
         }
     }
 }
+
+#[derive(serde::Deserialize)]
+pub struct GameActionPayload {
+    pub game_id: String,
+    pub username: String,
+    pub player_move: String,
+}

@@ -1,8 +1,10 @@
 use crate::types::dynamo_db::GameRecord;
 use crate::types::game::GameState;
 use crate::types::pieces::Color;
+use crate::utils::api_gateway::post_to_connection;
 use crate::utils::dynamo_db::{get_item, put_item};
 
+use aws_sdk_apigatewaymanagement as apigw;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Client;
 use lambda_runtime::Error;
@@ -58,14 +60,27 @@ pub fn assign_player_to_remaining_slot(
     username: &str,
     connection_id: &str,
 ) -> Result<GameRecord, Error> {
-    if game.white_username.is_none() {
-        game.white_connection_id = Some(connection_id.to_string());
-        game.white_username = Some(username.to_string());
-    } else if game.black_username.is_none() {
-        game.black_connection_id = Some(connection_id.to_string());
-        game.black_username = Some(username.to_string());
-    } else {
-        return Err(Error::from("Game is full"));
+    // Check if the game is already full
+    if let Some(white_username) = &game.white_username {
+        if let Some(black_username) = &game.black_username {
+            if black_username != username && white_username != username {
+                return Err(Error::from("Game is full"));
+            }
+        }
+    }
+
+    match &game.white_username {
+        Some(white_username) if white_username == username => {
+            game.white_connection_id = Some(connection_id.to_string());
+        }
+        Some(_) => {
+            game.black_connection_id = Some(connection_id.to_string());
+            game.black_username = Some(username.to_string());
+        }
+        None => {
+            game.white_connection_id = Some(connection_id.to_string());
+            game.white_username = Some(username.to_string());
+        }
     }
 
     Ok(game)
@@ -92,4 +107,109 @@ pub fn create_game(
         game_state,
         created: chrono::Utc::now().to_rfc3339(),
     }
+}
+
+pub async fn notify_other_player_about_game_update(
+    client: &apigw::Client,
+    game: &GameRecord,
+    current_user_username: &str,
+) -> Result<(), Error> {
+    if let Some(white_username) = &game.white_username {
+        if white_username != current_user_username {
+            if let Some(white_connection_id) = &game.white_connection_id {
+                post_to_connection(client, white_connection_id, &game).await?;
+                tracing::info!("Sent game (ID: {}) update to white player", game.game_id);
+            }
+        }
+    }
+
+    if let Some(black_username) = &game.black_username {
+        if black_username != current_user_username {
+            if let Some(black_connection_id) = &game.black_connection_id {
+                post_to_connection(client, black_connection_id, &game).await?;
+                tracing::info!("Sent game (ID: {}) update to black player", game.game_id);
+            }
+        }
+    }
+
+    Ok(())
+}
+
+pub fn can_player_make_move(
+    game: &GameRecord,
+    username: &str,
+    connection_id: &str,
+) -> Result<(), &'static str> {
+    if !is_player_of_game(game, username) {
+        return Err("User is not part of this game");
+    }
+    if !is_turn(game, username) {
+        return Err("Not user's turn");
+    }
+    Ok(())
+}
+
+fn is_player_of_game(game: &GameRecord, _username: &str) -> bool {
+    // Check if user is in game
+    true
+}
+
+fn is_turn(game: &GameRecord, _username: &str) -> bool {
+    // Confirm it's this player's turn
+    true
+}
+
+pub fn check_game_state(game: &GameRecord) -> Result<(), &'static str> {
+    // Ensure game is still active
+    Ok(())
+}
+
+pub fn make_move(
+    game: &mut GameRecord,
+    username: &str,
+    player_move: &str,
+) -> Result<(), &'static str> {
+    if !is_valid_game_move(game, username, player_move) {
+        return Err("Invalid move");
+    }
+    does_move_deliver_check(game);
+    does_move_deliver_checkmate(game);
+    // Save and broadcast updated state
+    Ok(())
+}
+
+fn is_valid_game_move(game: &GameRecord, _username: &str, _player_move: &str) -> bool {
+    if !is_own_piece_at_origin(game, _player_move) {
+        return false;
+    }
+    if !is_move_in_bounds(game, _player_move) {
+        return false;
+    }
+    if does_move_create_self_check(game, _player_move) {
+        return false;
+    }
+    true
+}
+
+fn is_own_piece_at_origin(game: &GameRecord, _player_move: &str) -> bool {
+    // Verify piece belongs to the player
+    true
+}
+
+fn is_move_in_bounds(game: &GameRecord, _player_move: &str) -> bool {
+    // Confirm move is valid on the board
+    true
+}
+
+fn does_move_create_self_check(game: &GameRecord, _player_move: &str) -> bool {
+    // Check if the move would cause player's own king to be in check
+    false
+}
+
+fn does_move_deliver_check(game: &mut GameRecord) {
+    // Check if this move places opponent in check
+}
+
+fn does_move_deliver_checkmate(game: &mut GameRecord) {
+    // Check if this move checkmates opponent
 }

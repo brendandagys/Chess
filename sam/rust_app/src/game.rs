@@ -1,49 +1,90 @@
+mod helpers;
 mod types;
 mod utils;
 
-use lambda_runtime::{run, service_fn, Error, LambdaEvent};
-use serde::{Deserialize, Serialize};
-use serde_json;
+use aws_config::BehaviorVersion;
+use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequest};
+use aws_sdk_apigatewaymanagement as apigw;
+use aws_sdk_dynamodb::Client;
+use helpers::game::{
+    can_player_make_move, check_game_state, get_game, make_move,
+    notify_other_player_about_game_update, save_game,
+};
+use lambda_http::LambdaEvent;
+use lambda_runtime::{run, service_fn, Error};
+use types::game::GameActionPayload;
 
-/// This is a made-up example. Requests come into the runtime as unicode
-/// strings in json format, which can map to any structure that implements `serde::Deserialize`
-/// The runtime pays no attention to the contents of the request payload.
-#[derive(Deserialize)]
-struct Request {}
+async fn function_handler(
+    event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
+    dynamo_db_client: &Client,
+    api_gateway_client: &apigw::Client,
+) -> Result<ApiGatewayProxyResponse, Error> {
+    let game_table = std::env::var("GAME_TABLE").unwrap();
 
-/// This is a made-up example of what a response structure may look like.
-/// There is no restriction on what it can be. The runtime requires responses
-/// to be serialized into json. The runtime pays no attention
-/// to the contents of the response payload.
-#[derive(Serialize)]
-struct Response {
-    #[serde(rename = "statusCode")]
-    status_code: i32,
-    body: String,
-}
+    let request_context = event.payload.request_context;
 
-async fn function_handler(_event: LambdaEvent<Request>) -> Result<Response, Error> {
-    let game_state = types::game::GameState::new("game_1".to_string());
+    // Get the connection ID from the WebSocket context
+    let connection_id = request_context
+        .connection_id
+        .ok_or_else(|| Error::from("Missing connection ID"))?;
 
-    // Prepare the response
-    let resp = Response {
+    let request_body = event
+        .payload
+        .body
+        .as_ref()
+        .ok_or_else(|| Error::from("Missing request body"))?;
+
+    let payload: GameActionPayload = serde_json::from_str(request_body).map_err(|e| {
+        Error::from(format!(
+            "Failed to parse request body into a valid game action payload: {e}",
+        ))
+    })?;
+
+    let username = payload.username;
+    let game_id = payload.game_id;
+    let player_move = payload.player_move;
+
+    // Convert the player move string (from square, to square) to a new struct that represents a from and to for a chess move. Check that from square and to squares are valid notation.
+
+    let mut game = get_game(&dynamo_db_client, &game_table, &game_id).await?;
+
+    can_player_make_move(&game, &username, &connection_id)?;
+    check_game_state(&game)?;
+    make_move(&mut game, &username, &player_move)?;
+
+    save_game(&dynamo_db_client, &game_table, &game).await?;
+
+    notify_other_player_about_game_update(api_gateway_client, &game, &username).await?;
+
+    tracing::info!("Player {username} made a move in game {game_id}: {player_move}");
+
+    Ok(ApiGatewayProxyResponse {
         status_code: 200,
-        body: serde_json::to_string(&game_state).unwrap(),
-    };
-
-    // Return `Response` (it will be serialized to JSON automatically by the runtime)
-    Ok(resp)
+        body: Some(serde_json::to_string(&game)?.into()),
+        ..Default::default()
+    })
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    let sdk_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+    let dynamo_db_client: Client = Client::new(&sdk_config);
+    let api_gateway_client: apigw::Client = apigw::Client::new(&sdk_config);
+
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
-        // disable printing the name of the module in every log line.
-        .with_target(false)
-        // disabling time is handy because CloudWatch will add the ingestion time.
+        // Include the name of the module in every log line
+        .with_target(true)
+        // CloudWatch will add the ingestion time
         .without_time()
         .init();
 
-    run(service_fn(function_handler)).await
+    run(service_fn(
+        |event: LambdaEvent<ApiGatewayWebsocketProxyRequest>| async {
+            function_handler(event, &dynamo_db_client, &api_gateway_client).await
+        },
+    ))
+    .await?;
+
+    Ok(())
 }
