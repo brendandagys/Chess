@@ -51,7 +51,9 @@ pub async fn get_all_user_games(
     username: &str,
 ) -> Result<Vec<UserRecord>, Error> {
     let key_condition_expression = "username
-        = :username AND begins_with(sk, :game_prefix)";
+        = :username AND begins_with(sk, :game_prefix)"
+        .to_string();
+
     let mut expression_attribute_values = HashMap::new();
     expression_attribute_values.insert(
         ":username".to_string(),
@@ -65,8 +67,10 @@ pub async fn get_all_user_games(
     let items = query_items(
         client,
         table,
-        key_condition_expression,
-        expression_attribute_values,
+        Some(key_condition_expression),
+        None,
+        Some(expression_attribute_values),
+        None,
     )
     .await?;
 
@@ -76,9 +80,11 @@ pub async fn get_all_user_games(
 pub async fn get_user_game_from_connection_id(
     client: &Client,
     table: &str,
+    index: &str,
     connection_id: &str,
 ) -> Result<UserRecord, Error> {
-    let key_condition_expression = "connection_id = :connection_id";
+    let key_condition_expression = "connection_id = :connection_id".to_string();
+
     let mut expression_attribute_values = HashMap::new();
     expression_attribute_values.insert(
         ":connection_id".to_string(),
@@ -88,8 +94,10 @@ pub async fn get_user_game_from_connection_id(
     let items = query_items(
         client,
         table,
-        key_condition_expression,
-        expression_attribute_values,
+        Some(key_condition_expression),
+        None,
+        Some(expression_attribute_values),
+        Some(index.to_string()),
     )
     .await?;
 
