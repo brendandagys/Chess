@@ -74,6 +74,7 @@ async fn function_handler(
     match get_user_game(&dynamo_db_client, &user_table, username, &game.game_id).await {
         Ok(mut found_user_game) => {
             found_user_game.connection_id = Some(connection_id.clone());
+
             tracing::info!(
                 "Found existing user-game record for {username} (ID: {})",
                 found_user_game.sort_key
