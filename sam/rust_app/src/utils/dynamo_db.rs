@@ -27,14 +27,18 @@ pub async fn get_item<'a, T: Deserialize<'a> + Serialize>(
 pub async fn query_items<'a, T: Deserialize<'a> + Serialize>(
     client: &Client,
     table_name: &str,
-    key_condition_expression: &str,
-    expression_attribute_values: HashMap<String, AttributeValue>,
+    key_condition_expression: Option<String>,
+    expression_attribute_names: Option<HashMap<String, String>>,
+    expression_attribute_values: Option<HashMap<String, AttributeValue>>,
+    index_name: Option<String>,
 ) -> Result<Vec<T>, Error> {
     let response = client
         .query()
         .table_name(table_name)
-        .key_condition_expression(key_condition_expression)
-        .set_expression_attribute_values(Some(expression_attribute_values))
+        .set_index_name(index_name)
+        .set_key_condition_expression(key_condition_expression)
+        .set_expression_attribute_names(expression_attribute_names)
+        .set_expression_attribute_values(expression_attribute_values)
         .send()
         .await?;
 
