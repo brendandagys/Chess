@@ -1,11 +1,12 @@
 use aws_sdk_apigatewaymanagement::{operation::post_to_connection::PostToConnectionOutput, Client};
+use lambda_runtime::Error;
 use serde::Serialize;
 
 pub async fn post_to_connection<T>(
     client: &Client,
     connection_id: &str,
     data: &T,
-) -> Result<PostToConnectionOutput, aws_sdk_apigatewaymanagement::Error>
+) -> Result<PostToConnectionOutput, Error>
 where
     T: ?Sized + Serialize,
 {
