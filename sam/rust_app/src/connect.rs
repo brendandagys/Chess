@@ -2,18 +2,21 @@ mod helpers;
 mod types;
 mod utils;
 
-use aws_lambda_events::apigw::ApiGatewayProxyResponse;
-use helpers::game::{assign_player_to_remaining_slot, create_game, get_game, save_game};
+use helpers::game::{
+    assign_player_to_remaining_slot, create_game, get_game, notify_other_player_about_game_update,
+    save_game,
+};
 use helpers::user::{create_user_game, get_user_game, save_user_record};
 use types::pieces::Color;
-use utils::api_gateway::post_to_connection;
 
 use aws_config::BehaviorVersion;
+use aws_lambda_events::apigw::ApiGatewayProxyResponse;
 use aws_sdk_apigatewaymanagement as apigw;
 use aws_sdk_dynamodb::Client;
 use lambda_http::aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequest;
 use lambda_http::LambdaEvent;
 use lambda_runtime::{run, service_fn, Error};
+use serde_json;
 
 async fn function_handler(
     event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
@@ -87,22 +90,13 @@ async fn function_handler(
         }
     };
 
-    // Update connected players
-    if let Some(white_connection_id) = &game.white_connection_id {
-        post_to_connection(api_gateway_client, white_connection_id, &game).await?;
-        tracing::info!("Sent game (ID: {}) update to white player", game.game_id);
-    }
-
-    if let Some(black_connection_id) = &game.black_connection_id {
-        post_to_connection(api_gateway_client, black_connection_id, &game).await?;
-        tracing::info!("Sent game (ID: {}) update to black player", game.game_id);
-    }
+    notify_other_player_about_game_update(api_gateway_client, &game, username).await?;
 
     tracing::info!("USER {username} CONNECTED TO GAME (ID: {})", game.game_id);
 
     Ok(ApiGatewayProxyResponse {
         status_code: 200,
-        body: Some((format!("{username} joined game (ID: {})", game.game_id)).into()),
+        body: Some(serde_json::to_string(&game)?.into()),
         ..Default::default()
     })
 }
