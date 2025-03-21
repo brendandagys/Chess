@@ -104,7 +104,11 @@ pub async fn get_user_game_from_connection_id(
     items
         .into_iter()
         .next() // A connection should only have up to 1 game
-        .ok_or_else(|| Error::from("No user game found for the given connection ID"))
+        .ok_or_else(|| {
+            Error::from(format!(
+                "No user game found for the given connection ID: {connection_id}"
+            ))
+        })
 }
 
 pub fn create_user_game(game_id: &str, username: &str, connection_id: &str) -> UserRecord {
