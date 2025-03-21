@@ -2,7 +2,7 @@ use super::game::GameState;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GameRecord {
     pub game_id: String, // PK
     pub white_connection_id: Option<String>,

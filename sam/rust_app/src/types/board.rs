@@ -1,13 +1,13 @@
 use crate::types::pieces::Piece;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Position {
     pub row: usize,
     pub col: usize,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Board {
     pub squares: [[Option<Piece>; 8]; 8],
 }

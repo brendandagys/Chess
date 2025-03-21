@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Color {
     White,
     Black,
@@ -18,7 +18,7 @@ impl std::str::FromStr for Color {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum PieceType {
     Pawn,
     Knight,
@@ -28,7 +28,7 @@ pub enum PieceType {
     King,
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct Piece {
     pub piece_type: PieceType,
     pub color: Color,

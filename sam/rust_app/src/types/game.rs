@@ -3,7 +3,7 @@ use crate::types::pieces::{Color, Piece, PieceType};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum GameEnding {
     Checkmate(Color),
     Resignation(Color),
@@ -15,14 +15,14 @@ pub enum GameEnding {
     DrawByMutualAgreement,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum State {
     NotStarted,
     InProgress,
     Finished(GameEnding),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GameState {
     pub game_id: String,
     pub state: State,
