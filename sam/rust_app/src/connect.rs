@@ -3,7 +3,7 @@ mod types;
 mod utils;
 
 use helpers::game::{
-    assign_player_to_remaining_slot, create_game, get_game, notify_other_player_about_game_update,
+    assign_player_to_remaining_slot, create_game, get_game, notify_players_about_game_update,
     save_game,
 };
 use helpers::user::{create_user_game, get_user_game, save_user_record};
@@ -15,7 +15,6 @@ use aws_sdk_dynamodb::Client;
 use lambda_http::aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequest;
 use lambda_http::LambdaEvent;
 use lambda_runtime::{run, service_fn, Error};
-use serde_json;
 
 async fn function_handler(
     event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
@@ -91,13 +90,12 @@ async fn function_handler(
         }
     };
 
-    notify_other_player_about_game_update(sdk_config, &request_context, &game, username).await?;
+    notify_players_about_game_update(sdk_config, &request_context, connection_id, &game).await?;
 
-    tracing::info!("USER {username} CONNECTED TO GAME (ID: {})", game.game_id);
+    tracing::info!("PLAYER {username} CONNECTED TO GAME (ID: {})", game.game_id);
 
     Ok(ApiGatewayProxyResponse {
         status_code: 200,
-        body: Some(serde_json::to_string(&game)?.into()),
         ..Default::default()
     })
 }

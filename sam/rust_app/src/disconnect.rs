@@ -48,6 +48,7 @@ async fn function_handler(
     // Fetch the game using the user-game record's game ID from the sort key
     let mut game = get_game(dynamo_db_client, &game_table, game_id).await?;
 
+    // TODO: Refactor this out
     // Remove the respective connection ID from the game record.
     // Notify the other player about the disconnect, if they are connected.
     match game.white_username == Some(username.clone()) {
@@ -73,11 +74,10 @@ async fn function_handler(
         }
     }
 
-    tracing::info!("USER {username} DISCONNECTED FROM GAME (ID: {game_id})");
+    tracing::info!("PLAYER {username} DISCONNECTED FROM GAME (ID: {game_id})");
 
     Ok(ApiGatewayProxyResponse {
         status_code: 200,
-        body: Some((format!("{username} disconnected from game (ID: {})", game_id)).into()),
         ..Default::default()
     })
 }

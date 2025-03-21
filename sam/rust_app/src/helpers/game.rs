@@ -109,27 +109,33 @@ pub fn create_game(
     }
 }
 
-pub async fn notify_other_player_about_game_update(
+pub async fn notify_players_about_game_update(
     sdk_config: &aws_config::SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
+    current_user_connection_id: &str,
     game: &GameRecord,
-    current_user_username: &str,
 ) -> Result<(), Error> {
-    if let Some(white_username) = &game.white_username {
-        if white_username != current_user_username {
-            if let Some(white_connection_id) = &game.white_connection_id {
-                post_to_connection(sdk_config, request_context, white_connection_id, &game).await?;
-                tracing::info!("Sent game (ID: {}) update to white player", game.game_id);
-            }
+    // Always notify current user
+    post_to_connection(
+        sdk_config,
+        request_context,
+        current_user_connection_id,
+        &game,
+    )
+    .await?;
+
+    // Notify opponent if they are connected
+    if let Some(white_connection_id) = &game.white_connection_id {
+        if white_connection_id != current_user_connection_id {
+            post_to_connection(sdk_config, request_context, white_connection_id, &game).await?;
+            tracing::info!("Sent game (ID: {}) update to white player", game.game_id);
         }
     }
 
-    if let Some(black_username) = &game.black_username {
-        if black_username != current_user_username {
-            if let Some(black_connection_id) = &game.black_connection_id {
-                post_to_connection(sdk_config, request_context, black_connection_id, &game).await?;
-                tracing::info!("Sent game (ID: {}) update to black player", game.game_id);
-            }
+    if let Some(black_connection_id) = &game.black_connection_id {
+        if black_connection_id != current_user_connection_id {
+            post_to_connection(sdk_config, request_context, black_connection_id, &game).await?;
+            tracing::info!("Sent game (ID: {}) update to black player", game.game_id);
         }
     }
 
