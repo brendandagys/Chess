@@ -93,7 +93,6 @@ Resources:
     DependsOn:
       - ConnectRoute
       - DisconnectRoute
-      - DefaultRoute
       - GameRoute
     Properties:
       ApiId: !Ref WebSocketApi
@@ -105,42 +104,6 @@ Resources:
       DeploymentId: !Ref WebSocketDeployment
       ApiId: !Ref WebSocketApi
       AutoDeploy: true
-
-  # DEFAULT ROUTE
-  DefaultRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketApi
-      OperationName: DefaultRoute
-      RouteKey: $default
-      RouteResponseSelectionExpression: $default
-      Target: !Sub integrations/${DefaultIntegration}
-
-  DefaultIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketApi
-      IntegrationType: MOCK
-      RequestTemplates:
-        "200": '{"statusCode" : 200}'
-      TemplateSelectionExpression: "200"
-
-  DefaultIntegrationResponse:
-    Type: AWS::ApiGatewayV2::IntegrationResponse
-    Properties:
-      ApiId: !Ref WebSocketApi
-      IntegrationId: !Ref DefaultIntegration
-      IntegrationResponseKey: $default
-      ResponseTemplates:
-        "200": '{"statusCode" : 200, "message": "Welcome to my serverless chess API!", "connectionId" : "$context.connectionId"}'
-      TemplateSelectionExpression: "200"
-
-  DefaultRouteResponse:
-    Type: AWS::ApiGatewayV2::RouteResponse
-    Properties:
-      ApiId: !Ref WebSocketApi
-      RouteId: !Ref DefaultRoute
-      RouteResponseKey: $default
 
   # CONNECT
   ConnectFunction:
