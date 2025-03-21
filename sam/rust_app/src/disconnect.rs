@@ -8,7 +8,6 @@ use utils::api_gateway::post_to_connection;
 
 use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
-use aws_sdk_apigatewaymanagement as apigw;
 use aws_sdk_dynamodb::Client;
 use lambda_http::aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequest;
 use lambda_http::LambdaEvent;
@@ -16,8 +15,8 @@ use lambda_runtime::{run, service_fn, Error};
 
 async fn function_handler(
     event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
+    sdk_config: &aws_config::SdkConfig,
     dynamo_db_client: &Client,
-    api_gateway_client: &apigw::Client,
 ) -> Result<ApiGatewayProxyResponse, Error> {
     let request_context = event.payload.request_context;
 
@@ -27,6 +26,7 @@ async fn function_handler(
 
     let connection_id = request_context
         .connection_id
+        .as_ref()
         .ok_or_else(|| Error::from("Missing connection ID"))?;
 
     let mut user_game = get_user_game_from_connection_id(
@@ -56,7 +56,8 @@ async fn function_handler(
             save_game(dynamo_db_client, &game_table, &game).await?;
 
             if let Some(black_connection_id) = &game.black_connection_id {
-                post_to_connection(api_gateway_client, &black_connection_id, &game).await?;
+                post_to_connection(sdk_config, &request_context, &black_connection_id, &game)
+                    .await?;
                 tracing::info!("Notified black player of disconnection for game (ID: {game_id})",);
             }
         }
@@ -65,7 +66,8 @@ async fn function_handler(
             save_game(dynamo_db_client, &game_table, &game).await?;
 
             if let Some(white_connection_id) = &game.white_connection_id {
-                post_to_connection(api_gateway_client, &white_connection_id, &game).await?;
+                post_to_connection(sdk_config, &request_context, &white_connection_id, &game)
+                    .await?;
                 tracing::info!("Notified white player of disconnection for game (ID: {game_id})",);
             }
         }
@@ -84,7 +86,6 @@ async fn function_handler(
 async fn main() -> Result<(), Error> {
     let sdk_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
     let dynamo_db_client: Client = Client::new(&sdk_config);
-    let api_gateway_client: apigw::Client = apigw::Client::new(&sdk_config);
 
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
@@ -96,7 +97,7 @@ async fn main() -> Result<(), Error> {
 
     run(service_fn(
         |event: LambdaEvent<ApiGatewayWebsocketProxyRequest>| async {
-            function_handler(event, &dynamo_db_client, &api_gateway_client).await
+            function_handler(event, &sdk_config, &dynamo_db_client).await
         },
     ))
     .await?;

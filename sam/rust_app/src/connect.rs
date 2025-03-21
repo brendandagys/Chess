@@ -11,7 +11,6 @@ use types::pieces::Color;
 
 use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
-use aws_sdk_apigatewaymanagement as apigw;
 use aws_sdk_dynamodb::Client;
 use lambda_http::aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequest;
 use lambda_http::LambdaEvent;
@@ -20,8 +19,8 @@ use serde_json;
 
 async fn function_handler(
     event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
+    sdk_config: &aws_config::SdkConfig,
     dynamo_db_client: &Client,
-    api_gateway_client: &apigw::Client,
 ) -> Result<ApiGatewayProxyResponse, Error> {
     let game_table = std::env::var("GAME_TABLE").unwrap();
     let user_table = std::env::var("USER_TABLE").unwrap();
@@ -43,6 +42,7 @@ async fn function_handler(
     // Get the connection ID from the WebSocket context
     let connection_id = request_context
         .connection_id
+        .as_ref()
         .ok_or_else(|| Error::from("Missing connection ID"))?;
 
     let game = match game_id {
@@ -91,7 +91,7 @@ async fn function_handler(
         }
     };
 
-    notify_other_player_about_game_update(api_gateway_client, &game, username).await?;
+    notify_other_player_about_game_update(sdk_config, &request_context, &game, username).await?;
 
     tracing::info!("USER {username} CONNECTED TO GAME (ID: {})", game.game_id);
 
@@ -105,8 +105,7 @@ async fn function_handler(
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let sdk_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
-    let dynamo_db_client: Client = Client::new(&sdk_config);
-    let api_gateway_client: apigw::Client = apigw::Client::new(&sdk_config);
+    let dynamo_db_client = Client::new(&sdk_config);
 
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
@@ -118,7 +117,7 @@ async fn main() -> Result<(), Error> {
 
     run(service_fn(
         |event: LambdaEvent<ApiGatewayWebsocketProxyRequest>| async {
-            function_handler(event, &dynamo_db_client, &api_gateway_client).await
+            function_handler(event, &sdk_config, &dynamo_db_client).await
         },
     ))
     .await?;

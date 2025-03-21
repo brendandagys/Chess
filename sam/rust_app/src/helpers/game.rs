@@ -4,7 +4,7 @@ use crate::types::pieces::Color;
 use crate::utils::api_gateway::post_to_connection;
 use crate::utils::dynamo_db::{get_item, put_item};
 
-use aws_sdk_apigatewaymanagement as apigw;
+use aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequestContext;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Client;
 use lambda_runtime::Error;
@@ -110,14 +110,15 @@ pub fn create_game(
 }
 
 pub async fn notify_other_player_about_game_update(
-    client: &apigw::Client,
+    sdk_config: &aws_config::SdkConfig,
+    request_context: &ApiGatewayWebsocketProxyRequestContext,
     game: &GameRecord,
     current_user_username: &str,
 ) -> Result<(), Error> {
     if let Some(white_username) = &game.white_username {
         if white_username != current_user_username {
             if let Some(white_connection_id) = &game.white_connection_id {
-                post_to_connection(client, white_connection_id, &game).await?;
+                post_to_connection(sdk_config, request_context, white_connection_id, &game).await?;
                 tracing::info!("Sent game (ID: {}) update to white player", game.game_id);
             }
         }
@@ -126,7 +127,7 @@ pub async fn notify_other_player_about_game_update(
     if let Some(black_username) = &game.black_username {
         if black_username != current_user_username {
             if let Some(black_connection_id) = &game.black_connection_id {
-                post_to_connection(client, black_connection_id, &game).await?;
+                post_to_connection(sdk_config, request_context, black_connection_id, &game).await?;
                 tracing::info!("Sent game (ID: {}) update to black player", game.game_id);
             }
         }

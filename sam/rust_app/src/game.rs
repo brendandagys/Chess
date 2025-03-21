@@ -4,7 +4,6 @@ mod utils;
 
 use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequest};
-use aws_sdk_apigatewaymanagement as apigw;
 use aws_sdk_dynamodb::Client;
 use helpers::game::{
     can_player_make_move, check_game_state, get_game, make_move,
@@ -16,16 +15,18 @@ use types::game::GameActionPayload;
 
 async fn function_handler(
     event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
+    sdk_config: &aws_config::SdkConfig,
     dynamo_db_client: &Client,
-    api_gateway_client: &apigw::Client,
 ) -> Result<ApiGatewayProxyResponse, Error> {
-    let game_table = std::env::var("GAME_TABLE").unwrap();
-
     let request_context = event.payload.request_context;
+
+    let game_table = std::env::var("GAME_TABLE").unwrap();
+    let user_table = std::env::var("USER_TABLE").unwrap(); // TODO: Update winner after game
 
     // Get the connection ID from the WebSocket context
     let connection_id = request_context
         .connection_id
+        .as_ref()
         .ok_or_else(|| Error::from("Missing connection ID"))?;
 
     let request_body = event
@@ -54,7 +55,7 @@ async fn function_handler(
 
     save_game(&dynamo_db_client, &game_table, &game).await?;
 
-    notify_other_player_about_game_update(api_gateway_client, &game, &username).await?;
+    notify_other_player_about_game_update(&sdk_config, &request_context, &game, &username).await?;
 
     tracing::info!("Player {username} made a move in game {game_id}: {player_move}");
 
@@ -69,7 +70,6 @@ async fn function_handler(
 async fn main() -> Result<(), Error> {
     let sdk_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
     let dynamo_db_client: Client = Client::new(&sdk_config);
-    let api_gateway_client: apigw::Client = apigw::Client::new(&sdk_config);
 
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
@@ -81,7 +81,7 @@ async fn main() -> Result<(), Error> {
 
     run(service_fn(
         |event: LambdaEvent<ApiGatewayWebsocketProxyRequest>| async {
-            function_handler(event, &dynamo_db_client, &api_gateway_client).await
+            function_handler(event, &sdk_config, &dynamo_db_client).await
         },
     ))
     .await?;
