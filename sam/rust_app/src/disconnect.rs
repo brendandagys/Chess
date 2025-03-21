@@ -90,10 +90,9 @@ async fn main() -> Result<(), Error> {
     tracing_subscriber::fmt()
         .json()
         .with_max_level(tracing::Level::INFO)
-        // Include the name of the module in every log line
-        .with_target(true)
-        // CloudWatch will add the ingestion time
-        .without_time()
+        .with_target(true) // Include the name of the module in every log line
+        .with_current_span(false) // Remove duplicated "span" key in from logs
+        .without_time() // CloudWatch will add the ingestion time
         .init();
 
     run(service_fn(
