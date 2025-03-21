@@ -72,6 +72,7 @@ async fn main() -> Result<(), Error> {
     let dynamo_db_client: Client = Client::new(&sdk_config);
 
     tracing_subscriber::fmt()
+        .json()
         .with_max_level(tracing::Level::INFO)
         // Include the name of the module in every log line
         .with_target(true)
