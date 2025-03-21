@@ -46,23 +46,42 @@ async fn function_handler(
 
     let game = match game_id {
         Some(game_id) => match get_game(&dynamo_db_client, &game_table, game_id).await {
-            Ok(found_game) => {
+            Ok(mut found_game) => {
                 tracing::info!(
-                    "Found existing game for {username} (ID: {})",
+                    "Found existing game (ID: {}) for user ({username}) to try to join",
                     found_game.game_id
                 );
-                assign_player_to_remaining_slot(found_game, username, &connection_id)?
+
+                assign_player_to_remaining_slot(&mut found_game, username, &connection_id)?;
+
+                tracing::info!(
+                    "User ({username}) joined game (ID: {}) as {}",
+                    found_game.game_id,
+                    if username == found_game.white_username.as_ref().unwrap() {
+                        // There should always be 2 players here
+                        "white"
+                    } else {
+                        "black"
+                    }
+                );
+                found_game
             }
             Err(_) => {
                 let new_game =
                     create_game(Some(game_id), username, color_preference, &connection_id);
-                tracing::info!("Created new game for {username} (ID: {})", new_game.game_id);
+                tracing::info!(
+                    "Created new game (ID: {}) for user ({username})",
+                    new_game.game_id
+                );
                 new_game
             }
         },
         None => {
             let new_game = create_game(None, username, color_preference, &connection_id);
-            tracing::info!("Created new game for {username} (ID: {})", new_game.game_id);
+            tracing::info!(
+                "Created new game (ID: {}) for user ({username})",
+                new_game.game_id
+            );
             new_game
         }
     };
@@ -90,7 +109,8 @@ async fn function_handler(
         }
     };
 
-    notify_players_about_game_update(sdk_config, &request_context, connection_id, &game).await?;
+    notify_players_about_game_update(sdk_config, &request_context, connection_id, &game, false)
+        .await?;
 
     tracing::info!("PLAYER {username} CONNECTED TO GAME (ID: {})", game.game_id);
 

@@ -53,7 +53,8 @@ async fn function_handler(
     check_game_state(&game)?;
     make_move(&mut game, &username, &player_move)?;
     save_game(&dynamo_db_client, &game_table, &game).await?;
-    notify_players_about_game_update(&sdk_config, &request_context, connection_id, &game).await?;
+    notify_players_about_game_update(&sdk_config, &request_context, connection_id, &game, true)
+        .await?;
 
     tracing::info!(
         "PLAYER {username} MADE A MOVE (GAME ID: {game_id}): {player_move}. Game state: {game:?}"

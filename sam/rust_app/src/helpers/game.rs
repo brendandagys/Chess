@@ -56,10 +56,10 @@ pub fn determine_player_color(
 }
 
 pub fn assign_player_to_remaining_slot(
-    mut game: GameRecord,
+    game: &mut GameRecord,
     username: &str,
     connection_id: &str,
-) -> Result<GameRecord, Error> {
+) -> Result<(), Error> {
     // Check if the game is already full
     if let Some(white_username) = &game.white_username {
         if let Some(black_username) = &game.black_username {
@@ -74,16 +74,16 @@ pub fn assign_player_to_remaining_slot(
             game.white_connection_id = Some(connection_id.to_string());
         }
         Some(_) => {
-            game.black_connection_id = Some(connection_id.to_string());
             game.black_username = Some(username.to_string());
+            game.black_connection_id = Some(connection_id.to_string());
         }
         None => {
-            game.white_connection_id = Some(connection_id.to_string());
             game.white_username = Some(username.to_string());
+            game.white_connection_id = Some(connection_id.to_string());
         }
     }
 
-    Ok(game)
+    Ok(())
 }
 
 pub fn create_game(
@@ -123,12 +123,15 @@ pub async fn mark_user_as_disconnected_and_update_other_player(
             save_game(dynamo_db_client, &game_table, &game).await?;
 
             if let Some(black_connection_id) = &game.black_connection_id {
-                post_to_connection(sdk_config, &request_context, &black_connection_id, &game)
-                    .await?;
-                tracing::info!(
-                    "Notified black player of disconnection for game (ID: {})",
-                    game.game_id
-                );
+                if let Some(_) =
+                    post_to_connection(sdk_config, &request_context, &black_connection_id, &game)
+                        .await?
+                {
+                    tracing::info!(
+                        "Notified black player of disconnection for game (ID: {})",
+                        game.game_id
+                    );
+                }
             }
         }
         false => {
@@ -136,12 +139,15 @@ pub async fn mark_user_as_disconnected_and_update_other_player(
             save_game(dynamo_db_client, &game_table, &game).await?;
 
             if let Some(white_connection_id) = &game.white_connection_id {
-                post_to_connection(sdk_config, &request_context, &white_connection_id, &game)
-                    .await?;
-                tracing::info!(
-                    "Notified white player of disconnection for game (ID: {})",
-                    game.game_id
-                );
+                if let Some(_) =
+                    post_to_connection(sdk_config, &request_context, &white_connection_id, &game)
+                        .await?
+                {
+                    tracing::info!(
+                        "Notified white player of disconnection for game (ID: {})",
+                        game.game_id
+                    );
+                }
             }
         }
     }
@@ -154,28 +160,36 @@ pub async fn notify_players_about_game_update(
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     current_user_connection_id: &str,
     game: &GameRecord,
+    notify_current_user: bool, // We can't post to a connection ID during $connect
 ) -> Result<(), Error> {
-    // Always notify current user
-    post_to_connection(
-        sdk_config,
-        request_context,
-        current_user_connection_id,
-        &game,
-    )
-    .await?;
+    if notify_current_user {
+        post_to_connection(
+            sdk_config,
+            request_context,
+            current_user_connection_id,
+            &game,
+        )
+        .await?;
+    }
 
     // Notify opponent if they are connected
     if let Some(white_connection_id) = &game.white_connection_id {
         if white_connection_id != current_user_connection_id {
-            post_to_connection(sdk_config, request_context, white_connection_id, &game).await?;
-            tracing::info!("Sent game (ID: {}) update to white player", game.game_id);
+            if let Some(_) =
+                post_to_connection(sdk_config, request_context, white_connection_id, &game).await?
+            {
+                tracing::info!("Sent game (ID: {}) update to white player", game.game_id);
+            }
         }
     }
 
     if let Some(black_connection_id) = &game.black_connection_id {
         if black_connection_id != current_user_connection_id {
-            post_to_connection(sdk_config, request_context, black_connection_id, &game).await?;
-            tracing::info!("Sent game (ID: {}) update to black player", game.game_id);
+            if let Some(_) =
+                post_to_connection(sdk_config, request_context, black_connection_id, &game).await?
+            {
+                tracing::info!("Sent game (ID: {}) update to black player", game.game_id);
+            }
         }
     }
 
@@ -190,6 +204,11 @@ pub fn can_player_make_move(
     if !is_player_of_game(game, username) {
         return Err("User is not part of this game");
     }
+
+    if game.white_connection_id.is_none() || game.black_connection_id.is_none() {
+        return Err("Both players must be connected to make a move");
+    }
+
     if !is_turn(game, username) {
         return Err("Not user's turn");
     }

@@ -1,7 +1,8 @@
 use aws_config::SdkConfig;
 use aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequestContext;
 use aws_sdk_apigatewaymanagement::config;
-use aws_sdk_apigatewaymanagement::error::DisplayErrorContext;
+use aws_sdk_apigatewaymanagement::error::{DisplayErrorContext, SdkError};
+use aws_sdk_apigatewaymanagement::operation::post_to_connection::PostToConnectionError;
 use aws_sdk_apigatewaymanagement::{operation::post_to_connection::PostToConnectionOutput, Client};
 use lambda_runtime::Error;
 use serde::Serialize;
@@ -25,7 +26,7 @@ pub async fn post_to_connection<T>(
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     connection_id: &str,
     data: &T,
-) -> Result<PostToConnectionOutput, Error>
+) -> Result<Option<PostToConnectionOutput>, Error>
 where
     T: ?Sized + Serialize,
 {
@@ -39,11 +40,25 @@ where
         .send()
         .await
     {
-        Ok(output) => Ok(output),
-        Err(err) => {
-            tracing::error!("Failed to post to connection: {}", err);
-            tracing::error!("{}", DisplayErrorContext(&err));
-            return Err(Error::from(err));
+        Ok(output) => Ok(Some(output)),
+        Err(SdkError::ServiceError(service_error)) => match service_error.err() {
+            PostToConnectionError::GoneException(e) => {
+                tracing::warn!(
+                    "Failed to post to connection: connection ID ({connection_id}) is already disconnected: {}",
+                    e.message().unwrap_or("(No message provided)")
+                );
+                Ok(None)
+            }
+            _ => {
+                tracing::warn!(
+                    "Failed to post to connection: Service Error occurred: {service_error:?}"
+                );
+                Err(service_error.into_err().into())
+            }
+        },
+        Err(e) => {
+            tracing::error!("Failed to post to connection: {}", DisplayErrorContext(&e));
+            Err(Error::from(e))
         }
     }
 }
