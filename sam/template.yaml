@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: |
-  SAM Template for chess serverless API.
+  SAM Template for a chess service using an API Gateway Websocket API.
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -31,7 +31,7 @@ Parameters:
     Description: Name of the DynamoDB Global Secondary Index for the users table
 
 Resources:
-  # DATABASE
+  # TABLES
   GameTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -127,6 +127,12 @@ Resources:
             TableName: !Ref GameTableName
         - DynamoDBCrudPolicy:
             TableName: !Ref UserTableName
+        - Statement:
+            Effect: Allow
+            Action:
+              - execute-api:ManageConnections
+            Resource:
+              - !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/Prod/POST/@connections/*
 
   ConnectFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -180,6 +186,12 @@ Resources:
             TableName: !Ref GameTableName
         - DynamoDBCrudPolicy:
             TableName: !Ref UserTableName
+        - Statement:
+            Effect: Allow
+            Action:
+              - execute-api:ManageConnections
+            Resource:
+              - !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/Prod/POST/@connections/*
 
   DisconnectFunctionPermission:
     Type: AWS::Lambda::Permission
@@ -232,6 +244,12 @@ Resources:
             TableName: !Ref GameTableName
         - DynamoDBCrudPolicy:
             TableName: !Ref UserTableName
+        - Statement:
+            Effect: Allow
+            Action:
+              - execute-api:ManageConnections
+            Resource:
+              - !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/Prod/POST/@connections/*
 
   GameFunctionPermission:
     Type: AWS::Lambda::Permission
