@@ -50,7 +50,7 @@ where
                 Ok(None)
             }
             _ => {
-                tracing::warn!(
+                tracing::error!(
                     "Failed to post to connection: Service Error occurred: {service_error:?}"
                 );
                 Err(service_error.into_err().into())

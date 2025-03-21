@@ -12,13 +12,15 @@ pub async fn get_item<'a, T: Deserialize<'a> + Serialize>(
     let request = client
         .get_item()
         .table_name(table_name.to_string())
-        .set_key(Some(key));
+        .set_key(Some(key.clone()));
 
     let response = request.send().await?;
 
-    let item = response
-        .item
-        .ok_or_else(|| Error::from("Record not found"))?;
+    let item = response.item.ok_or_else(|| {
+        Error::from(format!(
+            "Record not found for table `{table_name}` during GetItem: {key:?}",
+        ))
+    })?;
     let typed_entity: T = from_item(item)?;
 
     Ok(typed_entity)
@@ -44,7 +46,7 @@ pub async fn query_items<'a, T: Deserialize<'a> + Serialize>(
 
     let items = response
         .items
-        .ok_or_else(|| Error::from("Error obtaining DynamoDB items from query result"))?;
+        .ok_or_else(|| Error::from("Error obtaining DynamoDB items from `QueryOutput`"))?;
 
     let typed_entities: Vec<T> = from_items(items)?;
 
