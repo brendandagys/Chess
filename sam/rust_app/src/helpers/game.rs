@@ -205,9 +205,9 @@ pub fn can_player_make_move(
         return Err("User is not part of this game");
     }
 
-    if game.white_connection_id.is_none() || game.black_connection_id.is_none() {
-        return Err("Both players must be connected to make a move");
-    }
+    // if game.white_connection_id.is_none() || game.black_connection_id.is_none() {
+    //     return Err("Both players must be connected to make a move");
+    // }
 
     if !is_turn(game, username) {
         return Err("Not user's turn");

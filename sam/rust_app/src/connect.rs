@@ -115,7 +115,7 @@ async fn function_handler(
     tracing::info!("PLAYER {username} CONNECTED TO GAME (ID: {})", game.game_id);
 
     Ok(ApiGatewayProxyResponse {
-        status_code: 200,
+        status_code: 200, // Doesn't seem to be used by API Gateway
         ..Default::default()
     })
 }

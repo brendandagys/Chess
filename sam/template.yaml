@@ -93,6 +93,7 @@ Resources:
     DependsOn:
       - ConnectRoute
       - DisconnectRoute
+      - DefaultRoute
       - GameRoute
     Properties:
       ApiId: !Ref WebSocketApi
@@ -104,6 +105,42 @@ Resources:
       DeploymentId: !Ref WebSocketDeployment
       ApiId: !Ref WebSocketApi
       AutoDeploy: true
+
+  # DEFAULT ROUTE
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      OperationName: DefaultRoute
+      RouteKey: $default
+      RouteResponseSelectionExpression: $default
+      Target: !Sub integrations/${DefaultIntegration}
+
+  DefaultIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationType: MOCK
+      RequestTemplates:
+        "200": '{"statusCode" : 200}'
+      TemplateSelectionExpression: "200"
+
+  DefaultIntegrationResponse:
+    Type: AWS::ApiGatewayV2::IntegrationResponse
+    Properties:
+      ApiId: !Ref WebSocketApi
+      IntegrationId: !Ref DefaultIntegration
+      IntegrationResponseKey: $default
+      ResponseTemplates:
+        "200": '{"statusCode" : 200, "message": "Welcome to my serverless chess API!", "connectionId" : "$context.connectionId"}'
+      TemplateSelectionExpression: "200"
+
+  DefaultRouteResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteId: !Ref DefaultRoute
+      RouteResponseKey: $default
 
   # CONNECT
   ConnectFunction:
@@ -141,14 +178,6 @@ Resources:
       FunctionName: !Ref ConnectFunction
       Principal: apigateway.amazonaws.com
 
-  ConnectIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketApi
-      IntegrationUri: !GetAtt ConnectFunction.Arn
-      IntegrationType: AWS_PROXY
-      PayloadFormatVersion: "1.0"
-
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -156,12 +185,13 @@ Resources:
       RouteKey: $connect
       Target: !Sub integrations/${ConnectIntegration}
 
-  ConnectRouteResponse:
-    Type: AWS::ApiGatewayV2::RouteResponse
+  ConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketApi
-      RouteId: !Ref ConnectRoute
-      RouteResponseKey: $default
+      IntegrationUri: !GetAtt ConnectFunction.Arn
+      IntegrationType: AWS_PROXY
+      PayloadFormatVersion: "1.0"
 
   # DISCONNECT
   DisconnectFunction:
@@ -200,14 +230,6 @@ Resources:
       FunctionName: !Ref DisconnectFunction
       Principal: apigateway.amazonaws.com
 
-  DisconnectIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketApi
-      IntegrationUri: !GetAtt DisconnectFunction.Arn
-      IntegrationType: AWS_PROXY
-      PayloadFormatVersion: "1.0"
-
   DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -215,12 +237,13 @@ Resources:
       RouteKey: $disconnect
       Target: !Sub integrations/${DisconnectIntegration}
 
-  DisconnectRouteResponse:
-    Type: AWS::ApiGatewayV2::RouteResponse
+  DisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocketApi
-      RouteId: !Ref DisconnectRoute
-      RouteResponseKey: $default
+      IntegrationUri: !GetAtt DisconnectFunction.Arn
+      IntegrationType: AWS_PROXY
+      PayloadFormatVersion: "1.0"
 
   # GAME
   GameFunction:
@@ -258,6 +281,14 @@ Resources:
       FunctionName: !Ref GameFunction
       Principal: apigateway.amazonaws.com
 
+  GameRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: game
+      RouteResponseSelectionExpression: $default
+      Target: !Sub integrations/${GameIntegration}
+
   GameIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
@@ -265,13 +296,6 @@ Resources:
       IntegrationUri: !GetAtt GameFunction.Arn
       IntegrationType: AWS_PROXY
       PayloadFormatVersion: "1.0"
-
-  GameRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketApi
-      RouteKey: game
-      Target: !Sub integrations/${GameIntegration}
 
   GameRouteResponse:
     Type: AWS::ApiGatewayV2::RouteResponse

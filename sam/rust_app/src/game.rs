@@ -9,7 +9,7 @@ use helpers::game::{
     can_player_make_move, check_game_state, get_game, make_move, notify_players_about_game_update,
     save_game,
 };
-use lambda_http::LambdaEvent;
+use lambda_http::{Body, LambdaEvent};
 use lambda_runtime::{run, service_fn, Error};
 use types::game::GameActionPayload;
 
@@ -61,7 +61,8 @@ async fn function_handler(
     );
 
     Ok(ApiGatewayProxyResponse {
-        status_code: 200,
+        status_code: 200, // Doesn't seem to be used by API Gateway
+        body: Some(Body::from(serde_json::to_string(&game)?)),
         ..Default::default()
     })
 }
