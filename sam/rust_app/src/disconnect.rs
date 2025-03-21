@@ -2,9 +2,8 @@ mod helpers;
 mod types;
 mod utils;
 
-use helpers::game::{get_game, save_game};
+use helpers::game::{get_game, mark_user_as_disconnected_and_update_other_player};
 use helpers::user::{get_user_game_from_connection_id, save_user_record};
-use utils::api_gateway::post_to_connection;
 
 use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
@@ -48,31 +47,17 @@ async fn function_handler(
     // Fetch the game using the user-game record's game ID from the sort key
     let mut game = get_game(dynamo_db_client, &game_table, game_id).await?;
 
-    // TODO: Refactor this out
     // Remove the respective connection ID from the game record.
     // Notify the other player about the disconnect, if they are connected.
-    match game.white_username == Some(username.clone()) {
-        true => {
-            game.white_connection_id = None;
-            save_game(dynamo_db_client, &game_table, &game).await?;
-
-            if let Some(black_connection_id) = &game.black_connection_id {
-                post_to_connection(sdk_config, &request_context, &black_connection_id, &game)
-                    .await?;
-                tracing::info!("Notified black player of disconnection for game (ID: {game_id})",);
-            }
-        }
-        false => {
-            game.black_connection_id = None;
-            save_game(dynamo_db_client, &game_table, &game).await?;
-
-            if let Some(white_connection_id) = &game.white_connection_id {
-                post_to_connection(sdk_config, &request_context, &white_connection_id, &game)
-                    .await?;
-                tracing::info!("Notified white player of disconnection for game (ID: {game_id})",);
-            }
-        }
-    }
+    mark_user_as_disconnected_and_update_other_player(
+        sdk_config,
+        &request_context,
+        dynamo_db_client,
+        &game_table,
+        &mut game,
+        username,
+    )
+    .await?;
 
     tracing::info!("PLAYER {username} DISCONNECTED FROM GAME (ID: {game_id})");
 

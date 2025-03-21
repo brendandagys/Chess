@@ -109,6 +109,46 @@ pub fn create_game(
     }
 }
 
+pub async fn mark_user_as_disconnected_and_update_other_player(
+    sdk_config: &aws_config::SdkConfig,
+    request_context: &ApiGatewayWebsocketProxyRequestContext,
+    dynamo_db_client: &Client,
+    game_table: &str,
+    game: &mut GameRecord,
+    username: &str,
+) -> Result<(), Error> {
+    match game.white_username == Some(username.to_string()) {
+        true => {
+            game.white_connection_id = Some("<disconnected>".to_string());
+            save_game(dynamo_db_client, &game_table, &game).await?;
+
+            if let Some(black_connection_id) = &game.black_connection_id {
+                post_to_connection(sdk_config, &request_context, &black_connection_id, &game)
+                    .await?;
+                tracing::info!(
+                    "Notified black player of disconnection for game (ID: {})",
+                    game.game_id
+                );
+            }
+        }
+        false => {
+            game.black_connection_id = Some("<disconnected>".to_string());
+            save_game(dynamo_db_client, &game_table, &game).await?;
+
+            if let Some(white_connection_id) = &game.white_connection_id {
+                post_to_connection(sdk_config, &request_context, &white_connection_id, &game)
+                    .await?;
+                tracing::info!(
+                    "Notified white player of disconnection for game (ID: {})",
+                    game.game_id
+                );
+            }
+        }
+    }
+
+    Ok(())
+}
+
 pub async fn notify_players_about_game_update(
     sdk_config: &aws_config::SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
