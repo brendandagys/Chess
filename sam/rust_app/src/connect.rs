@@ -3,7 +3,7 @@ mod types;
 mod utils;
 
 use helpers::game::{
-    assign_player_to_remaining_slot, create_game, get_game, notify_players_about_game_update,
+    assign_player_to_remaining_slot, create_game, get_game, notify_other_player_about_game_update,
     save_game,
 };
 use helpers::user::{create_user_game, get_user_game, save_user_record};
@@ -109,7 +109,7 @@ async fn function_handler(
         }
     };
 
-    notify_players_about_game_update(sdk_config, &request_context, connection_id, &game, false)
+    notify_other_player_about_game_update(sdk_config, &request_context, connection_id, &game)
         .await?;
 
     tracing::info!("PLAYER {username} CONNECTED TO GAME (ID: {})", game.game_id);

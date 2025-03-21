@@ -155,24 +155,13 @@ pub async fn mark_user_as_disconnected_and_update_other_player(
     Ok(())
 }
 
-pub async fn notify_players_about_game_update(
+/// Notify other player, if they are connected
+pub async fn notify_other_player_about_game_update(
     sdk_config: &aws_config::SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     current_user_connection_id: &str,
     game: &GameRecord,
-    notify_current_user: bool, // We can't post to a connection ID during $connect
 ) -> Result<(), Error> {
-    if notify_current_user {
-        post_to_connection(
-            sdk_config,
-            request_context,
-            current_user_connection_id,
-            &game,
-        )
-        .await?;
-    }
-
-    // Notify opponent if they are connected
     if let Some(white_connection_id) = &game.white_connection_id {
         if white_connection_id != current_user_connection_id {
             if let Some(_) =

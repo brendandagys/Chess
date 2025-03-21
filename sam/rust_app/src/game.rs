@@ -6,8 +6,8 @@ use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequest};
 use aws_sdk_dynamodb::Client;
 use helpers::game::{
-    can_player_make_move, check_game_state, get_game, make_move, notify_players_about_game_update,
-    save_game,
+    can_player_make_move, check_game_state, get_game, make_move,
+    notify_other_player_about_game_update, save_game,
 };
 use lambda_http::{Body, LambdaEvent};
 use lambda_runtime::{run, service_fn, Error};
@@ -53,7 +53,7 @@ async fn function_handler(
     check_game_state(&game)?;
     make_move(&mut game, &username, &player_move)?;
     save_game(&dynamo_db_client, &game_table, &game).await?;
-    notify_players_about_game_update(&sdk_config, &request_context, connection_id, &game, true)
+    notify_other_player_about_game_update(&sdk_config, &request_context, connection_id, &game)
         .await?;
 
     tracing::info!(
