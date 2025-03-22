@@ -3,7 +3,7 @@ mod types;
 mod utils;
 
 use helpers::game::{get_game, mark_user_as_disconnected_and_update_other_player};
-use helpers::user::{get_user_game_from_connection_id, save_user_record};
+use helpers::user::{get_user_games_from_connection_id, save_user_record};
 
 use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
@@ -28,7 +28,7 @@ async fn function_handler(
         .as_ref()
         .ok_or_else(|| Error::from("Missing connection ID"))?;
 
-    let mut user_game = get_user_game_from_connection_id(
+    let mut user_games = get_user_games_from_connection_id(
         dynamo_db_client,
         &user_table,
         &user_table_gsi,
@@ -36,30 +36,39 @@ async fn function_handler(
     )
     .await?;
 
-    // Get the game ID from the user-game record sort key
-    let game_id = user_game.sort_key.trim_start_matches("GAME-");
-    let username = &user_game.username;
+    for user_game in user_games.iter_mut() {
+        // Get the game ID from the user-game record sort key (e.g., "GAME-1234")
+        let game_id = user_game.sort_key.trim_start_matches("GAME-");
 
-    // Disassociate this connection from the user's game and the game itself
-    user_game.connection_id = Some("<disconnected>".to_string());
-    save_user_record(dynamo_db_client, &user_table, &user_game).await?;
+        tracing::info!(
+            "Found user game record (game ID: {game_id}) for connection ID {connection_id}"
+        );
 
-    // Fetch the game using the user-game record's game ID from the sort key
-    let mut game = get_game(dynamo_db_client, &game_table, game_id).await?;
+        let username = &user_game.username;
 
-    // Remove the respective connection ID from the game record.
-    // Notify the other player about the disconnect, if they are connected.
-    mark_user_as_disconnected_and_update_other_player(
-        sdk_config,
-        &request_context,
-        dynamo_db_client,
-        &game_table,
-        &mut game,
-        username,
-    )
-    .await?;
+        // Disassociate this connection from the user's game and the game itself
+        user_game.connection_id = Some("<disconnected>".to_string());
+        save_user_record(dynamo_db_client, &user_table, &user_game).await?;
 
-    tracing::info!("PLAYER {username} DISCONNECTED FROM GAME (ID: {game_id})");
+        // Fetch the game using the user-game record's game ID from the sort key
+        let Some(mut game) = get_game(dynamo_db_client, &game_table, game_id).await? else {
+            tracing::warn!("Game with ID {game_id} not found for associated user-game record");
+            continue;
+        };
+
+        // Remove the respective connection ID from the game record.
+        // Notify the other player about the disconnect if they are connected.
+        mark_user_as_disconnected_and_update_other_player(
+            sdk_config,
+            &request_context,
+            dynamo_db_client,
+            &game_table,
+            &mut game,
+            username,
+        )
+        .await?;
+        tracing::info!("PLAYER {username} DISCONNECTED FROM GAME (ID: {game_id})");
+    }
 
     Ok(ApiGatewayProxyResponse {
         status_code: 200,
