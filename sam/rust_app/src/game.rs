@@ -1,29 +1,30 @@
 mod helpers;
+mod player_action_handlers;
 mod types;
 mod utils;
+
+use player_action_handlers::{
+    create_new_game::create_new_game, get_game_state::get_game_state, join_game::join_game,
+    move_piece::move_piece, offer_draw::offer_draw, resign::resign,
+};
+use types::game::{GameRequest, PlayerAction};
 
 use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequest};
 use aws_sdk_dynamodb::Client;
-use helpers::game::{
-    can_player_make_move, check_game_state, get_game, make_move,
-    notify_other_player_about_game_update, save_game,
-};
-use lambda_http::{Body, LambdaEvent};
+use lambda_http::LambdaEvent;
 use lambda_runtime::{run, service_fn, Error};
-use types::game::GameActionPayload;
 
 async fn function_handler(
     event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
     sdk_config: &aws_config::SdkConfig,
     dynamo_db_client: &Client,
 ) -> Result<ApiGatewayProxyResponse, Error> {
-    let request_context = event.payload.request_context;
-
     let game_table = std::env::var("GAME_TABLE").unwrap();
     let user_table = std::env::var("USER_TABLE").unwrap(); // TODO: Update winner after game
 
-    // Get the connection ID from the WebSocket context
+    let request_context = event.payload.request_context;
+
     let connection_id = request_context
         .connection_id
         .as_ref()
@@ -35,36 +36,63 @@ async fn function_handler(
         .as_ref()
         .ok_or_else(|| Error::from("Missing request body"))?;
 
-    let payload: GameActionPayload = serde_json::from_str(request_body).map_err(|e| {
+    let request_data: GameRequest = serde_json::from_str(request_body).map_err(|e| {
         Error::from(format!(
-            "Failed to parse request body into a valid game action payload: {e}",
+            "Failed to parse request body into a valid player action: {e}",
         ))
     })?;
 
-    let game_id = payload.game_id;
-    let username = payload.username;
-    let player_move = payload.player_move;
-
-    // Convert the player move string (from square, to square) to a new struct that represents a from and to for a chess move. Check that from square and to squares are valid notation.
-
-    let mut game = get_game(&dynamo_db_client, &game_table, &game_id).await?;
-
-    can_player_make_move(&game, &username, &connection_id)?;
-    check_game_state(&game)?;
-    make_move(&mut game, &username, &player_move)?;
-    save_game(&dynamo_db_client, &game_table, &game).await?;
-    notify_other_player_about_game_update(&sdk_config, &request_context, connection_id, &game)
-        .await?;
-
-    tracing::info!(
-        "PLAYER {username} MADE A MOVE (GAME ID: {game_id}): {player_move}. Game state: {game:?}"
-    );
-
-    Ok(ApiGatewayProxyResponse {
-        status_code: 200, // Doesn't seem to be used by API Gateway
-        body: Some(Body::from(serde_json::to_string(&game)?)),
-        ..Default::default()
-    })
+    match request_data.data {
+        PlayerAction::CreateGame {
+            username,
+            game_id,
+            color_preference,
+        } => {
+            create_new_game(
+                dynamo_db_client,
+                &game_table,
+                &user_table,
+                &connection_id,
+                &username,
+                game_id.as_deref(),
+                color_preference,
+            )
+            .await
+        }
+        PlayerAction::JoinGame { username, game_id } => {
+            join_game(
+                sdk_config,
+                &request_context,
+                dynamo_db_client,
+                &game_table,
+                &user_table,
+                &connection_id,
+                &username,
+                &game_id,
+            )
+            .await
+        }
+        PlayerAction::GetGameState { game_id } => {
+            return get_game_state(dynamo_db_client, &game_table, &game_id).await;
+        }
+        PlayerAction::MovePiece {
+            game_id,
+            player_move,
+        } => {
+            move_piece(
+                sdk_config,
+                &request_context,
+                dynamo_db_client,
+                &game_table,
+                &connection_id,
+                &game_id,
+                player_move,
+            )
+            .await
+        }
+        PlayerAction::Resign { game_id } => resign(&game_id),
+        PlayerAction::OfferDraw { game_id } => offer_draw(&game_id),
+    }
 }
 
 #[tokio::main]
