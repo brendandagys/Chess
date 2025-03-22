@@ -27,13 +27,9 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
 ] }
 
 [[bin]]
-name = "connect"
-path = "src/connect.rs"
+name = "game"
+path = "src/game.rs"
 
 [[bin]]
 name = "disconnect"
 path = "src/disconnect.rs"
-
-[[bin]]
-name = "game"
-path = "src/game.rs"

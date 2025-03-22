@@ -81,7 +81,7 @@ Resources:
     Properties:
       Name: !Ref AWS::StackName
       ProtocolType: WEBSOCKET
-      RouteSelectionExpression: $request.body.action
+      RouteSelectionExpression: $request.body.route
 
   ApiGatewayAccount:
     Type: AWS::ApiGateway::Account
@@ -91,7 +91,6 @@ Resources:
   WebSocketDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
-      - ConnectRoute
       - DisconnectRoute
       - GameRoute
     Properties:
@@ -104,57 +103,6 @@ Resources:
       DeploymentId: !Ref WebSocketDeployment
       ApiId: !Ref WebSocketApi
       AutoDeploy: true
-
-  # CONNECT
-  ConnectFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: rust-cargolambda
-      BuildProperties:
-        Binary: connect
-    Properties:
-      CodeUri: ./rust_app
-      Handler: bootstrap
-      Runtime: provided.al2023
-      Architectures:
-        - arm64
-      Environment:
-        Variables:
-          GAME_TABLE: !Ref GameTableName
-          USER_TABLE: !Ref UserTableName
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref GameTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserTableName
-        - Statement:
-            Effect: Allow
-            Action:
-              - execute-api:ManageConnections
-            Resource:
-              - !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/Prod/POST/@connections/*
-
-  ConnectFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref ConnectFunction
-      Principal: apigateway.amazonaws.com
-
-  ConnectRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketApi
-      RouteKey: $connect
-      Target: !Sub integrations/${ConnectIntegration}
-
-  ConnectIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebSocketApi
-      IntegrationUri: !GetAtt ConnectFunction.Arn
-      IntegrationType: AWS_PROXY
-      PayloadFormatVersion: "1.0"
 
   # DISCONNECT
   DisconnectFunction:
