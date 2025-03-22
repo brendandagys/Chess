@@ -9,8 +9,10 @@ use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
 use aws_sdk_dynamodb::Client;
 use lambda_http::aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequest;
+use lambda_http::http::StatusCode;
 use lambda_http::LambdaEvent;
 use lambda_runtime::{run, service_fn, Error};
+use utils::api::build_response;
 
 async fn function_handler(
     event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
@@ -23,10 +25,13 @@ async fn function_handler(
     let user_table_gsi = std::env::var("USER_TABLE_GSI").unwrap();
     let game_table = std::env::var("GAME_TABLE").unwrap();
 
-    let connection_id = request_context
-        .connection_id
-        .as_ref()
-        .ok_or_else(|| Error::from("Missing connection ID"))?;
+    let Some(connection_id) = request_context.connection_id.as_ref() else {
+        return build_response(
+            Some(StatusCode::BAD_REQUEST),
+            Some("Missing connection ID"),
+            None::<()>,
+        );
+    };
 
     let mut user_games = get_user_games_from_connection_id(
         dynamo_db_client,

@@ -240,10 +240,7 @@ pub fn can_player_make_move(game: &GameRecord, connection_id: &str) -> Result<()
     Ok(())
 }
 
-pub fn get_username_for_connection_id<'a>(
-    game: &GameRecord,
-    connection_id: &str,
-) -> Option<String> {
+pub fn get_username_for_connection_id(game: &GameRecord, connection_id: &str) -> Option<String> {
     if let Some(white_connection_id) = &game.white_connection_id {
         if white_connection_id == connection_id {
             return game.white_username.clone();

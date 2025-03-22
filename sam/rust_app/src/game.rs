@@ -12,8 +12,9 @@ use types::game::{GameRequest, PlayerAction};
 use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequest};
 use aws_sdk_dynamodb::Client;
-use lambda_http::LambdaEvent;
+use lambda_http::{http::StatusCode, LambdaEvent};
 use lambda_runtime::{run, service_fn, Error};
+use utils::api::build_response;
 
 async fn function_handler(
     event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,
@@ -25,22 +26,34 @@ async fn function_handler(
 
     let request_context = event.payload.request_context;
 
-    let connection_id = request_context
-        .connection_id
-        .as_ref()
-        .ok_or_else(|| Error::from("Missing connection ID"))?;
+    let Some(connection_id) = request_context.connection_id.as_ref() else {
+        return build_response(
+            Some(StatusCode::BAD_REQUEST),
+            Some("Missing connection ID"),
+            None::<()>,
+        );
+    };
 
-    let request_body = event
-        .payload
-        .body
-        .as_ref()
-        .ok_or_else(|| Error::from("Missing request body"))?;
+    let Some(request_body) = event.payload.body.as_ref() else {
+        return build_response(
+            Some(StatusCode::BAD_REQUEST),
+            Some("Missing request body"),
+            None::<()>,
+        );
+    };
 
-    let request_data: GameRequest = serde_json::from_str(request_body).map_err(|e| {
-        Error::from(format!(
-            "Failed to parse request body into a valid player action: {e}",
-        ))
-    })?;
+    let request_data = match serde_json::from_str::<GameRequest>(request_body) {
+        Ok(data) => data,
+        Err(e) => {
+            return build_response(
+                Some(StatusCode::BAD_REQUEST),
+                Some(&format!(
+                    "Failed to parse request body into a valid player action: {e}"
+                )),
+                None::<()>,
+            );
+        }
+    };
 
     match request_data.data {
         PlayerAction::CreateGame {

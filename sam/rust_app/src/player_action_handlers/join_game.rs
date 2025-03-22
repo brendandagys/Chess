@@ -3,9 +3,11 @@ use crate::helpers::game::{
 };
 
 use crate::helpers::user::{create_user_game, get_user_game, save_user_record};
+use crate::utils::api::build_response;
 
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
+use lambda_http::http::StatusCode;
 use lambda_http::Body;
 use lambda_runtime::Error;
 
@@ -26,7 +28,15 @@ pub async fn join_game(
                 existing_game.game_id
             );
 
-            assign_player_to_remaining_slot(&mut existing_game, username, connection_id)?;
+            if let Err(err) =
+                assign_player_to_remaining_slot(&mut existing_game, username, connection_id)
+            {
+                return build_response(
+                    Some(StatusCode::BAD_REQUEST),
+                    Some(&err.to_string()),
+                    None::<()>,
+                );
+            }
 
             tracing::info!(
                 "User ({username}) joined game (ID: {}) as {}",
@@ -44,9 +54,13 @@ pub async fn join_game(
             existing_game
         }
         None => {
-            return Err(Error::from(format!(
-                "Game with ID `{game_id}` does not exist. Please create a new game instead."
-            )))
+            return build_response(
+                Some(StatusCode::BAD_REQUEST),
+                Some(&format!(
+                    "Game with ID `{game_id}` does not exist. Please create a new game instead."
+                )),
+                None::<()>,
+            );
         }
     };
 

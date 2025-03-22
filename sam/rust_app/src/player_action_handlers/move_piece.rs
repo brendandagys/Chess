@@ -1,6 +1,6 @@
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
-use lambda_http::Body;
+use lambda_http::{http::StatusCode, Body};
 use lambda_runtime::Error;
 
 use crate::{
@@ -9,6 +9,7 @@ use crate::{
         make_move, notify_other_player_about_game_update, save_game,
     },
     types::game::PlayerMove,
+    utils::api::build_response,
 };
 
 pub async fn move_piece(
@@ -21,12 +22,19 @@ pub async fn move_piece(
     player_move: PlayerMove,
 ) -> Result<ApiGatewayProxyResponse, Error> {
     match get_game(dynamo_db_client, game_table, game_id).await? {
-        None => {
-            return Err(Error::from(format!("Game with ID {game_id} not found",)));
-        }
+        None => build_response(
+            Some(StatusCode::BAD_REQUEST),
+            Some(&format!("Game (ID: {game_id}) not found")),
+            None::<()>,
+        ),
         Some(mut game) => {
-            let username = get_username_for_connection_id(&game, connection_id)
-                .ok_or_else(|| Error::from("Player not found in game"))?;
+            let Some(username) = get_username_for_connection_id(&game, connection_id) else {
+                return build_response(
+                    Some(StatusCode::BAD_REQUEST),
+                    Some(&format!("You must be a player in the game to make a move")),
+                    None::<()>,
+                );
+            };
 
             can_player_make_move(&game, connection_id)?;
             check_game_state(&game)?;

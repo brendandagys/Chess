@@ -2,9 +2,11 @@ use crate::helpers::game::{create_game, get_game, save_game};
 
 use crate::helpers::user::{create_user_game, save_user_record};
 use crate::types::pieces::Color;
+use crate::utils::api::build_response;
 
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
 use aws_sdk_dynamodb::Client;
+use lambda_http::http::StatusCode;
 use lambda_http::Body;
 use lambda_runtime::Error;
 
@@ -20,9 +22,13 @@ pub async fn create_new_game(
     let new_game = match game_id {
         Some(game_id) => {
             if let Some(_) = get_game(&dynamo_db_client, game_table, game_id).await? {
-                return Err(Error::from(format!(
-                    "Game with ID `{game_id}` already exists. Please join the game instead."
-                )));
+                return build_response(
+                    Some(StatusCode::BAD_REQUEST),
+                    Some(&format!(
+                        "Game with ID `{game_id}` already exists. Please join the game instead."
+                    )),
+                    None::<()>,
+                );
             }
 
             create_game(Some(game_id), username, color_preference, connection_id)
