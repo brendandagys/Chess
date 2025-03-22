@@ -21,7 +21,7 @@ async fn get_user_record(
     table: &str,
     username: &str,
     sort_key: &str,
-) -> Result<UserRecord, Error> {
+) -> Result<Option<UserRecord>, Error> {
     let mut key = HashMap::new();
     key.insert("username".into(), AttributeValue::S(username.into()));
     key.insert("sk".into(), AttributeValue::S(sort_key.into()));
@@ -32,7 +32,7 @@ pub async fn get_user_info(
     client: &Client,
     table: &str,
     username: &str,
-) -> Result<UserRecord, Error> {
+) -> Result<Option<UserRecord>, Error> {
     get_user_record(client, table, username, "INFO").await
 }
 
@@ -41,7 +41,7 @@ pub async fn get_user_game(
     table: &str,
     username: &str,
     game_id: &str,
-) -> Result<UserRecord, Error> {
+) -> Result<Option<UserRecord>, Error> {
     get_user_record(client, table, username, &format!("GAME-{game_id}")).await
 }
 
@@ -77,12 +77,12 @@ pub async fn get_all_user_games(
     Ok(items)
 }
 
-pub async fn get_user_game_from_connection_id(
+pub async fn get_user_games_from_connection_id(
     client: &Client,
     table: &str,
     index: &str,
     connection_id: &str,
-) -> Result<UserRecord, Error> {
+) -> Result<Vec<UserRecord>, Error> {
     let key_condition_expression = "connection_id = :connection_id".to_string();
 
     let mut expression_attribute_values = HashMap::new();
@@ -91,7 +91,7 @@ pub async fn get_user_game_from_connection_id(
         AttributeValue::S(connection_id.to_string()),
     );
 
-    let items = query_items(
+    Ok(query_items(
         client,
         table,
         Some(key_condition_expression),
@@ -99,16 +99,7 @@ pub async fn get_user_game_from_connection_id(
         Some(expression_attribute_values),
         Some(index.to_string()),
     )
-    .await?;
-
-    items
-        .into_iter()
-        .next() // A connection should only have up to 1 game
-        .ok_or_else(|| {
-            Error::from(format!(
-                "No user game found for the given connection ID: {connection_id}"
-            ))
-        })
+    .await?)
 }
 
 pub fn create_user_game(game_id: &str, username: &str, connection_id: &str) -> UserRecord {

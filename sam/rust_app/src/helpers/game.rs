@@ -1,5 +1,5 @@
 use crate::types::dynamo_db::GameRecord;
-use crate::types::game::GameState;
+use crate::types::game::{GameState, PlayerMove};
 use crate::types::pieces::Color;
 use crate::utils::api_gateway::post_to_connection;
 use crate::utils::dynamo_db::{get_item, put_item};
@@ -16,7 +16,11 @@ pub async fn save_game(client: &Client, table: &str, game: &GameRecord) -> Resul
     put_item(client, table, game).await
 }
 
-pub async fn get_game(client: &Client, table: &str, game_id: &str) -> Result<GameRecord, Error> {
+pub async fn get_game(
+    client: &Client,
+    table: &str,
+    game_id: &str,
+) -> Result<Option<GameRecord>, Error> {
     let mut key = HashMap::new();
     key.insert("game_id".into(), AttributeValue::S(game_id.into()));
     Ok(get_item(client, table, key).await?)
@@ -66,6 +70,24 @@ pub fn assign_player_to_remaining_slot(
             if black_username != username && white_username != username {
                 return Err(Error::from("Game is full"));
             }
+        }
+    }
+
+    if let Some(white_connection_id) = &game.white_connection_id {
+        if white_connection_id == connection_id {
+            return Err(Error::from(format!(
+                "User ({username}) has already joined game (ID: {}) as white",
+                game.game_id
+            )));
+        }
+    }
+
+    if let Some(black_connection_id) = &game.black_connection_id {
+        if black_connection_id == connection_id {
+            return Err(Error::from(format!(
+                "User ({username}) has already joined game (ID: {}) as black",
+                game.game_id
+            )));
         }
     }
 
@@ -123,14 +145,20 @@ pub async fn mark_user_as_disconnected_and_update_other_player(
             save_game(dynamo_db_client, &game_table, &game).await?;
 
             if let Some(black_connection_id) = &game.black_connection_id {
-                if let Some(_) =
-                    post_to_connection(sdk_config, &request_context, &black_connection_id, &game)
-                        .await?
-                {
-                    tracing::info!(
-                        "Notified black player of disconnection for game (ID: {})",
-                        game.game_id
-                    );
+                if black_connection_id != "<disconnected>" {
+                    if let Some(_) = post_to_connection(
+                        sdk_config,
+                        &request_context,
+                        &black_connection_id,
+                        &game,
+                    )
+                    .await?
+                    {
+                        tracing::info!(
+                            "Notified black player of disconnection for game (ID: {})",
+                            game.game_id
+                        );
+                    }
                 }
             }
         }
@@ -139,14 +167,20 @@ pub async fn mark_user_as_disconnected_and_update_other_player(
             save_game(dynamo_db_client, &game_table, &game).await?;
 
             if let Some(white_connection_id) = &game.white_connection_id {
-                if let Some(_) =
-                    post_to_connection(sdk_config, &request_context, &white_connection_id, &game)
-                        .await?
-                {
-                    tracing::info!(
-                        "Notified white player of disconnection for game (ID: {})",
-                        game.game_id
-                    );
+                if white_connection_id != "<disconnected>" {
+                    if let Some(_) = post_to_connection(
+                        sdk_config,
+                        &request_context,
+                        &white_connection_id,
+                        &game,
+                    )
+                    .await?
+                    {
+                        tracing::info!(
+                            "Notified white player of disconnection for game (ID: {})",
+                            game.game_id
+                        );
+                    }
                 }
             }
         }
@@ -163,7 +197,9 @@ pub async fn notify_other_player_about_game_update(
     game: &GameRecord,
 ) -> Result<(), Error> {
     if let Some(white_connection_id) = &game.white_connection_id {
-        if white_connection_id != current_user_connection_id {
+        if white_connection_id != current_user_connection_id
+            && white_connection_id != "<disconnected>"
+        {
             if let Some(_) =
                 post_to_connection(sdk_config, request_context, white_connection_id, &game).await?
             {
@@ -173,7 +209,9 @@ pub async fn notify_other_player_about_game_update(
     }
 
     if let Some(black_connection_id) = &game.black_connection_id {
-        if black_connection_id != current_user_connection_id {
+        if black_connection_id != current_user_connection_id
+            && black_connection_id != "<disconnected>"
+        {
             if let Some(_) =
                 post_to_connection(sdk_config, request_context, black_connection_id, &game).await?
             {
@@ -185,28 +223,40 @@ pub async fn notify_other_player_about_game_update(
     Ok(())
 }
 
-pub fn can_player_make_move(
-    game: &GameRecord,
-    username: &str,
-    connection_id: &str,
-) -> Result<(), &'static str> {
-    if !is_player_of_game(game, username) {
+pub fn can_player_make_move(game: &GameRecord, connection_id: &str) -> Result<(), &'static str> {
+    if let None = get_username_for_connection_id(game, connection_id) {
+        // Some(username) => Ok(()),
         return Err("User is not part of this game");
-    }
+    };
 
     // if game.white_connection_id.is_none() || game.black_connection_id.is_none() {
     //     return Err("Both players must be connected to make a move");
     // }
 
-    if !is_turn(game, username) {
+    if !is_turn(game, connection_id) {
         return Err("Not user's turn");
     }
+
     Ok(())
 }
 
-fn is_player_of_game(game: &GameRecord, _username: &str) -> bool {
-    // Check if user is in game
-    true
+pub fn get_username_for_connection_id<'a>(
+    game: &GameRecord,
+    connection_id: &str,
+) -> Option<String> {
+    if let Some(white_connection_id) = &game.white_connection_id {
+        if white_connection_id == connection_id {
+            return game.white_username.clone();
+        }
+    }
+
+    if let Some(black_connection_id) = &game.black_connection_id {
+        if black_connection_id == connection_id {
+            return game.black_username.clone();
+        }
+    }
+
+    None
 }
 
 fn is_turn(game: &GameRecord, _username: &str) -> bool {
@@ -221,42 +271,44 @@ pub fn check_game_state(game: &GameRecord) -> Result<(), &'static str> {
 
 pub fn make_move(
     game: &mut GameRecord,
-    username: &str,
-    player_move: &str,
+    connection_id: &str,
+    player_move: &PlayerMove,
 ) -> Result<(), &'static str> {
-    if !is_valid_game_move(game, username, player_move) {
+    if !is_valid_game_move(game, connection_id, player_move) {
         return Err("Invalid move");
     }
     does_move_deliver_check(game);
     does_move_deliver_checkmate(game);
+
     // Save and broadcast updated state
+
     Ok(())
 }
 
-fn is_valid_game_move(game: &GameRecord, _username: &str, _player_move: &str) -> bool {
-    if !is_own_piece_at_origin(game, _player_move) {
+fn is_valid_game_move(game: &GameRecord, connection_id: &str, player_move: &PlayerMove) -> bool {
+    if !is_own_piece_at_origin(game, player_move) {
         return false;
     }
-    if !is_move_in_bounds(game, _player_move) {
+    if !is_move_in_bounds(game, player_move) {
         return false;
     }
-    if does_move_create_self_check(game, _player_move) {
+    if does_move_create_self_check(game, player_move) {
         return false;
     }
     true
 }
 
-fn is_own_piece_at_origin(game: &GameRecord, _player_move: &str) -> bool {
+fn is_own_piece_at_origin(game: &GameRecord, player_move: &PlayerMove) -> bool {
     // Verify piece belongs to the player
     true
 }
 
-fn is_move_in_bounds(game: &GameRecord, _player_move: &str) -> bool {
+fn is_move_in_bounds(game: &GameRecord, player_move: &PlayerMove) -> bool {
     // Confirm move is valid on the board
     true
 }
 
-fn does_move_create_self_check(game: &GameRecord, _player_move: &str) -> bool {
+fn does_move_create_self_check(game: &GameRecord, player_move: &PlayerMove) -> bool {
     // Check if the move would cause player's own king to be in check
     false
 }
