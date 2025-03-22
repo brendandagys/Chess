@@ -4,6 +4,7 @@ use crate::types::pieces::{Color, Piece, PieceType};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum GameEnding {
     Checkmate(Color),
     Resignation(Color),
@@ -16,6 +17,7 @@ pub enum GameEnding {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum State {
     NotStarted,
     InProgress,
@@ -23,6 +25,7 @@ pub enum State {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GameState {
     pub game_id: String,
     pub state: State,
@@ -129,9 +132,38 @@ impl GameState {
     }
 }
 
-#[derive(serde::Deserialize)]
-pub struct GameActionPayload {
-    pub game_id: String,
-    pub username: String,
-    pub player_move: String,
+#[derive(Debug, Deserialize)]
+pub struct PlayerMove {
+    from: Position,
+    to: Position,
+}
+
+#[derive(Deserialize)]
+#[serde(tag = "action", rename_all = "kebab-case")]
+pub enum PlayerAction {
+    #[serde(rename_all = "camelCase")]
+    CreateGame {
+        username: String,
+        game_id: Option<String>,
+        color_preference: Option<Color>,
+    },
+    #[serde(rename_all = "camelCase")]
+    JoinGame { username: String, game_id: String },
+    #[serde(rename_all = "camelCase")]
+    GetGameState { game_id: String },
+    #[serde(rename_all = "camelCase")]
+    MovePiece {
+        game_id: String,
+        player_move: PlayerMove,
+    },
+    #[serde(rename_all = "camelCase")]
+    Resign { game_id: String },
+    #[serde(rename_all = "camelCase")]
+    OfferDraw { game_id: String },
+}
+
+#[derive(Deserialize)]
+pub struct GameRequest {
+    pub route: String,
+    pub data: PlayerAction,
 }

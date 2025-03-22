@@ -1,9 +1,19 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum Color {
     White,
     Black,
+}
+
+impl std::fmt::Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Color::White => write!(f, "white"),
+            Color::Black => write!(f, "black"),
+        }
+    }
 }
 
 impl std::str::FromStr for Color {
@@ -19,6 +29,7 @@ impl std::str::FromStr for Color {
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum PieceType {
     Pawn,
     Knight,
@@ -29,6 +40,7 @@ pub enum PieceType {
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Piece {
     pub piece_type: PieceType,
     pub color: Color,
