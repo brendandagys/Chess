@@ -8,22 +8,21 @@ pub async fn get_item<'a, T: Deserialize<'a> + Serialize>(
     client: &Client,
     table_name: &str,
     key: HashMap<String, AttributeValue>,
-) -> Result<T, Error> {
-    let request = client
+) -> Result<Option<T>, Error> {
+    let response = client
         .get_item()
         .table_name(table_name.to_string())
-        .set_key(Some(key.clone()));
+        .set_key(Some(key.clone()))
+        .send()
+        .await?;
 
-    let response = request.send().await?;
-
-    let item = response.item.ok_or_else(|| {
-        Error::from(format!(
-            "Record not found for table `{table_name}` during GetItem: {key:?}",
-        ))
-    })?;
-    let typed_entity: T = from_item(item)?;
-
-    Ok(typed_entity)
+    match response.item {
+        Some(item) => {
+            let typed_entity: T = from_item(item)?;
+            Ok(Some(typed_entity))
+        }
+        None => Ok(None),
+    }
 }
 
 pub async fn query_items<'a, T: Deserialize<'a> + Serialize>(
