@@ -1,5 +1,5 @@
 use crate::types::dynamo_db::GameRecord;
-use crate::types::game::{GameState, PlayerMove};
+use crate::types::game::{GameState, PlayerMove, State};
 use crate::types::pieces::Color;
 use crate::utils::api_gateway::post_to_connection;
 use crate::utils::dynamo_db::{get_item, put_item};
@@ -239,6 +239,10 @@ fn is_turn(game: &GameRecord, color: &Color) -> bool {
 }
 
 pub fn can_player_make_move(game: &GameRecord, color: &Color) -> Result<(), &'static str> {
+    if is_game_over(game) {
+        return Err("Game is finished");
+    }
+
     if !are_both_players_present(game) {
         return Err("Both players must be connected to make a move");
     }
@@ -286,9 +290,11 @@ pub fn get_player_details_from_connection_id(
     None
 }
 
-pub fn check_game_state(game: &GameRecord) -> Result<(), &'static str> {
-    // Ensure game is still active
-    Ok(())
+pub fn is_game_over(game: &GameRecord) -> bool {
+    match game.game_state.state {
+        State::Finished(_) => true,
+        _ => false,
+    }
 }
 
 pub fn make_move(
