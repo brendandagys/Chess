@@ -226,42 +226,64 @@ pub async fn notify_other_player_about_game_update(
     Ok(())
 }
 
-pub fn can_player_make_move(game: &GameRecord, connection_id: &str) -> Result<(), &'static str> {
-    if let None = get_username_for_connection_id(game, connection_id) {
-        // Some(username) => Ok(()),
-        return Err("User is not part of this game");
-    };
+fn are_both_players_present(game: &GameRecord) -> bool {
+    match (&game.white_connection_id, &game.black_connection_id) {
+        (Some(white), Some(black)) => white != "<disconnected>" && black != "<disconnected>",
+        _ => false,
+    }
+}
 
-    // if game.white_connection_id.is_none() || game.black_connection_id.is_none() {
-    //     return Err("Both players must be connected to make a move");
-    // }
+/// Confirm it is this player's turn
+fn is_turn(game: &GameRecord, color: &Color) -> bool {
+    color == &game.game_state.current_turn
+}
 
-    if !is_turn(game, connection_id) {
-        return Err("Not user's turn");
+pub fn can_player_make_move(game: &GameRecord, color: &Color) -> Result<(), &'static str> {
+    if !are_both_players_present(game) {
+        return Err("Both players must be connected to make a move");
+    }
+
+    if !is_turn(game, color) {
+        return Err("It is not your turn");
     }
 
     Ok(())
 }
 
-pub fn get_username_for_connection_id(game: &GameRecord, connection_id: &str) -> Option<String> {
+pub struct PlayerDetails {
+    pub color: Color,
+    pub username: String,
+}
+
+pub fn get_player_details_from_connection_id(
+    game: &GameRecord,
+    connection_id: &str,
+) -> Option<PlayerDetails> {
     if let Some(white_connection_id) = &game.white_connection_id {
         if white_connection_id == connection_id {
-            return game.white_username.clone();
+            return Some(PlayerDetails {
+                color: Color::White,
+                username: game
+                    .white_username
+                    .clone()
+                    .expect("White player must have a username"),
+            });
         }
     }
 
     if let Some(black_connection_id) = &game.black_connection_id {
         if black_connection_id == connection_id {
-            return game.black_username.clone();
+            return Some(PlayerDetails {
+                color: Color::Black,
+                username: game
+                    .black_username
+                    .clone()
+                    .expect("Black player must have a username"),
+            });
         }
     }
 
     None
-}
-
-fn is_turn(game: &GameRecord, _username: &str) -> bool {
-    // Confirm it's this player's turn
-    true
 }
 
 pub fn check_game_state(game: &GameRecord) -> Result<(), &'static str> {
