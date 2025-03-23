@@ -68,7 +68,10 @@ pub fn assign_player_to_remaining_slot(
     if let Some(white_username) = &game.white_username {
         if let Some(black_username) = &game.black_username {
             if black_username != username && white_username != username {
-                return Err(Error::from("Game is full"));
+                return Err(Error::from(format!(
+                    "Game (ID: `{}`) is full",
+                    game.game_id
+                )));
             }
         }
     }
@@ -76,7 +79,7 @@ pub fn assign_player_to_remaining_slot(
     if let Some(white_connection_id) = &game.white_connection_id {
         if white_connection_id == connection_id {
             return Err(Error::from(format!(
-                "User ({username}) has already joined game (ID: {}) as white",
+                "You have already joined this game (ID: {}) as white",
                 game.game_id
             )));
         }
@@ -85,7 +88,7 @@ pub fn assign_player_to_remaining_slot(
     if let Some(black_connection_id) = &game.black_connection_id {
         if black_connection_id == connection_id {
             return Err(Error::from(format!(
-                "User ({username}) has already joined game (ID: {}) as black",
+                "You have already joined this game (ID: {}) as black",
                 game.game_id
             )));
         }
