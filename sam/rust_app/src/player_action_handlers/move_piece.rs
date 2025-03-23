@@ -5,8 +5,8 @@ use lambda_runtime::Error;
 
 use chess::{
     helpers::game::{
-        can_player_make_move, check_game_state, get_game, get_player_details_from_connection_id,
-        make_move, notify_other_player_about_game_update, save_game, PlayerDetails,
+        can_player_make_move, get_game, get_player_details_from_connection_id, make_move,
+        notify_other_player_about_game_update, save_game, PlayerDetails,
     },
     types::game::PlayerMove,
     utils::api::build_response,
@@ -42,8 +42,10 @@ pub async fn move_piece(
                 return build_response(Some(StatusCode::BAD_REQUEST), Some(e), None::<()>);
             }
 
-            check_game_state(&game)?;
-            make_move(&mut game, connection_id, &player_move)?;
+            if let Err(e) = make_move(&mut game, connection_id, &player_move) {
+                return build_response(Some(StatusCode::BAD_REQUEST), Some(e), None::<()>);
+            }
+
             save_game(&dynamo_db_client, game_table, &game).await?;
 
             notify_other_player_about_game_update(
