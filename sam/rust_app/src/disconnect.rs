@@ -1,10 +1,3 @@
-mod helpers;
-mod types;
-mod utils;
-
-use helpers::game::{get_game, mark_user_as_disconnected_and_update_other_player};
-use helpers::user::{get_user_games_from_connection_id, save_user_record};
-
 use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
 use aws_sdk_dynamodb::Client;
@@ -12,7 +5,10 @@ use lambda_http::aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequest;
 use lambda_http::http::StatusCode;
 use lambda_http::LambdaEvent;
 use lambda_runtime::{run, service_fn, Error};
-use utils::api::build_response;
+
+use chess::helpers::game::{get_game, mark_user_as_disconnected_and_update_other_player};
+use chess::helpers::user::{get_user_games_from_connection_id, save_user_record};
+use chess::utils::api::build_response;
 
 async fn function_handler(
     event: LambdaEvent<ApiGatewayWebsocketProxyRequest>,

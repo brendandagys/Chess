@@ -3,7 +3,7 @@ use aws_sdk_dynamodb::Client;
 use lambda_http::{http::StatusCode, Body};
 use lambda_runtime::Error;
 
-use crate::{
+use chess::{
     helpers::game::{
         can_player_make_move, check_game_state, get_game, get_username_for_connection_id,
         make_move, notify_other_player_about_game_update, save_game,

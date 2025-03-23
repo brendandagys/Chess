@@ -1,14 +1,13 @@
-use crate::helpers::game::{create_game, get_game, save_game};
-
-use crate::helpers::user::{create_user_game, save_user_record};
-use crate::types::pieces::Color;
-use crate::utils::api::build_response;
-
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
 use aws_sdk_dynamodb::Client;
 use lambda_http::http::StatusCode;
 use lambda_http::Body;
 use lambda_runtime::Error;
+
+use chess::helpers::game::{create_game, get_game, save_game};
+use chess::helpers::user::{create_user_game, save_user_record};
+use chess::types::pieces::Color;
+use chess::utils::api::build_response;
 
 pub async fn create_new_game(
     dynamo_db_client: &Client,

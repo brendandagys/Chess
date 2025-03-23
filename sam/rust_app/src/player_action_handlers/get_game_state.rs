@@ -3,7 +3,7 @@ use aws_sdk_dynamodb::Client;
 use lambda_http::{http::StatusCode, Body};
 use lambda_runtime::Error;
 
-use crate::{helpers::game::get_game, utils::api::build_response};
+use chess::{helpers::game::get_game, utils::api::build_response};
 
 pub async fn get_game_state(
     dynamo_db_client: &Client,

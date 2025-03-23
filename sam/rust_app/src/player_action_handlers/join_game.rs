@@ -1,15 +1,14 @@
-use crate::helpers::game::{
-    assign_player_to_remaining_slot, get_game, notify_other_player_about_game_update, save_game,
-};
-
-use crate::helpers::user::{create_user_game, get_user_game, save_user_record};
-use crate::utils::api::build_response;
-
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
 use lambda_http::http::StatusCode;
 use lambda_http::Body;
 use lambda_runtime::Error;
+
+use chess::helpers::game::{
+    assign_player_to_remaining_slot, get_game, notify_other_player_about_game_update, save_game,
+};
+use chess::helpers::user::{create_user_game, get_user_game, save_user_record};
+use chess::utils::api::build_response;
 
 pub async fn join_game(
     sdk_config: &aws_config::SdkConfig,
