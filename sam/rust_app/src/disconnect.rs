@@ -6,7 +6,7 @@ use lambda_http::http::StatusCode;
 use lambda_http::LambdaEvent;
 use lambda_runtime::{run, service_fn, Error};
 
-use chess::helpers::game::{get_game, mark_user_as_disconnected_and_update_other_player};
+use chess::helpers::game::{get_game, mark_user_as_disconnected_and_notify_other_player};
 use chess::helpers::user::{get_user_games_from_connection_id, save_user_record};
 use chess::utils::api::build_response;
 
@@ -47,19 +47,19 @@ async fn function_handler(
 
         let username = &user_game.username;
 
-        // Disassociate this connection from the user's game and the game itself
+        // Disassociate this connection from the user-game record
         user_game.connection_id = Some("<disconnected>".to_string());
         save_user_record(dynamo_db_client, &user_table, &user_game).await?;
 
-        // Fetch the game using the user-game record's game ID from the sort key
+        // Fetch the game record with the user-game's game ID in the sort key
         let Some(mut game) = get_game(dynamo_db_client, &game_table, game_id).await? else {
             tracing::warn!("Game with ID {game_id} not found for associated user-game record");
             continue;
         };
 
         // Remove the respective connection ID from the game record.
-        // Notify the other player about the disconnect if they are connected.
-        mark_user_as_disconnected_and_update_other_player(
+        // Notify the other player if they are connected.
+        mark_user_as_disconnected_and_notify_other_player(
             sdk_config,
             &request_context,
             dynamo_db_client,
@@ -68,6 +68,7 @@ async fn function_handler(
             username,
         )
         .await?;
+
         tracing::info!("PLAYER {username} DISCONNECTED FROM GAME (ID: {game_id})");
     }
 
