@@ -48,7 +48,7 @@ pub async fn move_piece(
                 return build_response(Some(StatusCode::BAD_REQUEST), Some(e), None::<()>);
             }
 
-            if let Err(e) = make_move(&mut game, &player_move) {
+            if let Err(e) = make_move(&mut game.game_state, &player_move) {
                 return build_response(Some(StatusCode::BAD_REQUEST), Some(e), None::<()>);
             }
 

@@ -1,6 +1,6 @@
 use crate::types::board::{Board, BoardSetup, Position};
 use crate::types::dynamo_db::GameRecord;
-use crate::types::game::{GameState, PlayerMove, State};
+use crate::types::game::{GameEnding, GameState, PlayerMove, State};
 use crate::types::pieces::{Color, Piece};
 use crate::utils::api_gateway::post_to_connection;
 use crate::utils::dynamo_db::{get_item, put_item};
@@ -355,19 +355,44 @@ pub fn validate_move(
     Ok(())
 }
 
-fn does_move_deliver_check(game: &mut GameRecord) {
-    // Check if this move places opponent in check
+fn check_for_mates(game_state: &mut GameState) {
+    let board = &game_state.board;
+    let player_color = game_state.current_turn;
+    let opponent_color = player_color.opponent_color();
+
+    if board.is_king_in_check(&opponent_color) {
+        game_state.in_check = Some(opponent_color);
+
+        // Check for a checkmate (i.e. no moves by opponent can remove check)
+        let possible_moves_to_remove_check = board.get_all_pieces(Some(&player_color)).iter().fold(
+            Vec::new(),
+            |mut acc, (piece, position)| {
+                acc.extend(piece.possible_moves(board, position).iter().map(|move_to| {
+                    PlayerMove {
+                        from: position.clone(),
+                        to: move_to.clone(),
+                    }
+                }));
+                acc
+            },
+        );
+
+        let checkmate = possible_moves_to_remove_check.iter().all(|opponent_move| {
+            let mut hypothetical_board = board.clone();
+            hypothetical_board.apply_move(opponent_move);
+            hypothetical_board.is_king_in_check(&opponent_color)
+        });
+
+        if checkmate {
+            game_state.state = State::Finished(GameEnding::Checkmate(opponent_color));
+        }
+    }
 }
 
-fn does_move_deliver_checkmate(game: &mut GameRecord) {
-    // Check if this move checkmates opponent
-}
+pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result<(), &'static str> {
+    game_state.board.apply_move(player_move);
 
-pub fn make_move(game: &mut GameRecord, player_move: &PlayerMove) -> Result<(), &'static str> {
-    game.game_state.board.apply_move(player_move);
-
-    does_move_deliver_check(game);
-    does_move_deliver_checkmate(game);
+    check_for_mates(game_state);
 
     Ok(())
 }

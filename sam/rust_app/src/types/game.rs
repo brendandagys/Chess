@@ -31,6 +31,7 @@ pub struct GameState {
     pub game_id: String,
     pub state: State,
     pub current_turn: Color,
+    pub in_check: Option<Color>,
     pub board: Board,
     pub move_history: Vec<(Position, Position)>,
 }
@@ -43,6 +44,7 @@ impl GameState {
             game_id,
             state: State::NotStarted,
             current_turn: Color::White,
+            in_check: None,
             board,
             move_history: Vec::new(),
         }

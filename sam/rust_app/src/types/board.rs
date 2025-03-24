@@ -6,7 +6,7 @@ use super::{
     pieces::{Color, PieceType},
 };
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub struct Rank(pub usize);
 
@@ -17,7 +17,7 @@ impl Rank {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub struct File(pub usize);
 
@@ -28,7 +28,7 @@ impl File {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Position {
     pub rank: Rank,
     pub file: File,
@@ -313,6 +313,7 @@ impl Board {
         opponent_attacking_squares.contains(king_position)
     }
 
+    /// This function assumes the move has been validated
     pub fn apply_move(&mut self, player_move: &PlayerMove) {
         self.set_piece_at_position(
             &player_move.to,
