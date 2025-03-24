@@ -157,6 +157,7 @@ impl BoardSetup {
 
                 Board { squares }
             }
+            // TODO
             Self::Random(dimensions) => Board {
                 squares: vec![vec![None; dimensions.files]; dimensions.ranks],
             },
