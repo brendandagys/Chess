@@ -1,5 +1,6 @@
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
 use aws_sdk_dynamodb::Client;
+use chess::types::board::BoardSetup;
 use lambda_http::http::StatusCode;
 use lambda_http::Body;
 use lambda_runtime::Error;
@@ -16,6 +17,7 @@ pub async fn create_new_game(
     connection_id: &str,
     username: &str,
     game_id: Option<&str>,
+    board_setup: Option<BoardSetup>,
     color_preference: Option<Color>,
 ) -> Result<ApiGatewayProxyResponse, Error> {
     let new_game = match game_id {
@@ -30,9 +32,15 @@ pub async fn create_new_game(
                 );
             }
 
-            create_game(Some(game_id), username, color_preference, connection_id)
+            create_game(
+                Some(game_id),
+                username,
+                board_setup,
+                color_preference,
+                connection_id,
+            )
         }
-        None => create_game(None, username, color_preference, connection_id),
+        None => create_game(None, username, board_setup, color_preference, connection_id),
     };
 
     save_game(&dynamo_db_client, game_table, &new_game).await?;

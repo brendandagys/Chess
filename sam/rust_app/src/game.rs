@@ -56,6 +56,7 @@ async fn function_handler(
         PlayerAction::CreateGame {
             username,
             game_id,
+            board_setup,
             color_preference,
         } => {
             create_new_game(
@@ -65,6 +66,7 @@ async fn function_handler(
                 &connection_id,
                 &username,
                 game_id.as_deref(),
+                board_setup,
                 color_preference,
             )
             .await

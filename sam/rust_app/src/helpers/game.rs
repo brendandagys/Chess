@@ -1,6 +1,7 @@
+use crate::types::board::{Board, BoardSetup, Position};
 use crate::types::dynamo_db::GameRecord;
 use crate::types::game::{GameState, PlayerMove, State};
-use crate::types::pieces::Color;
+use crate::types::pieces::{Color, Piece};
 use crate::utils::api_gateway::post_to_connection;
 use crate::utils::dynamo_db::{get_item, put_item};
 
@@ -114,11 +115,16 @@ pub fn assign_player_to_remaining_slot(
 pub fn create_game(
     game_id: Option<&str>,
     username: &str,
+    board_setup: Option<BoardSetup>,
     color_preference: Option<Color>,
     connection_id: &str,
 ) -> GameRecord {
     let game_id = game_id.map_or_else(generate_id, |id| id.to_string());
-    let game_state = GameState::new(game_id.clone());
+
+    let game_state = GameState::new(
+        game_id.clone(),
+        &board_setup.unwrap_or(BoardSetup::Standard),
+    );
 
     let (white_connection_id, white_username, black_connection_id, black_username) =
         determine_player_color(color_preference, username, connection_id);
@@ -134,7 +140,7 @@ pub fn create_game(
     }
 }
 
-pub async fn mark_user_as_disconnected_and_update_other_player(
+pub async fn mark_user_as_disconnected_and_notify_other_player(
     sdk_config: &aws_config::SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     dynamo_db_client: &Client,
@@ -226,6 +232,13 @@ pub async fn notify_other_player_about_game_update(
     Ok(())
 }
 
+pub fn is_game_over(game: &GameRecord) -> bool {
+    match game.game_state.state {
+        State::Finished(_) => true,
+        _ => false,
+    }
+}
+
 fn are_both_players_present(game: &GameRecord) -> bool {
     match (&game.white_connection_id, &game.black_connection_id) {
         (Some(white), Some(black)) => white != "<disconnected>" && black != "<disconnected>",
@@ -234,20 +247,20 @@ fn are_both_players_present(game: &GameRecord) -> bool {
 }
 
 /// Confirm it is this player's turn
-fn is_turn(game: &GameRecord, color: &Color) -> bool {
-    color == &game.game_state.current_turn
+fn is_turn(game: &GameRecord, player_color: &Color) -> bool {
+    *player_color == game.game_state.current_turn
 }
 
-pub fn can_player_make_move(game: &GameRecord, color: &Color) -> Result<(), &'static str> {
+pub fn can_player_make_a_move(game: &GameRecord, player_color: &Color) -> Result<(), &'static str> {
     if is_game_over(game) {
-        return Err("Game is finished");
+        return Err("Game is finished"); // TODO: add more detail
     }
 
     if !are_both_players_present(game) {
         return Err("Both players must be connected to make a move");
     }
 
-    if !is_turn(game, color) {
+    if !is_turn(game, player_color) {
         return Err("It is not your turn");
     }
 
@@ -290,55 +303,56 @@ pub fn get_player_details_from_connection_id(
     None
 }
 
-pub fn is_game_over(game: &GameRecord) -> bool {
-    match game.game_state.state {
-        State::Finished(_) => true,
-        _ => false,
+fn get_own_piece_from_position<'a>(
+    board: &'a Board,
+    position: &Position,
+    player_color: &Color,
+) -> Option<&'a Piece> {
+    if let Some(piece) = board.get_piece_at_position(position) {
+        if piece.color == *player_color {
+            return Some(piece);
+        }
     }
+
+    None
 }
 
-pub fn make_move(
-    game: &mut GameRecord,
-    connection_id: &str,
+fn does_move_create_self_check(
+    board: &Board,
     player_move: &PlayerMove,
-) -> Result<(), &'static str> {
-    if !is_valid_game_move(game, connection_id, player_move) {
-        return Err("Invalid move");
-    }
-    does_move_deliver_check(game);
-    does_move_deliver_checkmate(game);
+    player_color: &Color,
+) -> bool {
+    let mut hypothetical_board = board.clone();
 
-    // Save and broadcast updated state
+    hypothetical_board.apply_move(player_move);
+    hypothetical_board.is_king_in_check(player_color)
+}
+
+pub fn validate_move(
+    board: &Board,
+    player_move: &PlayerMove,
+    player_color: &Color,
+) -> Result<(), &'static str> {
+    let Some(piece) = get_own_piece_from_position(board, &player_move.from, player_color) else {
+        return Err("Move does not originate from one of your pieces");
+    };
+
+    if !board.is_valid_board_position(&player_move.to) {
+        return Err("Move destination is out of bounds");
+    }
+
+    if !piece
+        .possible_moves(board, &player_move.from)
+        .contains(&player_move.to)
+    {
+        return Err("Invalid move for this piece");
+    }
+
+    if does_move_create_self_check(board, player_move, player_color) {
+        return Err("Move would place your own king in check");
+    }
 
     Ok(())
-}
-
-fn is_valid_game_move(game: &GameRecord, connection_id: &str, player_move: &PlayerMove) -> bool {
-    if !is_own_piece_at_origin(game, player_move) {
-        return false;
-    }
-    if !is_move_in_bounds(game, player_move) {
-        return false;
-    }
-    if does_move_create_self_check(game, player_move) {
-        return false;
-    }
-    true
-}
-
-fn is_own_piece_at_origin(game: &GameRecord, player_move: &PlayerMove) -> bool {
-    // Verify piece belongs to the player
-    true
-}
-
-fn is_move_in_bounds(game: &GameRecord, player_move: &PlayerMove) -> bool {
-    // Confirm move is valid on the board
-    true
-}
-
-fn does_move_create_self_check(game: &GameRecord, player_move: &PlayerMove) -> bool {
-    // Check if the move would cause player's own king to be in check
-    false
 }
 
 fn does_move_deliver_check(game: &mut GameRecord) {
@@ -347,4 +361,13 @@ fn does_move_deliver_check(game: &mut GameRecord) {
 
 fn does_move_deliver_checkmate(game: &mut GameRecord) {
     // Check if this move checkmates opponent
+}
+
+pub fn make_move(game: &mut GameRecord, player_move: &PlayerMove) -> Result<(), &'static str> {
+    game.game_state.board.apply_move(player_move);
+
+    does_move_deliver_check(game);
+    does_move_deliver_checkmate(game);
+
+    Ok(())
 }
