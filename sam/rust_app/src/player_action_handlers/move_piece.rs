@@ -5,8 +5,8 @@ use lambda_runtime::Error;
 
 use chess::{
     helpers::game::{
-        can_player_make_move, get_game, get_player_details_from_connection_id, make_move,
-        notify_other_player_about_game_update, save_game, PlayerDetails,
+        can_player_make_a_move, get_game, get_player_details_from_connection_id, make_move,
+        notify_other_player_about_game_update, save_game, validate_move, PlayerDetails,
     },
     types::game::PlayerMove,
     utils::api::build_response,
@@ -28,23 +28,31 @@ pub async fn move_piece(
             None::<()>,
         ),
         Some(mut game) => {
-            let Some(PlayerDetails { color, username }) =
-                get_player_details_from_connection_id(&game, connection_id)
+            let Some(PlayerDetails {
+                color: player_color,
+                username,
+            }) = get_player_details_from_connection_id(&game, connection_id)
             else {
                 return build_response(
                     Some(StatusCode::BAD_REQUEST),
-                    Some(&format!("You must be a player in the game to make a move")),
+                    Some(&format!("You are not a player in this game")),
                     None::<()>,
                 );
             };
 
-            if let Err(e) = can_player_make_move(&game, &color) {
+            if let Err(e) = can_player_make_a_move(&game, &player_color) {
                 return build_response(Some(StatusCode::BAD_REQUEST), Some(e), None::<()>);
             }
 
-            if let Err(e) = make_move(&mut game, connection_id, &player_move) {
+            if let Err(e) = validate_move(&game.game_state.board, &player_move, &player_color) {
                 return build_response(Some(StatusCode::BAD_REQUEST), Some(e), None::<()>);
             }
+
+            if let Err(e) = make_move(&mut game, &player_move) {
+                return build_response(Some(StatusCode::BAD_REQUEST), Some(e), None::<()>);
+            }
+
+            // TODO: What else on the game needs an update? State? Turn?
 
             save_game(&dynamo_db_client, game_table, &game).await?;
 
