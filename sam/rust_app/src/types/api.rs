@@ -4,7 +4,7 @@ use super::game::PlayerAction;
 
 #[derive(Deserialize)]
 pub struct GameRequest {
-    pub route: String,
+    pub route: String, // API Gateway uses this to forward to the appropriate Lambda handler
     pub data: PlayerAction,
 }
 
