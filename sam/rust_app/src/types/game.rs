@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use super::board::BoardSetup;
-use crate::types::board::{Board, Position};
-use crate::types::piece::Color;
+use super::{
+    board::{Board, BoardSetup, Position},
+    piece::Color,
+};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -80,10 +81,4 @@ pub enum PlayerAction {
     Resign { game_id: String },
     #[serde(rename_all = "camelCase")]
     OfferDraw { game_id: String },
-}
-
-#[derive(Deserialize)]
-pub struct GameRequest {
-    pub route: String,
-    pub data: PlayerAction,
 }
