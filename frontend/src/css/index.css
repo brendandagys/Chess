@@ -1,0 +1,16 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+#root {
+  width: 100%;
+}
+
+:root {
+  --font: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  font-family: var(--font);
+  text-align: center;
+}
