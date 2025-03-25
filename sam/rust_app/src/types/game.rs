@@ -4,7 +4,7 @@ use super::board::BoardSetup;
 use crate::types::board::{Board, Position};
 use crate::types::pieces::Color;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum GameEnding {
     Checkmate(Color),
@@ -17,7 +17,7 @@ pub enum GameEnding {
     DrawByMutualAgreement,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum State {
     NotStarted,
@@ -33,7 +33,7 @@ pub struct GameState {
     pub current_turn: Color,
     pub in_check: Option<Color>,
     pub board: Board,
-    pub move_history: Vec<(Position, Position)>,
+    pub move_history: Vec<(Position, Position)>, // TODO: Implement
 }
 
 impl GameState {

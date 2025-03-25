@@ -385,12 +385,19 @@ fn check_for_mates(game_state: &mut GameState) {
 
         if checkmate {
             game_state.state = State::Finished(GameEnding::Checkmate(opponent_color));
+            return;
         }
     }
+
+    game_state.current_turn = player_color.opponent_color();
 }
 
 pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result<(), &'static str> {
     game_state.board.apply_move(player_move);
+
+    if game_state.state == State::NotStarted {
+        game_state.state = State::InProgress;
+    }
 
     check_for_mates(game_state);
 
