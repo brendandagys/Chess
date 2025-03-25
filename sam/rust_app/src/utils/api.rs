@@ -6,11 +6,11 @@ use crate::types::api::ApiResponse;
 
 /// Sends a response back to the client
 pub fn build_response<T: Serialize>(
-    status_code: Option<StatusCode>,
+    status_code: StatusCode,
     message: Option<&str>,
-    data: T,
+    data: Option<T>,
 ) -> Result<ApiGatewayProxyResponse, Error> {
-    let status_code = status_code.unwrap_or(StatusCode::OK).as_u16();
+    let status_code = status_code.as_u16();
 
     let body = Body::from(serde_json::to_string(&ApiResponse {
         status_code,

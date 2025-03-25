@@ -30,11 +30,7 @@ pub async fn join_game(
             if let Err(err) =
                 assign_player_to_remaining_slot(&mut existing_game, username, connection_id)
             {
-                return build_response(
-                    Some(StatusCode::BAD_REQUEST),
-                    Some(&err.to_string()),
-                    None::<()>,
-                );
+                return build_response(StatusCode::BAD_REQUEST, Some(&err.to_string()), None::<()>);
             }
 
             tracing::info!(
@@ -54,7 +50,7 @@ pub async fn join_game(
         }
         None => {
             return build_response(
-                Some(StatusCode::BAD_REQUEST),
+                StatusCode::BAD_REQUEST,
                 Some(&format!(
                     "Game with ID `{game_id}` does not exist. Please create a new game instead."
                 )),

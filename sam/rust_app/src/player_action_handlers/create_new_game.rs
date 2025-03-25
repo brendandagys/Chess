@@ -24,7 +24,7 @@ pub async fn create_new_game(
         Some(game_id) => {
             if let Some(_) = get_game(&dynamo_db_client, game_table, game_id).await? {
                 return build_response(
-                    Some(StatusCode::BAD_REQUEST),
+                    StatusCode::BAD_REQUEST,
                     Some(&format!(
                         "Game with ID `{game_id}` already exists. Please join the game instead."
                     )),

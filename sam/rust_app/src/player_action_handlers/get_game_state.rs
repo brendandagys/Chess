@@ -21,7 +21,7 @@ pub async fn get_game_state(
             })
         }
         None => build_response(
-            Some(StatusCode::BAD_REQUEST),
+            StatusCode::BAD_REQUEST,
             Some(&format!("Game with ID `{game_id}` not found")),
             None::<()>,
         ),
