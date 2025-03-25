@@ -31,7 +31,7 @@ type State =
   | StateInProgress
   | StateFinished;
 
-interface GameState {
+export interface GameState {
   gameId: string;
   state: State;
   currentTurn: Color;
@@ -45,8 +45,17 @@ export interface PlayerMove {
   to: Position;
 }
 
+export enum PlayerActionName {
+  CreateGame = 'create-game',
+  JoinGame = 'join-game',
+  GetGameState = 'get-game-state',
+  MovePiece = 'move-piece',
+  Resign = 'resign',
+  OfferDraw = 'offer-draw',
+}
+
 interface PlayerActionCreateGame {
-  'create-game': {
+  [PlayerActionName.CreateGame]: {
     username: string;
     gameId: string | null;
     boardSetup: BoardSetup | null;
@@ -54,34 +63,35 @@ interface PlayerActionCreateGame {
   };
 }
 
+
 interface PlayerActionJoinGame {
-  'join-game': {
+  [PlayerActionName.JoinGame]: {
     username: string;
     gameId: string;
   };
 }
 
 interface PlayerActionGetGameState {
-  'get-game-state': {
+  [PlayerActionName.GetGameState]: {
     gameId: string;
   };
 }
 
 interface PlayerActionMovePiece {
-  'move-piece': {
+  [PlayerActionName.MovePiece]: {
     gameId: string;
     playerMove: PlayerMove;
   };
 }
 
 interface PlayerActionResign {
-  'resign': {
+  [PlayerActionName.Resign]: {
     gameId: string;
   };
 }
 
 interface PlayerActionOfferDraw {
-  'offer-draw': {
+  [PlayerActionName.OfferDraw]: {
     gameId: string;
   };
 }
@@ -93,3 +103,13 @@ export type PlayerAction =
   | PlayerActionMovePiece
   | PlayerActionResign
   | PlayerActionOfferDraw;
+
+export interface GameRecord {
+  gameId: string;
+  whiteConnectionId: string | null;
+  whiteUsername: string | null;
+  blackConnectionId: string | null;
+  blackUsername: string | null;
+  gameState: GameState;
+  created: string;
+}
