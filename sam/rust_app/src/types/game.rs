@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::board::BoardSetup;
 use crate::types::board::{Board, Position};
-use crate::types::pieces::Color;
+use crate::types::piece::Color;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]

@@ -1,9 +1,9 @@
-use crate::types::pieces::Piece;
+use crate::types::piece::Piece;
 use serde::{Deserialize, Serialize};
 
 use super::{
     game::PlayerMove,
-    pieces::{Color, PieceType},
+    piece::{Color, PieceType},
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

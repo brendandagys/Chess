@@ -1,7 +1,7 @@
 use crate::types::board::{Board, BoardSetup, Position};
 use crate::types::dynamo_db::GameRecord;
 use crate::types::game::{GameEnding, GameState, PlayerMove, State};
-use crate::types::pieces::{Color, Piece};
+use crate::types::piece::{Color, Piece};
 use crate::utils::api_gateway::post_to_connection;
 use crate::utils::dynamo_db::{get_item, put_item};
 

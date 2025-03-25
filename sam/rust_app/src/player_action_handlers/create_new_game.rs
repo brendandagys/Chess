@@ -7,7 +7,7 @@ use lambda_runtime::Error;
 
 use chess::helpers::game::{create_game, get_game, save_game};
 use chess::helpers::user::{create_user_game, save_user_record};
-use chess::types::pieces::Color;
+use chess::types::piece::Color;
 use chess::utils::api::build_response;
 
 pub async fn create_new_game(
