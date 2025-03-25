@@ -1,13 +1,13 @@
 use aws_config::BehaviorVersion;
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequest};
 use aws_sdk_dynamodb::Client;
-use chess::utils::api::build_response;
+use chess::{types::api::GameRequest, utils::api::build_response};
 use lambda_http::{http::StatusCode, LambdaEvent};
 use lambda_runtime::{run, service_fn, Error};
 
 mod player_action_handlers;
 
-use chess::types::game::{GameRequest, PlayerAction};
+use chess::types::game::PlayerAction;
 use player_action_handlers::{
     create_new_game::create_new_game, get_game_state::get_game_state, join_game::join_game,
     move_piece::move_piece, offer_draw::offer_draw, resign::resign,
