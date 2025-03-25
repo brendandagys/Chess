@@ -7,7 +7,6 @@ use super::{
 };
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
 pub struct Rank(pub usize);
 
 impl Rank {
@@ -18,7 +17,6 @@ impl Rank {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
 pub struct File(pub usize);
 
 impl File {
@@ -41,6 +39,7 @@ pub struct BoardSetupDimensions {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum BoardSetup {
     Standard,
     Random(BoardSetupDimensions),
