@@ -1,3 +1,4 @@
+use crate::types::api::ApiResponse;
 use crate::types::board::{Board, BoardSetup, Position};
 use crate::types::dynamo_db::GameRecord;
 use crate::types::game::{GameEnding, GameState, PlayerMove, State};
@@ -159,7 +160,11 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                         sdk_config,
                         &request_context,
                         &black_connection_id,
-                        &game,
+                        &ApiResponse {
+                            status_code: 200,
+                            message: None,
+                            data: Some(&game),
+                        },
                     )
                     .await?
                     {
@@ -181,7 +186,11 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                         sdk_config,
                         &request_context,
                         &white_connection_id,
-                        &game,
+                        &ApiResponse {
+                            status_code: 200,
+                            message: None,
+                            data: Some(&game),
+                        },
                     )
                     .await?
                     {
@@ -205,12 +214,23 @@ pub async fn notify_other_player_about_game_update(
     current_user_connection_id: &str,
     game: &GameRecord,
 ) -> Result<(), Error> {
+    let api_response = ApiResponse {
+        status_code: 200,
+        message: None,
+        data: Some(game),
+    };
+
     if let Some(white_connection_id) = &game.white_connection_id {
         if white_connection_id != current_user_connection_id
             && white_connection_id != "<disconnected>"
         {
-            if let Some(_) =
-                post_to_connection(sdk_config, request_context, white_connection_id, &game).await?
+            if let Some(_) = post_to_connection(
+                sdk_config,
+                request_context,
+                white_connection_id,
+                &api_response,
+            )
+            .await?
             {
                 tracing::info!("Sent game (ID: {}) update to white player", game.game_id);
             }
@@ -221,8 +241,13 @@ pub async fn notify_other_player_about_game_update(
         if black_connection_id != current_user_connection_id
             && black_connection_id != "<disconnected>"
         {
-            if let Some(_) =
-                post_to_connection(sdk_config, request_context, black_connection_id, &game).await?
+            if let Some(_) = post_to_connection(
+                sdk_config,
+                request_context,
+                black_connection_id,
+                &api_response,
+            )
+            .await?
             {
                 tracing::info!("Sent game (ID: {}) update to black player", game.game_id);
             }

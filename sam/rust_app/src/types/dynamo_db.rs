@@ -3,6 +3,7 @@ use super::game::GameState;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GameRecord {
     pub game_id: String, // PK
     pub white_connection_id: Option<String>,
