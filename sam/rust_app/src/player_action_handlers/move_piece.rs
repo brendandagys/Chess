@@ -4,19 +4,45 @@ use lambda_http::{http::StatusCode, Body};
 use lambda_runtime::Error;
 
 use chess::{
-    helpers::game::{
-        can_player_make_a_move, get_game, get_player_details_from_connection_id, make_move,
-        notify_other_player_about_game_update, save_game, validate_move, PlayerDetails,
+    helpers::{
+        game::{
+            can_player_make_a_move, get_game, get_player_details_from_connection_id, make_move,
+            notify_other_player_about_game_update, save_game, validate_move, PlayerDetails,
+        },
+        user::{get_user_game, save_user_record},
     },
-    types::game::PlayerMove,
+    types::game::{GameEnding, GameState, PlayerMove, State},
     utils::api::build_response,
 };
+
+async fn handle_if_game_is_finished(
+    dynamo_db_client: &Client,
+    user_table: &str,
+    username: &str,
+    game_state: &GameState,
+) -> Result<(), Error> {
+    if let State::Finished(GameEnding::Checkmate(checkmated_color)) = game_state.state {
+        let mut user_game =
+            get_user_game(dynamo_db_client, user_table, &username, &game_state.game_id)
+                .await?
+                .expect(&format!(
+                    "User ({username}) does not have a user-game record for game `{}`",
+                    game_state.game_id
+                ));
+
+        user_game.winner = Some(checkmated_color.opponent_color().to_string());
+        save_user_record(dynamo_db_client, user_table, &user_game).await?;
+    }
+
+    Ok(())
+}
 
 pub async fn move_piece(
     sdk_config: &aws_config::SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     dynamo_db_client: &Client,
     game_table: &str,
+    user_table: &str,
     connection_id: &str,
     game_id: &str,
     player_move: PlayerMove,
@@ -53,6 +79,9 @@ pub async fn move_piece(
             }
 
             save_game(&dynamo_db_client, game_table, &game).await?;
+
+            handle_if_game_is_finished(dynamo_db_client, user_table, &username, &game.game_state)
+                .await?;
 
             notify_other_player_about_game_update(
                 &sdk_config,

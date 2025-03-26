@@ -96,6 +96,7 @@ async fn function_handler(
                 &request_context,
                 dynamo_db_client,
                 &game_table,
+                &user_table,
                 &connection_id,
                 &game_id,
                 player_move,
