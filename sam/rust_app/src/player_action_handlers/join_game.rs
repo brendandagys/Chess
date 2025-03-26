@@ -20,6 +20,14 @@ pub async fn join_game(
     username: &str,
     game_id: &str,
 ) -> Result<ApiGatewayProxyResponse, Error> {
+    if username.trim().is_empty() {
+        return build_response(
+            StatusCode::BAD_REQUEST,
+            Some("Must provide a username"),
+            None::<()>,
+        );
+    }
+
     let game = match get_game(&dynamo_db_client, game_table, game_id).await? {
         Some(mut existing_game) => {
             tracing::info!(
