@@ -105,11 +105,11 @@ export type PlayerAction =
   | PlayerActionOfferDraw;
 
 export interface GameRecord {
-  gameId: string;
-  whiteConnectionId: string | null;
-  whiteUsername: string | null;
-  blackConnectionId: string | null;
-  blackUsername: string | null;
-  gameState: GameState;
+  game_id: string;
+  white_connection_id: string | null;
+  white_username: string | null;
+  black_connection_id: string | null;
+  black_username: string | null;
+  game_state: GameState;
   created: string;
 }
