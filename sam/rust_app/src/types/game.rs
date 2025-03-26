@@ -59,7 +59,7 @@ pub struct PlayerMove {
 }
 
 #[derive(Deserialize)]
-#[serde(tag = "action", rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
 pub enum PlayerAction {
     #[serde(rename_all = "camelCase")]
     CreateGame {
