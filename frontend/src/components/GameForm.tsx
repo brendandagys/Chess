@@ -13,9 +13,14 @@ import { FormToShow } from "../types/sharedComponentTypes";
 interface GameFormProps {
   sendMessage: (action: GameRequest) => void;
   mode: FormToShow;
+  setUsernames: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-export const GameForm: React.FC<GameFormProps> = ({ sendMessage, mode }) => {
+export const GameForm: React.FC<GameFormProps> = ({
+  sendMessage,
+  mode,
+  setUsernames,
+}) => {
   const [username, setUsername] = useState("");
   const [gameId, setGameId] = useState("");
   const [boardSetupName, setBoardSetupName] = useState<BoardSetupName>(
@@ -70,6 +75,9 @@ export const GameForm: React.FC<GameFormProps> = ({ sendMessage, mode }) => {
       route: API_ROUTE,
       data,
     });
+
+    setGameId("");
+    setUsernames((old) => [...old.filter((u) => u !== username), username]);
   };
 
   return (

@@ -1,3 +1,7 @@
+.app-container {
+  padding-bottom: 3rem;
+}
+
 .title {
   margin: 1rem;
 }
@@ -39,4 +43,47 @@
 
 .button-link:hover {
   color: navy;
+}
+
+
+.games-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 3rem;
+  gap: 3rem;
+}
+
+.games-container .child {
+  flex: 1 1 50%;
+  height: 50vh;
+}
+
+/* If there's only one child, it takes full space */
+/* .games-container:has(:only-child) .child {
+  flex-basis: 100%;
+  height: 100vh;
+} */
+
+/* If there are 3 or 4 children, make a 2x2 grid */
+/* .games-container:has(.child:nth-child(3)) .child {
+  flex-basis: 50%;
+  height: 50vh;
+} */
+
+
+@media (max-width: 450px) {
+  .games-container .child {
+    flex: 1 1 100%;
+    /* Default: 100% width if there are 2 */
+    height: 50vh;
+    /* Half screen height */
+  }
+
+  /* If there's only one child, it takes full space */
+  /* .games-container:has(:only-child) .child {
+    flex-basis: 100%;
+    height: 100vh;
+  } */
 }

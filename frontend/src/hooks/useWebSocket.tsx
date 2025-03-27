@@ -16,12 +16,17 @@ export function useWebSocket(
     };
 
     websocket.current.onmessage = (event) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      onMessage(JSON.parse(event.data));
+      const response = JSON.parse(event.data) as GameRecord;
+
+      if (response.game_id) {
+        onMessage(response);
+      }
     };
+
     websocket.current.onerror = (error) => {
       console.error("WebSocket error", error);
     };
+
     websocket.current.onclose = () => {
       console.log("WebSocket disconnected");
     };

@@ -2,8 +2,8 @@ import { useState, useCallback } from "react";
 import { useWebSocket } from "../hooks/useWebSocket";
 import { GameForm } from "./GameForm";
 import { FormToShow } from "../types/sharedComponentTypes";
-import { ChessBoard } from "./ChessBoard";
 import { GameRecord } from "../types/game";
+import { Game } from "./Game";
 import { WEBSOCKET_ENDPOINT } from "../constants";
 
 import "../css/App.css";
@@ -12,6 +12,8 @@ export const App: React.FC = () => {
   const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
   const [showForm, setShowForm] = useState(true);
   const [formToShow, setFormToShow] = useState<FormToShow>(FormToShow.Create);
+
+  const [usernames, setUsernames] = useState<string[]>([]);
 
   const onMessage = useCallback((gameRecord: GameRecord) => {
     setGameRecords((old) => [
@@ -23,7 +25,7 @@ export const App: React.FC = () => {
   const sendMessage = useWebSocket(WEBSOCKET_ENDPOINT, onMessage);
 
   return (
-    <div>
+    <div className="app-container">
       <h1 className="title">Play Chess</h1>
       <p className="sub-title">
         <button
@@ -47,25 +49,31 @@ export const App: React.FC = () => {
         </button>
       </p>
 
-      <div
-        className="options-bar"
-        onClick={() => {
-          setShowForm((old) => !old);
-        }}
-      >
-        Hide form
-      </div>
-
       {showForm && (
-        <div className="form-container">
-          <GameForm sendMessage={sendMessage} mode={formToShow} />
+        <div
+          className="options-bar"
+          onClick={() => {
+            setShowForm((old) => !old);
+          }}
+        >
+          Hide form
         </div>
       )}
 
-      <div className="boards-container">
+      {showForm && (
+        <div className="form-container">
+          <GameForm
+            sendMessage={sendMessage}
+            mode={formToShow}
+            setUsernames={setUsernames}
+          />
+        </div>
+      )}
+
+      <div className="games-container">
         {gameRecords.map((gameRecord) => (
-          <div key={gameRecord.game_id} className="board-container">
-            <ChessBoard gameRecord={gameRecord} />
+          <div key={gameRecord.game_id} className="game-container">
+            <Game gameRecord={gameRecord} usernames={usernames} />
           </div>
         ))}
       </div>

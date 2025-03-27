@@ -1,0 +1,13 @@
+.game-container p {
+  font-size: 1rem;
+  margin-top: 0.15rem;
+  padding-top: 0.7rem;
+
+}
+
+.status-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}

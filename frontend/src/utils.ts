@@ -9,3 +9,8 @@ export const getRandomIntInRange = (
 
   return minimum + Math.floor(Math.random() * variance);
 };
+
+
+export const rotateBoard180Degrees = <T>(matrix: T[][]): T[][] => (
+  matrix.map((row) => [...row].reverse()).reverse()
+);

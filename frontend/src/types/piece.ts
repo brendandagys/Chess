@@ -3,7 +3,7 @@ export enum Color {
   Black = 'black',
 }
 
-enum PieceType {
+export enum PieceType {
   King = 'king',
   Queen = 'queen',
   Rook = 'rook',
