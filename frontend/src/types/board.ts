@@ -14,13 +14,13 @@ interface BoardSetupDimensions {
   files: number;
 }
 
-enum BoardSetupName {
+export enum BoardSetupName {
   Standard = 'standard',
   Random = 'random',
   KingAndOneOtherPiece = 'king-and-one-other-piece',
 }
 
-type BoardSetupStandard = 'standard';
+export type BoardSetupStandard = 'standard';
 
 interface BoardSetupRandom {
   [BoardSetupName.Random]: BoardSetupDimensions;

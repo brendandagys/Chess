@@ -8,10 +8,10 @@ import { WEBSOCKET_ENDPOINT } from "../constants";
 import "../css/App.css";
 
 export const App: React.FC = () => {
-  const [gameRecord, setGameRecord] = useState<GameRecord | null>(null);
+  const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
 
   const onMessage = useCallback((gameRecord: GameRecord) => {
-    setGameRecord(gameRecord);
+    setGameRecords((old) => [...old, gameRecord]);
   }, []);
 
   const sendMessage = useWebSocket(WEBSOCKET_ENDPOINT, onMessage);
@@ -25,7 +25,13 @@ export const App: React.FC = () => {
         <CreateGameForm sendMessage={sendMessage} />
       </div>
 
-      {gameRecord && <ChessBoard gameRecord={gameRecord} />}
+      <div className="boards-container">
+        {gameRecords.map((gameRecord) => (
+          <div key={gameRecord.game_id} className="board-container">
+            <ChessBoard gameRecord={gameRecord} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

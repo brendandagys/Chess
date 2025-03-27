@@ -9,5 +9,7 @@
 .form-container {
   display: flex;
   justify-content: center;
+  align-items: center;
   margin-top: 3rem;
+  padding: 0 1rem;
 }
