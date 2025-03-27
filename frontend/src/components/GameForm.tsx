@@ -1,14 +1,14 @@
 import { useState } from "react";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import { API_ROUTE } from "../constants";
 import { PlayerActionName } from "../types/game";
 import { GameRequest } from "../types/api";
-
+import { FormToShow } from "../types/sharedComponentTypes";
 import { BoardSetup, BoardSetupName } from "../types/board";
 import { Color } from "../types/piece";
 import { getRandomIntInRange } from "../utils";
 
 import "../css/GameForm.css";
-import { FormToShow } from "../types/sharedComponentTypes";
 
 interface GameFormProps {
   sendMessage: (action: GameRequest) => void;
@@ -21,7 +21,7 @@ export const GameForm: React.FC<GameFormProps> = ({
   mode,
   setUsernames,
 }) => {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useLocalStorage("username", "");
   const [gameId, setGameId] = useState("");
   const [boardSetupName, setBoardSetupName] = useState<BoardSetupName>(
     BoardSetupName.Standard
