@@ -72,9 +72,11 @@ export const App: React.FC = () => {
 
       <div className="games-container">
         {gameRecords.map((gameRecord) => (
-          <div key={gameRecord.game_id} className="game-container">
-            <Game gameRecord={gameRecord} usernames={usernames} />
-          </div>
+          <Game
+            key={gameRecord.game_id}
+            gameRecord={gameRecord}
+            usernames={usernames}
+          />
         ))}
       </div>
     </div>
