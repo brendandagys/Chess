@@ -17,6 +17,8 @@ export const Game: React.FC<GameProps> = ({ gameRecord, usernames }) => {
     ? Color.White
     : Color.Black;
 
+  const isTurn = playerColor === gameState.currentTurn;
+
   return (
     <div className="game-container">
       <h2>Game: {gameRecord.game_id}</h2>
@@ -31,8 +33,9 @@ export const Game: React.FC<GameProps> = ({ gameRecord, usernames }) => {
         <p className="pill pill--pink">Playing as {playerColor}</p>
       </div>
 
-      {/* <button onClick={triggerHighlight}>Highlight Status</button> */}
-      <ChessBoard board={gameState.board} playerColor={playerColor} />
+      <div className={`chess-board-container ${isTurn && "is-player-turn"}`}>
+        <ChessBoard board={gameState.board} playerColor={playerColor} />
+      </div>
     </div>
   );
 };
