@@ -14,7 +14,10 @@ export const App: React.FC = () => {
   const [formToShow, setFormToShow] = useState<FormToShow>(FormToShow.Create);
 
   const onMessage = useCallback((gameRecord: GameRecord) => {
-    setGameRecords((old) => [...old, gameRecord]);
+    setGameRecords((old) => [
+      ...old.filter((game) => game.game_id !== gameRecord.game_id),
+      gameRecord,
+    ]);
   }, []);
 
   const sendMessage = useWebSocket(WEBSOCKET_ENDPOINT, onMessage);
