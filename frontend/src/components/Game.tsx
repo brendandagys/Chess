@@ -21,14 +21,17 @@ export const Game: React.FC<GameProps> = ({ gameRecord, usernames }) => {
     <div className="game-container">
       <h2>Game: {gameRecord.game_id}</h2>
       <div className="status-container">
-        <p>Game {gameState.state.toString().replace("-", " ")}</p>
-        <p>
+        <p className="pill pill--green">
+          Game {gameState.state.toString().replace("-", " ")}
+        </p>
+        <p className="pill pill--blue">
           {gameState.currentTurn.toString().replace("w", "W").replace("b", "B")}
           {"'s turn"}
         </p>
-        <p>Playing as {playerColor}</p>
+        <p className="pill pill--pink">Playing as {playerColor}</p>
       </div>
 
+      {/* <button onClick={triggerHighlight}>Highlight Status</button> */}
       <ChessBoard board={gameState.board} playerColor={playerColor} />
     </div>
   );

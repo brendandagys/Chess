@@ -1,8 +1,6 @@
 .game-container p {
-  font-size: 1rem;
-  margin-top: 0.15rem;
-  padding-top: 0.7rem;
-
+  font-size: .8rem;
+  margin-top: 1rem;
 }
 
 .status-container {
@@ -10,4 +8,44 @@
   justify-content: center;
   align-items: center;
   gap: 1rem;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.pill--pink {
+  background-color: #ffb6c1;
+  border: 2px solid #ff69b4;
+}
+
+.pill--blue {
+  background-color: #add8e6;
+  border: 2px solid #4682b4;
+}
+
+.pill--green {
+  background-color: #90ee90;
+  border: 2px solid #32cd32;
+}
+
+.pill.highlight {
+  animation: highlight-animation 5s ease-in-out;
+}
+
+@keyframes highlight-animation {
+  0% {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(70, 130, 180, 0.8);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: none;
+  }
 }
