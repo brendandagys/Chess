@@ -51,7 +51,7 @@
 }
 
 .game-container .chess-board-container.is-player-turn {
-  border: 10px solid #713c0b;
+  border: 9px solid #713c0b;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 
