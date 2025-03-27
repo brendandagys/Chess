@@ -1,4 +1,4 @@
-.create-game-form {
+.game-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -33,12 +33,18 @@
   background-color: dodgerblue;
 }
 
-.create-game-form label {
+.game-details-container button[type="submit"]:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+}
+
+.game-form label {
   font-weight: bold;
 }
 
-.create-game-form .username-field,
-.create-game-form .game-id-field {
+.game-form .username-field,
+.game-form .game-id-field {
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;

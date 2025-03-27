@@ -10,6 +10,33 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 3rem;
+  margin-top: 1.5rem;
   padding: 0 1rem;
+}
+
+.options-bar {
+  background-color: white;
+  cursor: pointer;
+  border: 2px dashed black;
+  margin: 1.6rem auto 1rem;
+  padding: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.options-bar:hover {
+  background-color: #f0f0f0;
+}
+
+.button-link {
+  background: none;
+  border: none;
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+}
+
+.button-link:hover {
+  color: navy;
 }
