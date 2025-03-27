@@ -68,12 +68,12 @@ impl BoardSetup {
                     has_moved: false,
                 });
                 squares[0][3] = Some(Piece {
-                    piece_type: PieceType::Queen,
+                    piece_type: PieceType::King,
                     color: Color::White,
                     has_moved: false,
                 });
                 squares[0][4] = Some(Piece {
-                    piece_type: PieceType::King,
+                    piece_type: PieceType::Queen,
                     color: Color::White,
                     has_moved: false,
                 });
@@ -128,12 +128,12 @@ impl BoardSetup {
                     has_moved: false,
                 });
                 squares[7][3] = Some(Piece {
-                    piece_type: PieceType::Queen,
+                    piece_type: PieceType::King,
                     color: Color::Black,
                     has_moved: false,
                 });
                 squares[7][4] = Some(Piece {
-                    piece_type: PieceType::King,
+                    piece_type: PieceType::Queen,
                     color: Color::Black,
                     has_moved: false,
                 });
