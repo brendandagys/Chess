@@ -1,15 +1,25 @@
+.game-container .game-id {
+  margin-bottom: 1rem;
+}
+
 .game-container .status-container {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1rem;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  height: 30px;
+}
+
+.game-container .status-container.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 .game-container .status-container .pill {
   display: inline-block;
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
-  margin-top: 1.1rem;
   font-size: 0.8rem;
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -55,7 +65,59 @@
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 
+  /* Modern board style */
   /* border: 8px solid #333;
   border-radius: 4px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); */
+}
+
+.alert {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.alert.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.alert .message {
+  margin-right: 0.75rem;
+}
+
+.alert--green {
+  background-color: #90ee90;
+  border: 2px solid #32cd32;
+}
+
+.alert--blue {
+  background-color: #add8e6;
+  border: 2px solid #4682b4;
+}
+
+.alert--red {
+  background-color: #ffb6c1;
+  border: 2px solid #ff6347;
+}
+
+.alert-dismiss {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  margin-bottom: 0.1rem;
+  font-weight: bold;
+  color: inherit;
+  cursor: pointer;
+}
+
+.alert-dismiss:hover {
+  color: #333;
 }
