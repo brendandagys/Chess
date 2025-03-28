@@ -67,15 +67,15 @@ pub async fn move_piece(
             };
 
             if let Err(e) = can_player_make_a_move(&game, &player_color) {
-                return build_response(StatusCode::BAD_REQUEST, Some(vec![e.into()]), None::<()>);
+                return build_response(StatusCode::BAD_REQUEST, Some(vec![e.into()]), Some(game));
             }
 
             if let Err(e) = validate_move(&game.game_state.board, &player_move, &player_color) {
-                return build_response(StatusCode::BAD_REQUEST, Some(vec![e.into()]), None::<()>);
+                return build_response(StatusCode::BAD_REQUEST, Some(vec![e.into()]), Some(game));
             }
 
             if let Err(e) = make_move(&mut game.game_state, &player_move) {
-                return build_response(StatusCode::BAD_REQUEST, Some(vec![e.into()]), None::<()>);
+                return build_response(StatusCode::BAD_REQUEST, Some(vec![e.into()]), Some(game));
             }
 
             save_game(&dynamo_db_client, game_table, &game).await?;
