@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 import { ApiResponse, GameRequest } from "../types/api";
 
-export function useWebSocket(
+export const useWebSocket = (
   url: string,
   onMessage: (response: ApiResponse<unknown>) => void
-) {
+) => {
   const websocket = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -43,4 +43,4 @@ export function useWebSocket(
   };
 
   return sendMessage;
-}
+};

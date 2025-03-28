@@ -7,9 +7,9 @@ import { Game } from "./Game";
 import { WEBSOCKET_ENDPOINT } from "../constants";
 import { useMessageDisplay } from "../hooks/useMessageDisplay";
 import { Alert } from "./Alert";
+import { ApiResponse } from "../types/api";
 
 import "../css/App.css";
-import { ApiResponse } from "../types/api";
 
 export const App: React.FC = () => {
   const [messages, setMessages, dismissMessage] = useMessageDisplay();

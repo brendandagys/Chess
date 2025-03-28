@@ -10,11 +10,11 @@ import wq from "../images/wq.png";
 import bq from "../images/bq.png";
 import wk from "../images/wk.png";
 import bk from "../images/bk.png";
-
-import "../css/ChessBoard.css";
 import { Color, PieceType } from "../types/piece";
 import { Board } from "../types/board";
 import { rotateBoard180Degrees } from "../utils";
+
+import "../css/ChessBoard.css";
 
 interface ChessBoardProps {
   board: Board;

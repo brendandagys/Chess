@@ -3,8 +3,8 @@ import { GameRecord } from "../types/game";
 import { Color } from "../types/piece";
 import { ChessBoard } from "./ChessBoard";
 import { Alert } from "./Alert";
-
 import { useMessageDisplay } from "../hooks/useMessageDisplay";
+
 import "../css/Game.css";
 
 interface GameProps {
