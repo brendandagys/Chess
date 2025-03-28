@@ -9,6 +9,7 @@ import { useMessageDisplay } from "../hooks/useMessageDisplay";
 import { Alert } from "./Alert";
 
 import "../css/App.css";
+import { ApiResponse } from "../types/api";
 
 export const App: React.FC = () => {
   const [messages, setMessages, dismissMessage] = useMessageDisplay();
@@ -17,12 +18,31 @@ export const App: React.FC = () => {
   const [formToShow, setFormToShow] = useState<FormToShow>(FormToShow.Create);
   const [usernames, setUsernames] = useState<string[]>([]);
 
-  const onWebSocketMessage = useCallback((gameRecord: GameRecord) => {
-    setGameRecords((old) => [
-      ...old.filter((game) => game.game_id !== gameRecord.game_id),
-      gameRecord,
-    ]);
-  }, []);
+  const onWebSocketMessage = useCallback(
+    (response: ApiResponse<unknown>) => {
+      if (response.messages.length) {
+        setMessages((old) => [
+          ...old,
+          ...response.messages.map(({ message, errorType }) => ({
+            id: crypto.randomUUID(),
+            message,
+            errorType,
+            duration: 5000,
+          })),
+        ]);
+      }
+
+      if (response.data as GameRecord | null) {
+        const gameRecord = response.data as GameRecord;
+
+        setGameRecords((old) => [
+          ...old.filter((game) => game.game_id !== gameRecord.game_id),
+          gameRecord,
+        ]);
+      }
+    },
+    [setMessages]
+  );
 
   const sendMessage = useWebSocket(WEBSOCKET_ENDPOINT, onWebSocketMessage);
 

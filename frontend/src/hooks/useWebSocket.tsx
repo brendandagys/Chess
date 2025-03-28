@@ -1,10 +1,9 @@
 import { useEffect, useRef } from "react";
-import { GameRecord } from "../types/game";
-import { GameRequest } from "../types/api";
+import { ApiResponse, GameRequest } from "../types/api";
 
 export function useWebSocket(
   url: string,
-  onMessage: (gameRecord: GameRecord) => void
+  onMessage: (response: ApiResponse<unknown>) => void
 ) {
   const websocket = useRef<WebSocket | null>(null);
 
@@ -15,12 +14,10 @@ export function useWebSocket(
       console.log("WebSocket connected");
     };
 
-    websocket.current.onmessage = (event) => {
-      const response = JSON.parse(event.data) as GameRecord;
+    websocket.current.onmessage = (event: MessageEvent) => {
+      const response = JSON.parse(event.data as string) as ApiResponse<unknown>;
 
-      if (response.game_id) {
-        onMessage(response);
-      }
+      onMessage(response);
     };
 
     websocket.current.onerror = (error) => {

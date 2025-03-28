@@ -9,7 +9,7 @@ interface AlertProps {
 
 export const Alert: React.FC<AlertProps> = ({ message, onDismiss }) => {
   return (
-    <div className={`alert alert--${message.color}`}>
+    <div className={`alert alert--${message.errorType}`}>
       <span className="message">{message.message}</span>
       <button className="alert-dismiss" onClick={onDismiss}>
         &times;
