@@ -59,6 +59,14 @@ pub struct Piece {
 }
 
 impl Piece {
+    pub fn new(piece_type: PieceType, color: Color) -> Self {
+        Piece {
+            piece_type,
+            color,
+            has_moved: false,
+        }
+    }
+
     fn get_tentative_position(
         &self,
         rank_index: isize,

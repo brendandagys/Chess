@@ -1,3 +1,4 @@
+use rand::seq::IndexedRandom;
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -52,116 +53,122 @@ impl BoardSetup {
                 let mut squares = vec![vec![None; 8]; 8];
 
                 // White major pieces
-                squares[0][0] = Some(Piece {
-                    piece_type: PieceType::Rook,
-                    color: Color::White,
-                    has_moved: false,
-                });
-                squares[0][1] = Some(Piece {
-                    piece_type: PieceType::Knight,
-                    color: Color::White,
-                    has_moved: false,
-                });
-                squares[0][2] = Some(Piece {
-                    piece_type: PieceType::Bishop,
-                    color: Color::White,
-                    has_moved: false,
-                });
-                squares[0][3] = Some(Piece {
-                    piece_type: PieceType::King,
-                    color: Color::White,
-                    has_moved: false,
-                });
-                squares[0][4] = Some(Piece {
-                    piece_type: PieceType::Queen,
-                    color: Color::White,
-                    has_moved: false,
-                });
-                squares[0][5] = Some(Piece {
-                    piece_type: PieceType::Bishop,
-                    color: Color::White,
-                    has_moved: false,
-                });
-                squares[0][6] = Some(Piece {
-                    piece_type: PieceType::Knight,
-                    color: Color::White,
-                    has_moved: false,
-                });
-                squares[0][7] = Some(Piece {
-                    piece_type: PieceType::Rook,
-                    color: Color::White,
-                    has_moved: false,
-                });
+                squares[0][0] = Some(Piece::new(PieceType::Rook, Color::White));
+                squares[0][1] = Some(Piece::new(PieceType::Knight, Color::White));
+                squares[0][2] = Some(Piece::new(PieceType::Bishop, Color::White));
+                squares[0][3] = Some(Piece::new(PieceType::King, Color::White));
+                squares[0][4] = Some(Piece::new(PieceType::Queen, Color::White));
+                squares[0][5] = Some(Piece::new(PieceType::Bishop, Color::White));
+                squares[0][6] = Some(Piece::new(PieceType::Knight, Color::White));
+                squares[0][7] = Some(Piece::new(PieceType::Rook, Color::White));
 
                 // White pawns
                 for col in 0..8 {
-                    squares[1][col] = Some(Piece {
-                        piece_type: PieceType::Pawn,
-                        color: Color::White,
-                        has_moved: false,
-                    });
+                    squares[1][col] = Some(Piece::new(PieceType::Pawn, Color::White));
                 }
 
                 // Black pawns
                 for col in 0..8 {
-                    squares[6][col] = Some(Piece {
-                        piece_type: PieceType::Pawn,
-                        color: Color::Black,
-                        has_moved: false,
-                    });
+                    squares[6][col] = Some(Piece::new(PieceType::Pawn, Color::Black));
                 }
 
                 // Black major pieces
-                squares[7][0] = Some(Piece {
-                    piece_type: PieceType::Rook,
-                    color: Color::Black,
-                    has_moved: false,
-                });
-                squares[7][1] = Some(Piece {
-                    piece_type: PieceType::Knight,
-                    color: Color::Black,
-                    has_moved: false,
-                });
-                squares[7][2] = Some(Piece {
-                    piece_type: PieceType::Bishop,
-                    color: Color::Black,
-                    has_moved: false,
-                });
-                squares[7][3] = Some(Piece {
-                    piece_type: PieceType::King,
-                    color: Color::Black,
-                    has_moved: false,
-                });
-                squares[7][4] = Some(Piece {
-                    piece_type: PieceType::Queen,
-                    color: Color::Black,
-                    has_moved: false,
-                });
-                squares[7][5] = Some(Piece {
-                    piece_type: PieceType::Bishop,
-                    color: Color::Black,
-                    has_moved: false,
-                });
-                squares[7][6] = Some(Piece {
-                    piece_type: PieceType::Knight,
-                    color: Color::Black,
-                    has_moved: false,
-                });
-                squares[7][7] = Some(Piece {
-                    piece_type: PieceType::Rook,
-                    color: Color::Black,
-                    has_moved: false,
-                });
+                squares[7][0] = Some(Piece::new(PieceType::Rook, Color::Black));
+                squares[7][1] = Some(Piece::new(PieceType::Knight, Color::Black));
+                squares[7][2] = Some(Piece::new(PieceType::Bishop, Color::Black));
+                squares[7][3] = Some(Piece::new(PieceType::King, Color::Black));
+                squares[7][4] = Some(Piece::new(PieceType::Queen, Color::Black));
+                squares[7][5] = Some(Piece::new(PieceType::Bishop, Color::Black));
+                squares[7][6] = Some(Piece::new(PieceType::Knight, Color::Black));
+                squares[7][7] = Some(Piece::new(PieceType::Rook, Color::Black));
 
                 Board { squares }
             }
-            // TODO
-            Self::Random(dimensions) => Board {
-                squares: vec![vec![None; dimensions.files]; dimensions.ranks],
-            },
-            Self::KingAndOneOtherPiece(dimensions) => Board {
-                squares: vec![vec![None; dimensions.files]; dimensions.ranks],
-            },
+            Self::Random(dimensions) => {
+                let mut squares = vec![vec![None; dimensions.files]; dimensions.ranks];
+                let mut rng = rand::rng();
+
+                let mut available_pieces = vec![
+                    PieceType::Rook,
+                    PieceType::Knight,
+                    PieceType::Bishop,
+                    PieceType::Queen,
+                ];
+
+                let mut generate_row = |piece_types: &Vec<PieceType>| {
+                    (0..dimensions.files)
+                        .map(|_| *piece_types.choose(&mut rng).unwrap())
+                        .collect::<Vec<PieceType>>()
+                };
+
+                let outer_row = generate_row(&available_pieces);
+                available_pieces.push(PieceType::Pawn);
+                let inner_row = generate_row(&available_pieces);
+
+                let king_file = dimensions.files / 2;
+
+                // Place kings
+                squares[0][king_file] = Some(Piece::new(PieceType::King, Color::White));
+                squares[dimensions.ranks - 1][king_file] =
+                    Some(Piece::new(PieceType::King, Color::Black));
+
+                // First and last ranks
+                for (i, piece_type) in outer_row.into_iter().enumerate() {
+                    if i == king_file {
+                        continue;
+                    }
+
+                    squares[0][i] = Some(Piece::new(piece_type, Color::White));
+                    squares[dimensions.ranks - 1][i] = Some(Piece::new(piece_type, Color::Black));
+                }
+
+                // Second and second-to-last ranks
+                for (i, piece_type) in inner_row.into_iter().enumerate() {
+                    if i == king_file {
+                        continue;
+                    }
+
+                    squares[1][i] = Some(Piece::new(piece_type, Color::White));
+                    squares[dimensions.ranks - 2][i] = Some(Piece::new(piece_type, Color::Black));
+                }
+
+                Board { squares }
+            }
+            Self::KingAndOneOtherPiece(dimensions) => {
+                let mut squares = vec![vec![None; dimensions.files]; dimensions.ranks];
+                let mut rng = rand::rng();
+
+                let available_pieces = vec![
+                    PieceType::Rook,
+                    PieceType::Knight,
+                    PieceType::Bishop,
+                    PieceType::Queen,
+                    PieceType::Pawn,
+                ];
+
+                let chosen_piece = available_pieces.choose(&mut rng).unwrap().clone();
+                let king_file = dimensions.files / 2;
+
+                // Place kings
+                squares[0][king_file] = Some(Piece::new(PieceType::King, Color::White));
+                squares[dimensions.ranks - 1][king_file] =
+                    Some(Piece::new(PieceType::King, Color::Black));
+
+                // Place the chosen piece
+                for i in 0..dimensions.files {
+                    if i == king_file && (i == 0 || i == dimensions.files - 1) {
+                        continue;
+                    }
+
+                    squares[0][i] = Some(Piece::new(chosen_piece, Color::White));
+                    squares[1][i] = Some(Piece::new(chosen_piece, Color::White));
+
+                    squares[dimensions.ranks - 1][i] = Some(Piece::new(chosen_piece, Color::White));
+                    squares[dimensions.ranks - 1][i] = Some(Piece::new(chosen_piece, Color::White));
+                }
+
+                Board { squares }
+            }
         }
     }
 }
