@@ -1,9 +1,7 @@
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
 use aws_sdk_dynamodb::Client;
-use chess::types::api::ApiResponse;
 use chess::types::board::BoardSetup;
 use lambda_http::http::StatusCode;
-use lambda_http::Body;
 use lambda_runtime::Error;
 
 use chess::helpers::game::{create_game, get_game, save_game};
@@ -73,13 +71,5 @@ pub async fn create_new_game(
         new_game.game_id
     );
 
-    Ok(ApiGatewayProxyResponse {
-        status_code: 200, // Doesn't seem to be used by API Gateway
-        body: Some(Body::from(serde_json::to_string(&ApiResponse {
-            status_code: 200,
-            messages: vec![],
-            data: Some(new_game),
-        })?)),
-        ..Default::default()
-    })
+    build_response(StatusCode::OK, None, Some(new_game))
 }

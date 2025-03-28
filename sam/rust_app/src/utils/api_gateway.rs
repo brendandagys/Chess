@@ -7,6 +7,8 @@ use aws_sdk_apigatewaymanagement::{operation::post_to_connection::PostToConnecti
 use lambda_runtime::Error;
 use serde::Serialize;
 
+use crate::types::api::ApiResponse;
+
 fn build_api_gateway_management_client(
     sdk_config: &SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
@@ -25,10 +27,10 @@ pub async fn post_to_connection<T>(
     sdk_config: &SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     connection_id: &str,
-    data: &T,
+    data: &ApiResponse<T>,
 ) -> Result<Option<PostToConnectionOutput>, Error>
 where
-    T: ?Sized + Serialize,
+    T: Sized + Serialize,
 {
     let payload = serde_json::to_vec(&data).unwrap().into();
     let client = build_api_gateway_management_client(sdk_config, request_context);
