@@ -9,9 +9,43 @@ pub struct GameRequest {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ApiErrorType {
+    Info,
+    Warning,
+    Error,
+    Success,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApiErrorMessage {
+    pub message: String,
+    pub error_type: ApiErrorType,
+}
+
+impl From<&str> for ApiErrorMessage {
+    fn from(message: &str) -> Self {
+        ApiErrorMessage {
+            message: message.to_string(),
+            error_type: ApiErrorType::Error,
+        }
+    }
+}
+
+impl From<String> for ApiErrorMessage {
+    fn from(message: String) -> Self {
+        ApiErrorMessage {
+            message,
+            error_type: ApiErrorType::Error,
+        }
+    }
+}
+
+#[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApiResponse<T> {
     pub status_code: u16,
-    pub message: Option<String>,
+    pub messages: Vec<ApiErrorMessage>,
     pub data: Option<T>,
 }

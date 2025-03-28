@@ -1,5 +1,6 @@
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
 use aws_sdk_dynamodb::Client;
+use chess::types::api::ApiResponse;
 use chess::types::board::BoardSetup;
 use lambda_http::http::StatusCode;
 use lambda_http::Body;
@@ -23,7 +24,7 @@ pub async fn create_new_game(
     if username.trim().is_empty() {
         return build_response(
             StatusCode::BAD_REQUEST,
-            Some("Must provide a username"),
+            Some(vec!["Must provide a username".into()]),
             None::<()>,
         );
     }
@@ -33,9 +34,10 @@ pub async fn create_new_game(
             if let Some(_) = get_game(&dynamo_db_client, game_table, game_id).await? {
                 return build_response(
                     StatusCode::BAD_REQUEST,
-                    Some(&format!(
+                    Some(vec![format!(
                         "Game with ID `{game_id}` already exists. Please join the game instead."
-                    )),
+                    )
+                    .into()]),
                     None::<()>,
                 );
             }
@@ -73,7 +75,11 @@ pub async fn create_new_game(
 
     Ok(ApiGatewayProxyResponse {
         status_code: 200, // Doesn't seem to be used by API Gateway
-        body: Some(Body::from(serde_json::to_string(&new_game)?)),
+        body: Some(Body::from(serde_json::to_string(&ApiResponse {
+            status_code: 200,
+            messages: vec![],
+            data: Some(new_game),
+        })?)),
         ..Default::default()
     })
 }

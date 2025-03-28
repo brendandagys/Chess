@@ -162,7 +162,7 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                         &black_connection_id,
                         &ApiResponse {
                             status_code: 200,
-                            message: None,
+                            messages: vec![],
                             data: Some(&game),
                         },
                     )
@@ -188,7 +188,7 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                         &white_connection_id,
                         &ApiResponse {
                             status_code: 200,
-                            message: None,
+                            messages: vec![],
                             data: Some(&game),
                         },
                     )
@@ -216,7 +216,7 @@ pub async fn notify_other_player_about_game_update(
 ) -> Result<(), Error> {
     let api_response = ApiResponse {
         status_code: 200,
-        message: None,
+        messages: vec![],
         data: Some(game),
     };
 

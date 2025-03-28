@@ -26,7 +26,7 @@ async fn function_handler(
     let Some(connection_id) = request_context.connection_id.as_ref() else {
         return build_response(
             StatusCode::BAD_REQUEST,
-            Some("Missing connection ID"),
+            Some(vec!["Missing connection ID".into()]),
             None::<()>,
         );
     };
@@ -34,7 +34,7 @@ async fn function_handler(
     let Some(request_body) = event.payload.body.as_ref() else {
         return build_response(
             StatusCode::BAD_REQUEST,
-            Some("Missing request body"),
+            Some(vec!["Missing request body".into()]),
             None::<()>,
         );
     };
@@ -44,9 +44,10 @@ async fn function_handler(
         Err(e) => {
             return build_response(
                 StatusCode::BAD_REQUEST,
-                Some(&format!(
+                Some(vec![format!(
                     "Failed to parse request body into a valid player action: {e}"
-                )),
+                )
+                .into()]),
                 None::<()>,
             );
         }

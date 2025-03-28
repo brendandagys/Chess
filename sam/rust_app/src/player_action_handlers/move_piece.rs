@@ -11,7 +11,10 @@ use chess::{
         },
         user::{get_user_game, save_user_record},
     },
-    types::game::{GameEnding, GameState, PlayerMove, State},
+    types::{
+        api::ApiResponse,
+        game::{GameEnding, GameState, PlayerMove, State},
+    },
     utils::api::build_response,
 };
 
@@ -50,7 +53,7 @@ pub async fn move_piece(
     match get_game(dynamo_db_client, game_table, game_id).await? {
         None => build_response(
             StatusCode::BAD_REQUEST,
-            Some(&format!("Game (ID: {game_id}) not found")),
+            Some(vec![format!("Game (ID: {game_id}) not found").into()]),
             None::<()>,
         ),
         Some(mut game) => {
@@ -61,21 +64,21 @@ pub async fn move_piece(
             else {
                 return build_response(
                     StatusCode::BAD_REQUEST,
-                    Some(&format!("You are not a player in this game")),
+                    Some(vec![format!("You are not a player in this game").into()]),
                     None::<()>,
                 );
             };
 
             if let Err(e) = can_player_make_a_move(&game, &player_color) {
-                return build_response(StatusCode::BAD_REQUEST, Some(e), None::<()>);
+                return build_response(StatusCode::BAD_REQUEST, Some(vec![e.into()]), None::<()>);
             }
 
             if let Err(e) = validate_move(&game.game_state.board, &player_move, &player_color) {
-                return build_response(StatusCode::BAD_REQUEST, Some(e), None::<()>);
+                return build_response(StatusCode::BAD_REQUEST, Some(vec![e.into()]), None::<()>);
             }
 
             if let Err(e) = make_move(&mut game.game_state, &player_move) {
-                return build_response(StatusCode::BAD_REQUEST, Some(e), None::<()>);
+                return build_response(StatusCode::BAD_REQUEST, Some(vec![e.into()]), None::<()>);
             }
 
             save_game(&dynamo_db_client, game_table, &game).await?;
@@ -97,7 +100,11 @@ pub async fn move_piece(
 
             Ok(ApiGatewayProxyResponse {
                 status_code: 200, // Doesn't seem to be used by API Gateway
-                body: Some(Body::from(serde_json::to_string(&game)?)),
+                body: Some(Body::from(serde_json::to_string(&ApiResponse {
+                    status_code: 200,
+                    messages: vec![],
+                    data: Some(game),
+                })?)),
                 ..Default::default()
             })
         }

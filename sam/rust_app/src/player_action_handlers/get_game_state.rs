@@ -3,7 +3,7 @@ use aws_sdk_dynamodb::Client;
 use lambda_http::{http::StatusCode, Body};
 use lambda_runtime::Error;
 
-use chess::{helpers::game::get_game, utils::api::build_response};
+use chess::{helpers::game::get_game, types::api::ApiResponse, utils::api::build_response};
 
 pub async fn get_game_state(
     dynamo_db_client: &Client,
@@ -16,13 +16,17 @@ pub async fn get_game_state(
 
             Ok(ApiGatewayProxyResponse {
                 status_code: 200, // Doesn't seem to be used by API Gateway
-                body: Some(Body::from(serde_json::to_string(&game)?)),
+                body: Some(Body::from(serde_json::to_string(&ApiResponse {
+                    status_code: 200,
+                    messages: vec![],
+                    data: Some(game),
+                })?)),
                 ..Default::default()
             })
         }
         None => build_response(
             StatusCode::BAD_REQUEST,
-            Some(&format!("Game with ID `{game_id}` not found")),
+            Some(vec![format!("Game with ID `{game_id}` not found").into()]),
             None::<()>,
         ),
     }

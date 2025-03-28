@@ -24,7 +24,7 @@ async fn function_handler(
     let Some(connection_id) = request_context.connection_id.as_ref() else {
         return build_response(
             StatusCode::BAD_REQUEST,
-            Some("Missing connection ID"),
+            Some(vec!["Missing connection ID".into()]),
             None::<()>,
         );
     };

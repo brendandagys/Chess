@@ -1,5 +1,6 @@
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
+use chess::types::api::ApiResponse;
 use lambda_http::http::StatusCode;
 use lambda_http::Body;
 use lambda_runtime::Error;
@@ -23,7 +24,7 @@ pub async fn join_game(
     if username.trim().is_empty() {
         return build_response(
             StatusCode::BAD_REQUEST,
-            Some("Must provide a username"),
+            Some(vec!["Must provide a username".into()]),
             None::<()>,
         );
     }
@@ -38,7 +39,11 @@ pub async fn join_game(
             if let Err(err) =
                 assign_player_to_remaining_slot(&mut existing_game, username, connection_id)
             {
-                return build_response(StatusCode::BAD_REQUEST, Some(&err.to_string()), None::<()>);
+                return build_response(
+                    StatusCode::BAD_REQUEST,
+                    Some(vec![err.to_string().into()]),
+                    None::<()>,
+                );
             }
 
             tracing::info!(
@@ -59,9 +64,10 @@ pub async fn join_game(
         None => {
             return build_response(
                 StatusCode::BAD_REQUEST,
-                Some(&format!(
+                Some(vec![format!(
                     "Game with ID `{game_id}` does not exist. Please create a new game instead."
-                )),
+                )
+                .into()]),
                 None::<()>,
             );
         }
@@ -95,7 +101,11 @@ pub async fn join_game(
 
     Ok(ApiGatewayProxyResponse {
         status_code: 200, // Doesn't seem to be used by API Gateway
-        body: Some(Body::from(serde_json::to_string(&game)?)),
+        body: Some(Body::from(serde_json::to_string(&ApiResponse {
+            status_code: 200,
+            messages: vec![],
+            data: Some(game),
+        })?)),
         ..Default::default()
     })
 }
