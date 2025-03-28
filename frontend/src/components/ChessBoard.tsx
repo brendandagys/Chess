@@ -161,7 +161,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                 )
               ) / 2 || 0),
             top:
-              draggingPiece.y +
+              draggingPiece.y -
               (parseFloat(
                 getComputedStyle(document.documentElement).getPropertyValue(
                   "--piece-diameter"
