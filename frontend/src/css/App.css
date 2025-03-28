@@ -21,7 +21,8 @@
 .options-bar {
   background-color: white;
   cursor: pointer;
-  border: 2px dashed black;
+  border-top: 2px dashed black;
+  border-bottom: 2px dashed black;
   margin: 1.6rem auto 1rem;
   padding: 0.3rem;
   font-size: 0.9rem;
