@@ -3,18 +3,23 @@ import { GameRecord } from "../types/game";
 import { Color } from "../types/piece";
 import { ChessBoard } from "./ChessBoard";
 import { Alert } from "./Alert";
-import { useMessageDisplay } from "../hooks/useMessageDisplay";
+import { GameMessage } from "../types/sharedComponentTypes";
 
 import "../css/Game.css";
 
 interface GameProps {
   gameRecord: GameRecord;
   usernames: string[];
+  messages: GameMessage[];
+  dismissMessage: (id: string) => void;
 }
 
-export const Game: React.FC<GameProps> = ({ gameRecord, usernames }) => {
-  const [messages, setMessages, dismissMessage] = useMessageDisplay();
-
+export const Game: React.FC<GameProps> = ({
+  gameRecord,
+  usernames,
+  messages,
+  dismissMessage,
+}) => {
   const gameState = gameRecord.game_state;
 
   const playerColor = usernames.includes(gameRecord.white_username ?? "")

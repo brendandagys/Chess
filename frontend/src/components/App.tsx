@@ -12,7 +12,9 @@ import { ApiResponse } from "../types/api";
 import "../css/App.css";
 
 export const App: React.FC = () => {
-  const [messages, setMessages, dismissMessage] = useMessageDisplay();
+  const [appMessages, setAppMessages, dismissAppMessage] = useMessageDisplay();
+  const [gameMessages, setGameMessages, dismissGameMessage] =
+    useMessageDisplay();
   const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
   const [showForm, setShowForm] = useState(true);
   const [formToShow, setFormToShow] = useState<FormToShow>(FormToShow.Create);
@@ -20,28 +22,29 @@ export const App: React.FC = () => {
 
   const onWebSocketMessage = useCallback(
     (response: ApiResponse<unknown>) => {
+      const isGameError = Object.keys(response.data ?? {}).includes("game_id");
+      const gameRecord = isGameError ? (response.data as GameRecord) : null;
+
+      if (gameRecord) {
+        setGameRecords((old) => [
+          ...old.filter((game) => game.game_id !== gameRecord.game_id),
+          gameRecord,
+        ]);
+      }
+
       if (response.messages.length) {
-        setMessages((old) => [
+        (gameRecord ? setGameMessages : setAppMessages)((old) => [
           ...old,
           ...response.messages.map(({ message, errorType }) => ({
-            id: crypto.randomUUID(),
+            id: gameRecord?.game_id ?? crypto.randomUUID(),
             message,
             errorType,
             duration: 5000,
           })),
         ]);
       }
-
-      if (response.data as GameRecord | null) {
-        const gameRecord = response.data as GameRecord;
-
-        setGameRecords((old) => [
-          ...old.filter((game) => game.game_id !== gameRecord.game_id),
-          gameRecord,
-        ]);
-      }
     },
-    [setMessages]
+    [setAppMessages, setGameMessages]
   );
 
   const sendMessage = useWebSocket(WEBSOCKET_ENDPOINT, onWebSocketMessage);
@@ -49,13 +52,13 @@ export const App: React.FC = () => {
   return (
     <div className="app-container">
       <div className="title-container">
-        {messages.length ? (
-          messages.map((message) => (
+        {appMessages.length ? (
+          appMessages.map((message) => (
             <Alert
               key={message.id}
               message={message}
               onDismiss={() => {
-                dismissMessage(message.id);
+                dismissAppMessage(message.id);
               }}
             />
           ))
@@ -113,6 +116,10 @@ export const App: React.FC = () => {
             key={gameRecord.game_id}
             gameRecord={gameRecord}
             usernames={usernames}
+            messages={gameMessages.filter(
+              (message) => message.id === gameRecord.game_id
+            )}
+            dismissMessage={dismissGameMessage}
           />
         ))}
       </div>
