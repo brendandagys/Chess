@@ -5,6 +5,7 @@
 
 .board-row {
   display: flex;
+  height: var(--piece-diameter);
 }
 
 .square {
@@ -20,10 +21,14 @@
 .board .square img {
   width: 100%;
   height: 100%;
-  max-width: 70px;
+  max-width: var(--piece-diameter);
 }
 
 .hidden-piece {
+  visibility: hidden;
+}
+
+.piece.dragging {
   visibility: hidden;
 }
 
