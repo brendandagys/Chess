@@ -57,7 +57,9 @@
 } */
 
 .game-container .chess-board-container {
-  display: inline-block;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
   margin-top: 1rem;
 }
 
