@@ -2,8 +2,8 @@
   padding-bottom: 3rem;
 }
 
-.title {
-  margin: 1rem;
+.app-container .title-container {
+  margin: 1rem 0;
 }
 
 .sub-title {

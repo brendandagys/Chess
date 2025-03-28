@@ -11,10 +11,10 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.alert.hidden {
+/* .alert.hidden {
   opacity: 0;
   transform: translateY(-10px);
-}
+} */
 
 .alert .message {
   margin-right: 0.75rem;

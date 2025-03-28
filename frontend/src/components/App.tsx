@@ -5,28 +5,45 @@ import { FormToShow } from "../types/sharedComponentTypes";
 import { GameRecord } from "../types/game";
 import { Game } from "./Game";
 import { WEBSOCKET_ENDPOINT } from "../constants";
+import { useMessageDisplay } from "../hooks/useMessageDisplay";
+import { Alert } from "./Alert";
 
 import "../css/App.css";
 
 export const App: React.FC = () => {
+  const [messages, setMessages, dismissMessage] = useMessageDisplay();
   const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
   const [showForm, setShowForm] = useState(true);
   const [formToShow, setFormToShow] = useState<FormToShow>(FormToShow.Create);
-
   const [usernames, setUsernames] = useState<string[]>([]);
 
-  const onMessage = useCallback((gameRecord: GameRecord) => {
+  const onWebSocketMessage = useCallback((gameRecord: GameRecord) => {
     setGameRecords((old) => [
       ...old.filter((game) => game.game_id !== gameRecord.game_id),
       gameRecord,
     ]);
   }, []);
 
-  const sendMessage = useWebSocket(WEBSOCKET_ENDPOINT, onMessage);
+  const sendMessage = useWebSocket(WEBSOCKET_ENDPOINT, onWebSocketMessage);
 
   return (
     <div className="app-container">
-      <h1 className="title">Play Chess</h1>
+      <div className="title-container">
+        {messages.length ? (
+          messages.map((message) => (
+            <Alert
+              key={message.id}
+              message={message}
+              onDismiss={() => {
+                dismissMessage(message.id);
+              }}
+            />
+          ))
+        ) : (
+          <h1>Play Chess</h1>
+        )}
+      </div>
+
       <p className="sub-title">
         <button
           onClick={() => {
