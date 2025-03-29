@@ -159,14 +159,16 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                 getComputedStyle(document.documentElement).getPropertyValue(
                   "--piece-diameter"
                 )
-              ) / 2 || 0),
+              ) / 2 || 0) +
+              window.scrollX,
             top:
               draggingPiece.y -
               (parseFloat(
                 getComputedStyle(document.documentElement).getPropertyValue(
                   "--piece-diameter"
                 )
-              ) / 2 || 0),
+              ) / 2 || 0) +
+              window.scrollY,
             pointerEvents: "none",
             width: "var(--piece-diameter)",
             height: "var(--piece-diameter)",
