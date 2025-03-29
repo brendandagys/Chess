@@ -26,10 +26,20 @@ export const App: React.FC = () => {
       const gameRecord = isGameError ? (response.data as GameRecord) : null;
 
       if (gameRecord) {
-        setGameRecords((old) => [
-          ...old.filter((game) => game.game_id !== gameRecord.game_id),
-          gameRecord,
-        ]);
+        setGameRecords((old) => {
+          const index = old.findIndex(
+            (game) => game.game_id === gameRecord.game_id
+          );
+
+          if (index === -1) {
+            return [...old, gameRecord];
+          }
+
+          const newGames = [...old];
+          newGames[index] = gameRecord;
+
+          return newGames;
+        });
       }
 
       if (response.messages.length) {
@@ -47,7 +57,10 @@ export const App: React.FC = () => {
     [setAppMessages, setGameMessages]
   );
 
-  const sendMessage = useWebSocket(WEBSOCKET_ENDPOINT, onWebSocketMessage);
+  const sendWebSocketMessage = useWebSocket(
+    WEBSOCKET_ENDPOINT,
+    onWebSocketMessage
+  );
 
   return (
     <div className="app-container">
@@ -103,7 +116,7 @@ export const App: React.FC = () => {
       {showForm && (
         <div className="form-container">
           <GameForm
-            sendMessage={sendMessage}
+            sendWebSocketMessage={sendWebSocketMessage}
             mode={formToShow}
             setUsernames={setUsernames}
           />
@@ -119,6 +132,7 @@ export const App: React.FC = () => {
             messages={gameMessages.filter(
               (message) => message.id === gameRecord.game_id
             )}
+            sendWebSocketMessage={sendWebSocketMessage}
             dismissMessage={dismissGameMessage}
           />
         ))}
