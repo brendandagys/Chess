@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiResponse, GameRequest } from "../types/api";
 
 export const useWebSocket = (
@@ -6,6 +6,7 @@ export const useWebSocket = (
   onMessage: (response: ApiResponse<unknown>) => void
 ) => {
   const websocket = useRef<WebSocket | null>(null);
+  const [connectionId, setConnectionId] = useState<string | null>(null);
 
   useEffect(() => {
     websocket.current = new WebSocket(url);
@@ -16,7 +17,8 @@ export const useWebSocket = (
 
     websocket.current.onmessage = (event: MessageEvent) => {
       const response = JSON.parse(event.data as string) as ApiResponse<unknown>;
-
+      console.log("Received message:", response);
+      setConnectionId(response.connectionId);
       onMessage(response);
     };
 
@@ -42,5 +44,5 @@ export const useWebSocket = (
     }
   };
 
-  return sendMessage;
+  return [connectionId, sendMessage] as const;
 };

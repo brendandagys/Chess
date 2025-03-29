@@ -18,12 +18,11 @@ export const App: React.FC = () => {
   const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
   const [showForm, setShowForm] = useState(true);
   const [formToShow, setFormToShow] = useState<FormToShow>(FormToShow.Create);
-  const [usernames, setUsernames] = useState<string[]>([]);
 
   const onWebSocketMessage = useCallback(
     (response: ApiResponse<unknown>) => {
-      const isGameError = Object.keys(response.data ?? {}).includes("game_id");
-      const gameRecord = isGameError ? (response.data as GameRecord) : null;
+      const isGameRecord = Object.keys(response.data ?? {}).includes("game_id");
+      const gameRecord = isGameRecord ? (response.data as GameRecord) : null;
 
       if (gameRecord) {
         setGameRecords((old) => {
@@ -57,7 +56,7 @@ export const App: React.FC = () => {
     [setAppMessages, setGameMessages]
   );
 
-  const sendWebSocketMessage = useWebSocket(
+  const [connectionId, sendWebSocketMessage] = useWebSocket(
     WEBSOCKET_ENDPOINT,
     onWebSocketMessage
   );
@@ -116,27 +115,28 @@ export const App: React.FC = () => {
             <GameForm
               sendWebSocketMessage={sendWebSocketMessage}
               mode={formToShow}
-              setUsernames={setUsernames}
               setShowForm={setShowForm}
             />
           </div>
         </>
       )}
 
-      <div className="games-container">
-        {gameRecords.map((gameRecord) => (
-          <Game
-            key={gameRecord.game_id}
-            gameRecord={gameRecord}
-            usernames={usernames}
-            messages={gameMessages.filter(
-              (message) => message.id === gameRecord.game_id
-            )}
-            sendWebSocketMessage={sendWebSocketMessage}
-            dismissMessage={dismissGameMessage}
-          />
-        ))}
-      </div>
+      {connectionId && (
+        <div className="games-container">
+          {gameRecords.map((gameRecord) => (
+            <Game
+              key={gameRecord.game_id}
+              gameRecord={gameRecord}
+              connectionId={connectionId}
+              messages={gameMessages.filter(
+                (message) => message.id === gameRecord.game_id
+              )}
+              sendWebSocketMessage={sendWebSocketMessage}
+              dismissMessage={dismissGameMessage}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

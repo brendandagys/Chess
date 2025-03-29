@@ -7,6 +7,7 @@ use crate::types::api::{ApiErrorMessage, ApiResponse};
 /// Sends a response back to the client
 pub fn build_response<T: Serialize>(
     status_code: StatusCode,
+    connection_id: Option<String>,
     messages: Option<Vec<ApiErrorMessage>>,
     data: Option<T>,
 ) -> Result<ApiGatewayProxyResponse, Error> {
@@ -14,6 +15,7 @@ pub fn build_response<T: Serialize>(
 
     let body = Body::from(serde_json::to_string(&ApiResponse {
         status_code,
+        connection_id,
         messages: messages.unwrap_or_default(),
         data,
     })?);

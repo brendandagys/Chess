@@ -19,6 +19,7 @@ interface ApiErrorMessage {
 
 export interface ApiResponse<T> {
   statusCode: number;
+  connectionId: string | null;
   messages: ApiErrorMessage[];
   data: T | null;
 }

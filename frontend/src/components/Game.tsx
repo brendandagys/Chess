@@ -10,7 +10,7 @@ import "../css/Game.css";
 
 interface GameProps {
   gameRecord: GameRecord;
-  usernames: string[];
+  connectionId: string;
   messages: GameMessage[];
   sendWebSocketMessage: (action: GameRequest) => void;
   dismissMessage: (id: string) => void;
@@ -18,16 +18,15 @@ interface GameProps {
 
 export const Game: React.FC<GameProps> = ({
   gameRecord,
-  usernames,
+  connectionId,
   messages,
   sendWebSocketMessage,
   dismissMessage,
 }) => {
   const gameState = gameRecord.game_state;
 
-  const playerColor = usernames.includes(gameRecord.white_username ?? "")
-    ? Color.White
-    : Color.Black;
+  const playerColor =
+    connectionId === gameRecord.white_connection_id ? Color.White : Color.Black;
 
   const isTurn = playerColor === gameState.currentTurn;
 

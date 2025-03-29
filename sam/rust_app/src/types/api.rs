@@ -46,6 +46,7 @@ impl From<String> for ApiErrorMessage {
 #[serde(rename_all = "camelCase")]
 pub struct ApiResponse<T> {
     pub status_code: u16,
+    pub connection_id: Option<String>,
     pub messages: Vec<ApiErrorMessage>,
     pub data: Option<T>,
 }

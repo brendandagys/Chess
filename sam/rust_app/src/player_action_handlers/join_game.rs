@@ -22,6 +22,7 @@ pub async fn join_game(
     if username.trim().is_empty() {
         return build_response(
             StatusCode::BAD_REQUEST,
+            Some(connection_id.to_string()),
             Some(vec!["Must provide a username".into()]),
             None::<()>,
         );
@@ -39,6 +40,7 @@ pub async fn join_game(
             {
                 return build_response(
                     StatusCode::BAD_REQUEST,
+                    Some(connection_id.to_string()),
                     Some(vec![err.to_string().into()]),
                     None::<()>,
                 );
@@ -62,6 +64,7 @@ pub async fn join_game(
         None => {
             return build_response(
                 StatusCode::BAD_REQUEST,
+                Some(connection_id.to_string()),
                 Some(vec![format!(
                     "Game with ID `{game_id}` does not exist. Please create a new game instead."
                 )
@@ -97,5 +100,10 @@ pub async fn join_game(
 
     tracing::info!("PLAYER {username} JOINED GAME (ID: {})", game.game_id);
 
-    build_response(StatusCode::OK, None, Some(game))
+    build_response(
+        StatusCode::OK,
+        Some(connection_id.to_string()),
+        None,
+        Some(game),
+    )
 }

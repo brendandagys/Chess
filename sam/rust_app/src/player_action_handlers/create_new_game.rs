@@ -22,6 +22,7 @@ pub async fn create_new_game(
     if username.trim().is_empty() {
         return build_response(
             StatusCode::BAD_REQUEST,
+            Some(connection_id.to_string()),
             Some(vec!["Must provide a username".into()]),
             None::<()>,
         );
@@ -32,6 +33,7 @@ pub async fn create_new_game(
             if let Some(_) = get_game(&dynamo_db_client, game_table, game_id).await? {
                 return build_response(
                     StatusCode::BAD_REQUEST,
+                    Some(connection_id.to_string()),
                     Some(vec![format!(
                         "Game with ID `{game_id}` already exists. Please join the game instead."
                     )
@@ -71,5 +73,10 @@ pub async fn create_new_game(
         new_game.game_id
     );
 
-    build_response(StatusCode::OK, None, Some(new_game))
+    build_response(
+        StatusCode::OK,
+        Some(connection_id.to_string()),
+        None,
+        Some(new_game),
+    )
 }
