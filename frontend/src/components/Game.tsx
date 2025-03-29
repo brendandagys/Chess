@@ -4,6 +4,7 @@ import { Color } from "../types/piece";
 import { ChessBoard } from "./ChessBoard";
 import { Alert } from "./Alert";
 import { GameMessage } from "../types/sharedComponentTypes";
+import { GameRequest } from "../types/api";
 
 import "../css/Game.css";
 
@@ -11,6 +12,7 @@ interface GameProps {
   gameRecord: GameRecord;
   usernames: string[];
   messages: GameMessage[];
+  sendWebSocketMessage: (action: GameRequest) => void;
   dismissMessage: (id: string) => void;
 }
 
@@ -18,6 +20,7 @@ export const Game: React.FC<GameProps> = ({
   gameRecord,
   usernames,
   messages,
+  sendWebSocketMessage,
   dismissMessage,
 }) => {
   const gameState = gameRecord.game_state;
@@ -59,7 +62,12 @@ export const Game: React.FC<GameProps> = ({
       </div>
 
       <div className={`chess-board-container ${isTurn && "is-player-turn"}`}>
-        <ChessBoard board={gameState.board} playerColor={playerColor} />
+        <ChessBoard
+          board={gameState.board}
+          playerColor={playerColor}
+          gameId={gameRecord.game_id}
+          sendWebSocketMessage={sendWebSocketMessage}
+        />
       </div>
     </div>
   );

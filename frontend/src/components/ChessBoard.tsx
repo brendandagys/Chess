@@ -2,12 +2,15 @@ import { images } from "../images";
 import { Color, PieceType } from "../types/piece";
 import { Board } from "../types/board";
 import { rotateBoard180Degrees } from "../utils";
+import { useDrag } from "../hooks/useDrag";
+import { GameRequest } from "../types/api";
 
 import "../css/ChessBoard.css";
-import { useDrag } from "../hooks/useDrag";
 interface ChessBoardProps {
   board: Board;
   playerColor: Color;
+  gameId: string;
+  sendWebSocketMessage: (action: GameRequest) => void;
 }
 
 const imageMap = {
@@ -22,13 +25,18 @@ const imageMap = {
 export const ChessBoard: React.FC<ChessBoardProps> = ({
   board: _board,
   playerColor,
+  gameId,
+  sendWebSocketMessage,
 }) => {
   const board =
     playerColor === Color.White
       ? rotateBoard180Degrees(_board.squares)
       : _board.squares;
 
-  const [draggingPiece, handleMouseDown] = useDrag();
+  const [draggingPiece, handleMouseDown] = useDrag(
+    gameId,
+    sendWebSocketMessage
+  );
 
   return (
     <div className={`board rank-count-${board.length % 2 ? "odd" : "even"}`}>

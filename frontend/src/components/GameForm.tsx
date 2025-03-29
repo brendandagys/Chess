@@ -10,13 +10,13 @@ import { Color } from "../types/piece";
 import "../css/GameForm.css";
 
 interface GameFormProps {
-  sendMessage: (action: GameRequest) => void;
+  sendWebSocketMessage: (action: GameRequest) => void;
   mode: FormToShow;
   setUsernames: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export const GameForm: React.FC<GameFormProps> = ({
-  sendMessage,
+  sendWebSocketMessage,
   mode,
   setUsernames,
 }) => {
@@ -75,7 +75,7 @@ export const GameForm: React.FC<GameFormProps> = ({
             },
           };
 
-    sendMessage({
+    sendWebSocketMessage({
       route: API_ROUTE,
       data,
     });
@@ -94,7 +94,7 @@ export const GameForm: React.FC<GameFormProps> = ({
             <label className="toggle">
               <input
                 type="checkbox"
-                defaultChecked={true}
+                checked={colorPreference === Color.White}
                 onChange={() => {
                   setColorPreference((old) =>
                     old === Color.White ? Color.Black : Color.White
