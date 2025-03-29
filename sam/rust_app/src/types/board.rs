@@ -107,30 +107,22 @@ impl BoardSetup {
 
                 let king_file = dimensions.files / 2;
 
-                // Place kings
-                squares[0][king_file] = Some(Piece::new(PieceType::King, Color::White));
-                squares[dimensions.ranks - 1][king_file] =
-                    Some(Piece::new(PieceType::King, Color::Black));
-
                 // First and last ranks
                 for (i, piece_type) in outer_row.into_iter().enumerate() {
-                    if i == king_file {
-                        continue;
-                    }
-
                     squares[0][i] = Some(Piece::new(piece_type, Color::White));
                     squares[dimensions.ranks - 1][i] = Some(Piece::new(piece_type, Color::Black));
                 }
 
                 // Second and second-to-last ranks
                 for (i, piece_type) in inner_row.into_iter().enumerate() {
-                    if i == king_file {
-                        continue;
-                    }
-
                     squares[1][i] = Some(Piece::new(piece_type, Color::White));
                     squares[dimensions.ranks - 2][i] = Some(Piece::new(piece_type, Color::Black));
                 }
+
+                // Place kings
+                squares[0][king_file] = Some(Piece::new(PieceType::King, Color::White));
+                squares[dimensions.ranks - 1][king_file] =
+                    Some(Piece::new(PieceType::King, Color::Black));
 
                 Board { squares }
             }
@@ -149,23 +141,19 @@ impl BoardSetup {
                 let chosen_piece = available_pieces.choose(&mut rng).unwrap().clone();
                 let king_file = dimensions.files / 2;
 
+                // Place the random piece
+                for i in 0..dimensions.files {
+                    squares[0][i] = Some(Piece::new(chosen_piece, Color::White));
+                    squares[1][i] = Some(Piece::new(chosen_piece, Color::White));
+
+                    squares[dimensions.ranks - 2][i] = Some(Piece::new(chosen_piece, Color::Black));
+                    squares[dimensions.ranks - 1][i] = Some(Piece::new(chosen_piece, Color::Black));
+                }
+
                 // Place kings
                 squares[0][king_file] = Some(Piece::new(PieceType::King, Color::White));
                 squares[dimensions.ranks - 1][king_file] =
                     Some(Piece::new(PieceType::King, Color::Black));
-
-                // Place the chosen piece
-                for i in 0..dimensions.files {
-                    if i == king_file && (i == 0 || i == dimensions.files - 1) {
-                        continue;
-                    }
-
-                    squares[0][i] = Some(Piece::new(chosen_piece, Color::White));
-                    squares[1][i] = Some(Piece::new(chosen_piece, Color::White));
-
-                    squares[dimensions.ranks - 1][i] = Some(Piece::new(chosen_piece, Color::White));
-                    squares[dimensions.ranks - 1][i] = Some(Piece::new(chosen_piece, Color::White));
-                }
 
                 Board { squares }
             }
