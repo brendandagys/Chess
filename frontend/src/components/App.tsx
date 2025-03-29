@@ -76,7 +76,7 @@ export const App: React.FC = () => {
             />
           ))
         ) : (
-          <h1>Play Chess</h1>
+          <h1 className="main-title">Play Chess</h1>
         )}
       </div>
 

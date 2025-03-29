@@ -6,6 +6,10 @@
   margin: 1rem 0;
 }
 
+.app-container .title-container .main-title {
+  max-height: 30px;
+}
+
 .sub-title {
   color: slategray;
 }
@@ -40,6 +44,7 @@
   cursor: pointer;
   font-size: inherit;
   padding: 0;
+  margin-top: 0.25rem;
 }
 
 .button-link:hover {
