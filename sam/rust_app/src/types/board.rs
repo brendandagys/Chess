@@ -52,35 +52,35 @@ impl BoardSetup {
             Self::Standard => {
                 let mut squares = vec![vec![None; 8]; 8];
 
-                // White major pieces
-                squares[0][0] = Some(Piece::new(PieceType::Rook, Color::White));
-                squares[0][1] = Some(Piece::new(PieceType::Knight, Color::White));
-                squares[0][2] = Some(Piece::new(PieceType::Bishop, Color::White));
-                squares[0][3] = Some(Piece::new(PieceType::King, Color::White));
-                squares[0][4] = Some(Piece::new(PieceType::Queen, Color::White));
-                squares[0][5] = Some(Piece::new(PieceType::Bishop, Color::White));
-                squares[0][6] = Some(Piece::new(PieceType::Knight, Color::White));
-                squares[0][7] = Some(Piece::new(PieceType::Rook, Color::White));
-
-                // White pawns
-                for col in 0..8 {
-                    squares[1][col] = Some(Piece::new(PieceType::Pawn, Color::White));
-                }
+                // Black major pieces
+                squares[0][0] = Some(Piece::new(PieceType::Rook, Color::Black));
+                squares[0][1] = Some(Piece::new(PieceType::Knight, Color::Black));
+                squares[0][2] = Some(Piece::new(PieceType::Bishop, Color::Black));
+                squares[0][3] = Some(Piece::new(PieceType::Queen, Color::Black));
+                squares[0][4] = Some(Piece::new(PieceType::King, Color::Black));
+                squares[0][5] = Some(Piece::new(PieceType::Bishop, Color::Black));
+                squares[0][6] = Some(Piece::new(PieceType::Knight, Color::Black));
+                squares[0][7] = Some(Piece::new(PieceType::Rook, Color::Black));
 
                 // Black pawns
                 for col in 0..8 {
-                    squares[6][col] = Some(Piece::new(PieceType::Pawn, Color::Black));
+                    squares[1][col] = Some(Piece::new(PieceType::Pawn, Color::Black));
                 }
 
-                // Black major pieces
-                squares[7][0] = Some(Piece::new(PieceType::Rook, Color::Black));
-                squares[7][1] = Some(Piece::new(PieceType::Knight, Color::Black));
-                squares[7][2] = Some(Piece::new(PieceType::Bishop, Color::Black));
-                squares[7][3] = Some(Piece::new(PieceType::King, Color::Black));
-                squares[7][4] = Some(Piece::new(PieceType::Queen, Color::Black));
-                squares[7][5] = Some(Piece::new(PieceType::Bishop, Color::Black));
-                squares[7][6] = Some(Piece::new(PieceType::Knight, Color::Black));
-                squares[7][7] = Some(Piece::new(PieceType::Rook, Color::Black));
+                // White pawns
+                for col in 0..8 {
+                    squares[6][col] = Some(Piece::new(PieceType::Pawn, Color::White));
+                }
+
+                // White major pieces
+                squares[7][0] = Some(Piece::new(PieceType::Rook, Color::White));
+                squares[7][1] = Some(Piece::new(PieceType::Knight, Color::White));
+                squares[7][2] = Some(Piece::new(PieceType::Bishop, Color::White));
+                squares[7][3] = Some(Piece::new(PieceType::Queen, Color::White));
+                squares[7][4] = Some(Piece::new(PieceType::King, Color::White));
+                squares[7][5] = Some(Piece::new(PieceType::Bishop, Color::White));
+                squares[7][6] = Some(Piece::new(PieceType::Knight, Color::White));
+                squares[7][7] = Some(Piece::new(PieceType::Rook, Color::White));
 
                 Board { squares }
             }
@@ -105,24 +105,24 @@ impl BoardSetup {
                 available_pieces.push(PieceType::Pawn);
                 let inner_row = generate_row(&available_pieces);
 
-                let king_file = (dimensions.files - 1) / 2;
+                let king_file = dimensions.files / 2;
 
                 // First and last ranks
                 for (i, piece_type) in outer_row.into_iter().enumerate() {
-                    squares[0][i] = Some(Piece::new(piece_type, Color::White));
-                    squares[dimensions.ranks - 1][i] = Some(Piece::new(piece_type, Color::Black));
+                    squares[0][i] = Some(Piece::new(piece_type, Color::Black));
+                    squares[dimensions.ranks - 1][i] = Some(Piece::new(piece_type, Color::White));
                 }
 
                 // Second and second-to-last ranks
                 for (i, piece_type) in inner_row.into_iter().enumerate() {
-                    squares[1][i] = Some(Piece::new(piece_type, Color::White));
-                    squares[dimensions.ranks - 2][i] = Some(Piece::new(piece_type, Color::Black));
+                    squares[1][i] = Some(Piece::new(piece_type, Color::Black));
+                    squares[dimensions.ranks - 2][i] = Some(Piece::new(piece_type, Color::White));
                 }
 
                 // Place kings
-                squares[0][king_file] = Some(Piece::new(PieceType::King, Color::White));
+                squares[0][king_file] = Some(Piece::new(PieceType::King, Color::Black));
                 squares[dimensions.ranks - 1][king_file] =
-                    Some(Piece::new(PieceType::King, Color::Black));
+                    Some(Piece::new(PieceType::King, Color::White));
 
                 Board { squares }
             }
@@ -139,21 +139,21 @@ impl BoardSetup {
                 ];
 
                 let chosen_piece = available_pieces.choose(&mut rng).unwrap().clone();
-                let king_file = (dimensions.files - 1) / 2;
+                let king_file = dimensions.files / 2;
 
                 // Place the random piece
                 for i in 0..dimensions.files {
-                    squares[0][i] = Some(Piece::new(chosen_piece, Color::White));
-                    squares[1][i] = Some(Piece::new(chosen_piece, Color::White));
+                    squares[0][i] = Some(Piece::new(chosen_piece, Color::Black));
+                    squares[1][i] = Some(Piece::new(chosen_piece, Color::Black));
 
-                    squares[dimensions.ranks - 2][i] = Some(Piece::new(chosen_piece, Color::Black));
-                    squares[dimensions.ranks - 1][i] = Some(Piece::new(chosen_piece, Color::Black));
+                    squares[dimensions.ranks - 2][i] = Some(Piece::new(chosen_piece, Color::White));
+                    squares[dimensions.ranks - 1][i] = Some(Piece::new(chosen_piece, Color::White));
                 }
 
                 // Place kings
-                squares[0][king_file] = Some(Piece::new(PieceType::King, Color::White));
+                squares[0][king_file] = Some(Piece::new(PieceType::King, Color::Black));
                 squares[dimensions.ranks - 1][king_file] =
-                    Some(Piece::new(PieceType::King, Color::Black));
+                    Some(Piece::new(PieceType::King, Color::White));
 
                 Board { squares }
             }
