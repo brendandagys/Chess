@@ -105,7 +105,7 @@ impl BoardSetup {
                 available_pieces.push(PieceType::Pawn);
                 let inner_row = generate_row(&available_pieces);
 
-                let king_file = (dimensions.files / 2) + 1;
+                let king_file = (dimensions.files - 1) / 2;
 
                 // First and last ranks
                 for (i, piece_type) in outer_row.into_iter().enumerate() {
@@ -139,7 +139,7 @@ impl BoardSetup {
                 ];
 
                 let chosen_piece = available_pieces.choose(&mut rng).unwrap().clone();
-                let king_file = (dimensions.files / 2) + 1;
+                let king_file = (dimensions.files - 1) / 2;
 
                 // Place the random piece
                 for i in 0..dimensions.files {
