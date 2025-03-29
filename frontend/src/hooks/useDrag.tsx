@@ -1,19 +1,38 @@
-import "../css/ChessBoard.css";
 import { useCallback, useEffect, useState } from "react";
 import { Piece } from "../types/piece";
+import { GameRequest } from "../types/api";
+import { PlayerActionName } from "../types/game";
+import { API_ROUTE } from "../constants";
+import { Position } from "../types/board";
 
-export const useDrag = () => {
+import "../css/ChessBoard.css";
+
+export const useDrag = (
+  gameId: string,
+  onMouseUp: (action: GameRequest) => void
+) => {
   const [draggingPiece, setDraggingPiece] = useState<{
     piece: Piece;
     x: number;
     y: number;
   } | null>(null);
 
+  const [from, setFrom] = useState<Position | null>(null);
+
   const handleMouseDown = (
     event: React.MouseEvent<HTMLImageElement>,
     piece: Piece
   ) => {
-    event.currentTarget.classList.add("dragging");
+    const elem = event.currentTarget;
+
+    elem.classList.add("dragging");
+
+    if (elem.dataset.rank && elem.dataset.file) {
+      setFrom({
+        rank: parseInt(elem.dataset.rank),
+        file: parseInt(elem.dataset.file),
+      });
+    }
 
     setDraggingPiece({
       piece,
@@ -44,24 +63,43 @@ export const useDrag = () => {
 
       if (elementUnderMouse && elementUnderMouse instanceof HTMLElement) {
         const classes = elementUnderMouse.classList;
-        let pieceElement: HTMLElement | null = null;
+        let piece: HTMLElement | null = null;
 
         if (classes.contains("square")) {
-          pieceElement =
+          piece =
             elementUnderMouse.querySelector(".piece") ??
             elementUnderMouse.querySelector(".hidden-piece");
         } else if (
           classes.contains("piece") ||
           classes.contains("hidden-piece")
         ) {
-          pieceElement = elementUnderMouse;
+          piece = elementUnderMouse;
         }
 
-        if (pieceElement) {
-          const rank = pieceElement.dataset.rank;
-          const file = pieceElement.dataset.file;
+        if (from && piece?.dataset.rank && piece.dataset.file) {
+          const toRank = parseInt(piece.dataset.rank);
+          const toFile = parseInt(piece.dataset.file);
 
-          console.log(`Piece placed at rank: ${rank}, file: ${file}`);
+          onMouseUp({
+            route: API_ROUTE,
+            data: {
+              [PlayerActionName.MovePiece]: {
+                gameId,
+                playerMove: {
+                  from: {
+                    rank: from.rank,
+                    file: from.file,
+                  },
+                  to: {
+                    rank: toRank,
+                    file: toFile,
+                  },
+                },
+              },
+            },
+          });
+
+          console.log(`Piece placed at rank: ${toRank}, file: ${toFile}`);
         }
       }
     }
@@ -71,7 +109,8 @@ export const useDrag = () => {
     });
 
     setDraggingPiece(null);
-  }, [draggingPiece]);
+    setFrom(null);
+  }, [draggingPiece, from, gameId, onMouseUp]);
 
   useEffect(() => {
     if (draggingPiece) {
