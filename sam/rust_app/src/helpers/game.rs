@@ -66,41 +66,42 @@ pub fn assign_player_to_remaining_slot(
     username: &str,
     connection_id: &str,
 ) -> Result<(), Error> {
-    // Check if the game is already full
     if let Some(white_username) = &game.white_username {
         if let Some(black_username) = &game.black_username {
             if black_username != username && white_username != username {
                 return Err(Error::from(format!(
-                    "Game (ID: `{}`) is full",
+                    "Game (ID: `{}`) already has two players",
                     game.game_id
                 )));
             }
         }
     }
 
-    if let Some(white_connection_id) = &game.white_connection_id {
-        if white_connection_id == connection_id {
-            return Err(Error::from(format!(
-                "You have already joined this game (ID: {}) as white",
-                game.game_id
-            )));
-        }
-    }
-
-    if let Some(black_connection_id) = &game.black_connection_id {
-        if black_connection_id == connection_id {
-            return Err(Error::from(format!(
-                "You have already joined this game (ID: {}) as black",
-                game.game_id
-            )));
-        }
-    }
-
     match &game.white_username {
         Some(white_username) if white_username == username => {
+            if let Some(white_connection_id) = &game.white_connection_id {
+                if white_connection_id != "<disconnected>" {
+                    return Err(Error::from(format!(
+                        "{username} has already joined this game (ID: {}) as white",
+                        game.game_id
+                    )));
+                }
+            }
+
             game.white_connection_id = Some(connection_id.to_string());
         }
         Some(_) => {
+            if let Some(black_username) = &game.black_username {
+                if let Some(black_connection_id) = &game.black_connection_id {
+                    if black_connection_id != "<disconnected>" {
+                        return Err(Error::from(format!(
+                            "{} has already joined this game (ID: {}) as black",
+                            black_username, game.game_id
+                        )));
+                    }
+                }
+            }
+
             game.black_username = Some(username.to_string());
             game.black_connection_id = Some(connection_id.to_string());
         }
