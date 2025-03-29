@@ -1,5 +1,6 @@
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
+use chess::types::api::ApiMessage;
 use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
 
@@ -95,8 +96,17 @@ pub async fn join_game(
         }
     };
 
-    notify_other_player_about_game_update(sdk_config, request_context, connection_id, &game)
-        .await?;
+    notify_other_player_about_game_update(
+        sdk_config,
+        request_context,
+        connection_id,
+        &game,
+        Some(vec![ApiMessage {
+            message: format!("Player {username} has joined game `{}`", game.game_id),
+            message_type: chess::types::api::ApiMessageType::Success,
+        }]),
+    )
+    .await?;
 
     tracing::info!("PLAYER {username} JOINED GAME (ID: {})", game.game_id);
 

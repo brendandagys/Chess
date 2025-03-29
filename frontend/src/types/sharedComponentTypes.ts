@@ -1,4 +1,4 @@
-import { ApiErrorType } from "./api";
+import { ApiMessageType } from "./api";
 
 export enum FormToShow {
   Create = "create",
@@ -8,6 +8,6 @@ export enum FormToShow {
 export interface GameMessage {
   id: string;
   message: string;
-  errorType: ApiErrorType;
+  messageType: ApiMessageType;
   duration: number;
 }

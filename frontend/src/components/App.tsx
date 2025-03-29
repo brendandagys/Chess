@@ -44,10 +44,10 @@ export const App: React.FC = () => {
       if (response.messages.length) {
         (gameRecord ? setGameMessages : setAppMessages)((old) => [
           ...old,
-          ...response.messages.map(({ message, errorType }) => ({
+          ...response.messages.map(({ message, messageType }) => ({
             id: gameRecord?.game_id ?? crypto.randomUUID(),
             message,
-            errorType,
+            messageType,
             duration: 5000,
           })),
         ]);

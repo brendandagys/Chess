@@ -105,6 +105,7 @@ pub async fn move_piece(
                 request_context,
                 connection_id,
                 &game,
+                None,
             )
             .await?;
 

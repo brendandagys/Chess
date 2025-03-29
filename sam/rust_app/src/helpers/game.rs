@@ -1,4 +1,4 @@
-use crate::types::api::ApiResponse;
+use crate::types::api::{ApiMessage, ApiResponse};
 use crate::types::board::{Board, BoardSetup, Position};
 use crate::types::dynamo_db::GameRecord;
 use crate::types::game::{GameEnding, GameState, PlayerMove, State};
@@ -173,7 +173,11 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                         &ApiResponse {
                             status_code: 200,
                             connection_id: Some(black_connection_id.clone()),
-                            messages: vec![],
+                            messages: vec![format!(
+                                "Player {username} has disconnected from game `{}`",
+                                game.game_id
+                            )
+                            .into()],
                             data: Some(&game),
                         },
                     )
@@ -200,7 +204,11 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                         &ApiResponse {
                             status_code: 200,
                             connection_id: Some(white_connection_id.clone()),
-                            messages: vec![],
+                            messages: vec![format!(
+                                "Player {username} has disconnected from game `{}`",
+                                game.game_id
+                            )
+                            .into()],
                             data: Some(&game),
                         },
                     )
@@ -225,6 +233,7 @@ pub async fn notify_other_player_about_game_update(
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     current_user_connection_id: &str,
     game: &GameRecord,
+    messages: Option<Vec<ApiMessage>>,
 ) -> Result<(), Error> {
     if let Some(white_connection_id) = &game.white_connection_id {
         if white_connection_id != current_user_connection_id
@@ -237,7 +246,7 @@ pub async fn notify_other_player_about_game_update(
                 &ApiResponse {
                     status_code: 200,
                     connection_id: Some(white_connection_id.clone()),
-                    messages: vec![],
+                    messages: messages.clone().unwrap_or_default(),
                     data: Some(game),
                 },
             )
@@ -259,7 +268,7 @@ pub async fn notify_other_player_about_game_update(
                 &ApiResponse {
                     status_code: 200,
                     connection_id: Some(black_connection_id.clone()),
-                    messages: vec![],
+                    messages: messages.unwrap_or_default(),
                     data: Some(game),
                 },
             )

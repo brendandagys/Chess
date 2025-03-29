@@ -5,21 +5,21 @@ export interface GameRequest {
   data: PlayerAction;
 }
 
-export enum ApiErrorType {
+export enum ApiMessageType {
   Info = 'info',
   Warning = 'warning',
   Error = 'error',
   Success = 'success',
 }
 
-interface ApiErrorMessage {
+interface ApiMessage {
   message: string;
-  errorType: ApiErrorType;
+  messageType: ApiMessageType;
 }
 
 export interface ApiResponse<T> {
   statusCode: number;
   connectionId: string | null;
-  messages: ApiErrorMessage[];
+  messages: ApiMessage[];
   data: T | null;
 }
