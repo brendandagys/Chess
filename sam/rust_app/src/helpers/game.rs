@@ -106,6 +106,15 @@ pub fn assign_player_to_remaining_slot(
             game.black_connection_id = Some(connection_id.to_string());
         }
         None => {
+            if let Some(black_username) = &game.black_username {
+                if black_username == username {
+                    return Err(Error::from(format!(
+                        "{} has already joined this game (ID: {}) as black",
+                        username, game.game_id
+                    )));
+                }
+            }
+
             game.white_username = Some(username.to_string());
             game.white_connection_id = Some(connection_id.to_string());
         }
@@ -163,6 +172,7 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                         &black_connection_id,
                         &ApiResponse {
                             status_code: 200,
+                            connection_id: Some(black_connection_id.clone()),
                             messages: vec![],
                             data: Some(&game),
                         },
@@ -189,6 +199,7 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                         &white_connection_id,
                         &ApiResponse {
                             status_code: 200,
+                            connection_id: Some(white_connection_id.clone()),
                             messages: vec![],
                             data: Some(&game),
                         },
@@ -215,12 +226,6 @@ pub async fn notify_other_player_about_game_update(
     current_user_connection_id: &str,
     game: &GameRecord,
 ) -> Result<(), Error> {
-    let api_response = ApiResponse {
-        status_code: 200,
-        messages: vec![],
-        data: Some(game),
-    };
-
     if let Some(white_connection_id) = &game.white_connection_id {
         if white_connection_id != current_user_connection_id
             && white_connection_id != "<disconnected>"
@@ -229,7 +234,12 @@ pub async fn notify_other_player_about_game_update(
                 sdk_config,
                 request_context,
                 white_connection_id,
-                &api_response,
+                &ApiResponse {
+                    status_code: 200,
+                    connection_id: Some(white_connection_id.clone()),
+                    messages: vec![],
+                    data: Some(game),
+                },
             )
             .await?
             {
@@ -246,7 +256,12 @@ pub async fn notify_other_player_about_game_update(
                 sdk_config,
                 request_context,
                 black_connection_id,
-                &api_response,
+                &ApiResponse {
+                    status_code: 200,
+                    connection_id: Some(black_connection_id.clone()),
+                    messages: vec![],
+                    data: Some(game),
+                },
             )
             .await?
             {
