@@ -137,8 +137,8 @@ impl Piece {
                 // Single-square forward
                 let new_single_jump_rank = rank_index
                     + match self.color {
-                        Color::White => 1isize,
-                        Color::Black => -1isize,
+                        Color::White => -1isize,
+                        Color::Black => 1isize,
                     };
 
                 let tentative_single_jump_position = Position {
@@ -157,8 +157,8 @@ impl Piece {
                     if !self.has_moved {
                         let new_double_jump_rank = rank_index
                             + match self.color {
-                                Color::White => 2isize,
-                                Color::Black => -2isize,
+                                Color::White => -2isize,
+                                Color::Black => 2isize,
                             };
 
                         let tentative_double_jump_position = Position {
@@ -195,6 +195,8 @@ impl Piece {
                         }
                     }
                 }
+
+                // TODO: Promotion
 
                 // TODO: En passant capture
                 // Store move COUNT on each piece and last game move (#),
