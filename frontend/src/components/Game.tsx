@@ -30,6 +30,11 @@ export const Game: React.FC<GameProps> = ({
 
   const isTurn = playerColor === gameState.currentTurn;
 
+  const opponentUsername =
+    playerColor === Color.White
+      ? gameRecord.black_username
+      : gameRecord.white_username;
+
   return (
     <div className="game-container">
       <h2 className="game-id">Game: {gameRecord.game_id}</h2>
@@ -47,15 +52,20 @@ export const Game: React.FC<GameProps> = ({
           ))
         ) : (
           <>
-            <p className="pill pill--green">
+            <p className="pill pill--blue">
               Game {gameState.state.toString().replace("-", " ")}
             </p>
-            <p className={`pill pill--blue ${!isTurn ? "pill--faded" : ""}`}>
+            <p className={`pill pill--green ${!isTurn ? "pill--faded" : ""}`}>
               {isTurn
                 ? "Your turn!"
                 : `${playerColor === Color.White ? "Black" : "White"}'s turn`}
             </p>
-            <p className="pill pill--pink">Playing as {playerColor}</p>
+
+            <p className="pill pill--gray">
+              {opponentUsername
+                ? `Opponent: ${opponentUsername}`
+                : "Waiting for other player..."}
+            </p>
           </>
         )}
       </div>
