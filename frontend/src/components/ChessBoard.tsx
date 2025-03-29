@@ -1,7 +1,7 @@
 import { images } from "../images";
 import { Color, PieceType } from "../types/piece";
 import { Board } from "../types/board";
-import { rotateBoard180Degrees } from "../utils";
+import { rotateMatrix180Degrees } from "../utils";
 import { useDrag } from "../hooks/useDrag";
 import { GameRequest } from "../types/api";
 
@@ -28,10 +28,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   gameId,
   sendWebSocketMessage,
 }) => {
-  const board =
-    playerColor === Color.White
-      ? rotateBoard180Degrees(_board.squares)
-      : _board.squares;
+  const shouldRotate = playerColor === Color.Black;
+  const board = shouldRotate
+    ? rotateMatrix180Degrees(_board.squares)
+    : _board.squares;
 
   const [draggingPiece, handleMouseDown] = useDrag(
     gameId,
@@ -40,33 +40,43 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   return (
     <div className={`board rank-count-${board.length % 2 ? "odd" : "even"}`}>
-      {board.map((row, rowIndex) => (
-        <div key={rowIndex} className="board-row">
-          {row.map((piece, colIndex) => (
-            <div key={colIndex} className="square">
-              {piece ? (
-                <img
-                  className="piece"
-                  src={imageMap[piece.pieceType][piece.color]}
-                  alt={`${piece.color} ${piece.pieceType}`}
-                  data-rank={board.length - rowIndex - 1}
-                  data-file={colIndex}
-                  onMouseDown={(e) => {
-                    handleMouseDown(e, piece);
-                  }}
-                />
-              ) : (
-                <img
-                  className="hidden-piece"
-                  src={imageMap[PieceType.Pawn][Color.White]}
-                  data-rank={board.length - rowIndex - 1}
-                  data-file={colIndex}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      ))}
+      {board.map((row, rowIndex) => {
+        const rank = shouldRotate ? rowIndex : board.length - rowIndex - 1;
+
+        return (
+          <div key={rowIndex} className="board-row">
+            {row.map((piece, colIndex) => {
+              const file = shouldRotate
+                ? board.length - colIndex - 1
+                : colIndex;
+
+              return (
+                <div key={colIndex} className="square">
+                  {piece ? (
+                    <img
+                      className="piece"
+                      src={imageMap[piece.pieceType][piece.color]}
+                      alt={`${piece.color} ${piece.pieceType}`}
+                      data-rank={rank}
+                      data-file={file}
+                      onMouseDown={(e) => {
+                        handleMouseDown(e, piece);
+                      }}
+                    />
+                  ) : (
+                    <img
+                      className="hidden-piece"
+                      src={imageMap[PieceType.Pawn][Color.White]}
+                      data-rank={rank}
+                      data-file={file}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
 
       {/* Floating piece */}
       {draggingPiece && (
