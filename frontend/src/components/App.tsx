@@ -103,24 +103,24 @@ export const App: React.FC = () => {
       </p>
 
       {showForm && (
-        <div
-          className="options-bar"
-          onClick={() => {
-            setShowForm((old) => !old);
-          }}
-        >
-          Hide form
-        </div>
-      )}
-
-      {showForm && (
-        <div className="form-container">
-          <GameForm
-            sendWebSocketMessage={sendWebSocketMessage}
-            mode={formToShow}
-            setUsernames={setUsernames}
-          />
-        </div>
+        <>
+          <div
+            className="options-bar"
+            onClick={() => {
+              setShowForm((old) => !old);
+            }}
+          >
+            Hide form
+          </div>
+          <div className="form-container">
+            <GameForm
+              sendWebSocketMessage={sendWebSocketMessage}
+              mode={formToShow}
+              setUsernames={setUsernames}
+              setShowForm={setShowForm}
+            />
+          </div>
+        </>
       )}
 
       <div className="games-container">

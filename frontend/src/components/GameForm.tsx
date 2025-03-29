@@ -13,12 +13,14 @@ interface GameFormProps {
   sendWebSocketMessage: (action: GameRequest) => void;
   mode: FormToShow;
   setUsernames: React.Dispatch<React.SetStateAction<string[]>>;
+  setShowForm: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const GameForm: React.FC<GameFormProps> = ({
   sendWebSocketMessage,
   mode,
   setUsernames,
+  setShowForm,
 }) => {
   const [username, setUsername] = useLocalStorage("username", "");
   const [gameId, setGameId] = useState("");
@@ -82,6 +84,7 @@ export const GameForm: React.FC<GameFormProps> = ({
 
     setGameId("");
     setUsernames((old) => [...old.filter((u) => u !== username), username]);
+    setShowForm(false);
   };
 
   return (
