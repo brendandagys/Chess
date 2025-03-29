@@ -25,6 +25,10 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.game-container .status-container .pill--faded {
+  opacity: 0.5;
+}
+
 .game-container .status-container .pill--pink {
   background-color: #ffb6c1;
   border: 2px solid #ff69b4;

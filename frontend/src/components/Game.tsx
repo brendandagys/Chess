@@ -48,12 +48,10 @@ export const Game: React.FC<GameProps> = ({
             <p className="pill pill--green">
               Game {gameState.state.toString().replace("-", " ")}
             </p>
-            <p className="pill pill--blue">
-              {gameState.currentTurn
-                .toString()
-                .replace("w", "W")
-                .replace("b", "B")}
-              {"'s turn"}
+            <p className={`pill pill--blue ${!isTurn ? "pill--faded" : ""}`}>
+              {isTurn
+                ? "Your turn!"
+                : `${playerColor === Color.White ? "Black" : "White"}'s turn`}
             </p>
             <p className="pill pill--pink">Playing as {playerColor}</p>
           </>
