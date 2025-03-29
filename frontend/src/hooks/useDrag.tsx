@@ -80,26 +80,29 @@ export const useDrag = (
           const toRank = parseInt(piece.dataset.rank);
           const toFile = parseInt(piece.dataset.file);
 
-          onMouseUp({
-            route: API_ROUTE,
-            data: {
-              [PlayerActionName.MovePiece]: {
-                gameId,
-                playerMove: {
-                  from: {
-                    rank: from.rank,
-                    file: from.file,
-                  },
-                  to: {
-                    rank: toRank,
-                    file: toFile,
+          // Prohibit same-square moves
+          if (toRank !== from.rank || toFile !== from.file) {
+            onMouseUp({
+              route: API_ROUTE,
+              data: {
+                [PlayerActionName.MovePiece]: {
+                  gameId,
+                  playerMove: {
+                    from: {
+                      rank: from.rank,
+                      file: from.file,
+                    },
+                    to: {
+                      rank: toRank,
+                      file: toFile,
+                    },
                   },
                 },
               },
-            },
-          });
+            });
 
-          console.log(`Piece placed at rank: ${toRank}, file: ${toFile}`);
+            console.log(`Piece placed at rank: ${toRank}, file: ${toFile}`);
+          }
         }
       }
     }
