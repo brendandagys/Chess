@@ -39,10 +39,6 @@
   cursor: not-allowed;
 }
 
-.game-form label {
-  font-weight: bold;
-}
-
 .game-form .username-field,
 .game-form .game-id-field {
   padding: 0.5rem;
@@ -50,29 +46,36 @@
   border-radius: 4px;
 }
 
+.game-preferences-form-component {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
 /* Toggle Container */
-.toggle {
+.game-form .toggle {
   position: relative;
   display: inline-block;
   width: 60px;
   height: 30px;
 }
 
-.toggle-label,
-.board-setup-label {
+.game-preferences-form-component .label {
   font-size: 0.8rem;
   margin-bottom: 0.2rem;
 }
 
 /* Hide Default Checkbox */
-.toggle input {
+.game-form .toggle input {
   opacity: 0;
   width: 0;
   height: 0;
 }
 
 /* Slider (the switch) */
-.slider {
+.game-form .slider {
   position: absolute;
   cursor: pointer;
   top: 0;
@@ -86,7 +89,7 @@
 }
 
 /* Circle (toggle button) */
-.slider::before {
+.game-form .slider::before {
   content: "";
   position: absolute;
   height: 24px;
@@ -98,20 +101,14 @@
   transition: 0.3s;
 }
 
-input:checked+.slider {
+.toggle input:checked+.slider {
   background-color: #4caf50;
   border: 2px solid #4caf50;
 }
 
-input:checked+.slider::before {
+.toggle input:checked+.slider::before {
   background-color: white;
   transform: translateX(29px);
-}
-
-.game-preferences-form-component {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
 }
 
 .board-setup-select {
@@ -121,4 +118,14 @@ input:checked+.slider::before {
   max-height: 30px;
   text-align-last: center;
   background-color: white;
+}
+
+.game-form .game-preferences-form-component input[type="number"] {
+  width: 50px;
+  padding: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.9rem;
+  height: 30px;
 }

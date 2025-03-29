@@ -6,7 +6,6 @@ import { GameRequest } from "../types/api";
 import { FormToShow } from "../types/sharedComponentTypes";
 import { BoardSetup, BoardSetupName } from "../types/board";
 import { Color } from "../types/piece";
-import { getRandomIntInRange } from "../utils";
 
 import "../css/GameForm.css";
 
@@ -26,6 +25,11 @@ export const GameForm: React.FC<GameFormProps> = ({
   const [boardSetupName, setBoardSetupName] = useState<BoardSetupName>(
     BoardSetupName.Standard
   );
+  const [dimensions, setDimensions] = useState({
+    ranks: "8",
+    files: "8",
+  });
+
   const [colorPreference, setColorPreference] = useState<Color>(Color.White);
 
   const getBoardSetup = (name: BoardSetupName): BoardSetup => {
@@ -35,15 +39,15 @@ export const GameForm: React.FC<GameFormProps> = ({
       case BoardSetupName.Random:
         return {
           [BoardSetupName.Random]: {
-            ranks: getRandomIntInRange(6, 12),
-            files: getRandomIntInRange(6, 12),
+            ranks: parseInt(dimensions.ranks) || 8,
+            files: parseInt(dimensions.files) || 8,
           },
         };
       case BoardSetupName.KingAndOneOtherPiece:
         return {
           [BoardSetupName.KingAndOneOtherPiece]: {
-            ranks: 8,
-            files: 8,
+            ranks: parseInt(dimensions.ranks) || 8,
+            files: parseInt(dimensions.files) || 8,
           },
         };
       default:
@@ -85,7 +89,7 @@ export const GameForm: React.FC<GameFormProps> = ({
       {mode === FormToShow.Create && (
         <div className="game-preferences-container">
           <div className="game-preferences-form-component">
-            <span className="toggle-label">Play as {colorPreference}</span>
+            <span className="label">Play as {colorPreference}</span>
 
             <label className="toggle">
               <input
@@ -102,7 +106,7 @@ export const GameForm: React.FC<GameFormProps> = ({
           </div>
 
           <div className="game-preferences-form-component">
-            <span className="board-setup-label">Board setup</span>
+            <span className="label">Board setup</span>
 
             <select
               className="board-setup-select"
@@ -118,6 +122,50 @@ export const GameForm: React.FC<GameFormProps> = ({
               </option>
             </select>
           </div>
+
+          {boardSetupName !== BoardSetupName.Standard && (
+            <div style={{ display: "flex", gap: "0.8rem" }}>
+              <div className="game-preferences-form-component">
+                <span className="label">
+                  Ranks <small>(6-12)</small>
+                </span>
+                <input
+                  type="number"
+                  min="6"
+                  max="12"
+                  value={dimensions.ranks}
+                  onChange={(e) => {
+                    if (/^(1|6|7|8|9|10|11|12)?$/.exec(e.target.value)) {
+                      setDimensions((old) => ({
+                        ...old,
+                        ranks: e.target.value.trim(),
+                      }));
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="game-preferences-form-component">
+                <span className="label">
+                  Files <small>(6-12)</small>
+                </span>
+                <input
+                  type="number"
+                  min="6"
+                  max="12"
+                  value={dimensions.files}
+                  onChange={(e) => {
+                    if (/^(1|6|7|8|9|10|11|12)?$/.exec(e.target.value)) {
+                      setDimensions((old) => ({
+                        ...old,
+                        files: e.target.value.trim(),
+                      }));
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
