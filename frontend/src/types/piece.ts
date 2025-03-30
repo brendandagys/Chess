@@ -3,6 +3,9 @@ export enum Color {
   Black = 'black',
 }
 
+export const getOppositePlayerColor = (playerColor: Color) =>
+  playerColor === Color.White ? Color.Black : Color.White;
+
 export enum PieceType {
   King = 'king',
   Queen = 'queen',
