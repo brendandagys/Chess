@@ -34,7 +34,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     ? rotateMatrix180Degrees(_board.squares)
     : _board.squares;
 
-  const [draggingPiece, handleMouseDown] = useDrag(
+  const [draggingPiece, handlePointerDown] = useDrag(
     gameId,
     sendWebSocketMessage
   );
@@ -60,8 +60,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                       alt={`${piece.color} ${piece.pieceType}`}
                       data-rank={rank}
                       data-file={file}
-                      onMouseDown={(e) => {
-                        handleMouseDown(e, piece);
+                      onPointerDown={(e) => {
+                        handlePointerDown(e, piece);
                       }}
                     />
                   ) : (

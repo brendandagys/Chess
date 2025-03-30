@@ -9,7 +9,7 @@ import "../css/ChessBoard.css";
 
 export const useDrag = (
   gameId: string,
-  onMouseUp: (action: GameRequest) => void
+  onPointerUp: (action: GameRequest) => void
 ) => {
   const [draggingPiece, setDraggingPiece] = useState<{
     piece: Piece;
@@ -19,8 +19,8 @@ export const useDrag = (
 
   const [from, setFrom] = useState<Position | null>(null);
 
-  const handleMouseDown = (
-    event: React.MouseEvent<HTMLImageElement>,
+  const handlePointerDown = (
+    event: React.PointerEvent<HTMLImageElement>,
     piece: Piece
   ) => {
     const elem = event.currentTarget;
@@ -43,8 +43,8 @@ export const useDrag = (
     event.preventDefault();
   };
 
-  const handleMouseMove = useCallback(
-    (event: MouseEvent) => {
+  const handlePointerMove = useCallback(
+    (event: PointerEvent) => {
       if (draggingPiece) {
         setDraggingPiece((prev) =>
           prev ? { ...prev, x: event.clientX, y: event.clientY } : null
@@ -54,26 +54,26 @@ export const useDrag = (
     [draggingPiece]
   );
 
-  const handleMouseUp = useCallback(() => {
+  const handlePointerUp = useCallback(() => {
     if (draggingPiece) {
-      const elementUnderMouse = document.elementFromPoint(
+      const elementUnderPointer = document.elementFromPoint(
         draggingPiece.x,
         draggingPiece.y
       );
 
-      if (elementUnderMouse && elementUnderMouse instanceof HTMLElement) {
-        const classes = elementUnderMouse.classList;
+      if (elementUnderPointer && elementUnderPointer instanceof HTMLElement) {
+        const classes = elementUnderPointer.classList;
         let piece: HTMLElement | null = null;
 
         if (classes.contains("square")) {
           piece =
-            elementUnderMouse.querySelector(".piece") ??
-            elementUnderMouse.querySelector(".hidden-piece");
+            elementUnderPointer.querySelector(".piece") ??
+            elementUnderPointer.querySelector(".hidden-piece");
         } else if (
           classes.contains("piece") ||
           classes.contains("hidden-piece")
         ) {
-          piece = elementUnderMouse;
+          piece = elementUnderPointer;
         }
 
         if (from && piece?.dataset.rank && piece.dataset.file) {
@@ -82,7 +82,7 @@ export const useDrag = (
 
           // Prohibit same-square moves
           if (toRank !== from.rank || toFile !== from.file) {
-            onMouseUp({
+            onPointerUp({
               route: API_ROUTE,
               data: {
                 [PlayerActionName.MovePiece]: {
@@ -113,22 +113,22 @@ export const useDrag = (
 
     setDraggingPiece(null);
     setFrom(null);
-  }, [draggingPiece, from, gameId, onMouseUp]);
+  }, [draggingPiece, from, gameId, onPointerUp]);
 
   useEffect(() => {
     if (draggingPiece) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
     } else {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     }
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [draggingPiece, handleMouseMove, handleMouseUp]);
+  }, [draggingPiece, handlePointerMove, handlePointerUp]);
 
-  return [draggingPiece, handleMouseDown] as const;
+  return [draggingPiece, handlePointerDown] as const;
 };
