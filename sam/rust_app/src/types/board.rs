@@ -327,6 +327,13 @@ impl Board {
 
         piece.has_moved = true;
 
+        // Handle pawn promotion
+        if player_move.to.rank.0 - 1 == 0 && piece.color == Color::Black {
+            piece.piece_type = PieceType::Queen;
+        } else if player_move.to.rank.0 == self.squares.len() && piece.color == Color::White {
+            piece.piece_type = PieceType::Queen;
+        }
+
         self.set_piece_at_position(&player_move.to, Some(piece));
         self.set_piece_at_position(&player_move.from, None);
     }

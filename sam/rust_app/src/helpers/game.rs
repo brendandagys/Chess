@@ -456,8 +456,6 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
         game_state.state = State::InProgress;
     }
 
-    // TODO: pawn promotion here
-
     check_for_mates(game_state);
 
     Ok(())
