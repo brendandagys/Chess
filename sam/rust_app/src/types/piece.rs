@@ -190,8 +190,6 @@ impl Piece {
                     }
                 }
 
-                // TODO: Promotion
-
                 // TODO: En passant capture
                 // Store move COUNT on each piece and last game move (#),
                 // to validate we are capturing a pawn that JUST moved forward two squares,
