@@ -176,7 +176,7 @@ impl Piece {
 
                     let tentative_capture_position = Position {
                         rank: Rank((new_single_jump_rank + 1) as usize),
-                        file: File(capture_file as usize),
+                        file: File((capture_file + 1) as usize),
                     };
 
                     if board.is_valid_board_position(&tentative_capture_position) {
