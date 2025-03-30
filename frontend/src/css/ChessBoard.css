@@ -12,6 +12,7 @@
   justify-content: center;
   max-width: var(--piece-diameter);
   max-height: var(--piece-diameter);
+  user-select: none;
 }
 
 .board .square img {
