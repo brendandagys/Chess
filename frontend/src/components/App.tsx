@@ -45,7 +45,9 @@ export const App: React.FC = () => {
         (gameRecord ? setGameMessages : setAppMessages)((old) => [
           ...old,
           ...response.messages.map(({ message, messageType }) => ({
-            id: gameRecord?.game_id ?? crypto.randomUUID(),
+            id: `${
+              gameRecord?.game_id ? `${gameRecord.game_id}-` : ""
+            }${crypto.randomUUID()}`,
             message,
             messageType,
             duration: 5000,
@@ -128,8 +130,8 @@ export const App: React.FC = () => {
               key={gameRecord.game_id}
               gameRecord={gameRecord}
               connectionId={connectionId}
-              messages={gameMessages.filter(
-                (message) => message.id === gameRecord.game_id
+              messages={gameMessages.filter((message) =>
+                message.id.includes(gameRecord.game_id)
               )}
               sendWebSocketMessage={sendWebSocketMessage}
               dismissMessage={dismissGameMessage}
