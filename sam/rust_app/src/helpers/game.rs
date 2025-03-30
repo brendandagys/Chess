@@ -173,11 +173,9 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                         &ApiResponse {
                             status_code: 200,
                             connection_id: Some(black_connection_id.clone()),
-                            messages: vec![format!(
-                                "Player {username} has disconnected from game `{}`",
-                                game.game_id
-                            )
-                            .into()],
+                            messages: vec![
+                                format!("{username} has disconnected from the game").into()
+                            ],
                             data: Some(&game),
                         },
                     )
@@ -204,11 +202,9 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                         &ApiResponse {
                             status_code: 200,
                             connection_id: Some(white_connection_id.clone()),
-                            messages: vec![format!(
-                                "Player {username} has disconnected from game `{}`",
-                                game.game_id
-                            )
-                            .into()],
+                            messages: vec![
+                                format!("{username} has disconnected from the game").into()
+                            ],
                             data: Some(&game),
                         },
                     )
@@ -405,41 +401,39 @@ pub fn validate_move(
     Ok(())
 }
 
+/// Called after a move is made. Checks if the opponent's king is in check or checkmate.
 fn check_for_mates(game_state: &mut GameState) {
     let board = &game_state.board;
-    let player_color = game_state.current_turn;
-    let opponent_color = player_color.opponent_color();
+    let opponent_color = game_state.current_turn.opponent_color();
 
     if board.is_king_in_check(&opponent_color) {
         game_state.in_check = Some(opponent_color);
 
-        // Check for a checkmate (i.e. no moves by opponent can remove check)
-        let possible_moves_to_remove_check = board.get_all_pieces(Some(&player_color)).iter().fold(
-            Vec::new(),
-            |mut acc, (piece, position)| {
-                acc.extend(piece.possible_moves(board, position).iter().map(|move_to| {
-                    PlayerMove {
-                        from: position.clone(),
-                        to: move_to.clone(),
-                    }
-                }));
-                acc
-            },
-        );
+        let possible_moves_by_opponent_to_remove_check =
+            board.get_all_pieces(Some(&opponent_color));
 
-        let checkmate = possible_moves_to_remove_check.iter().all(|opponent_move| {
-            let mut hypothetical_board = board.clone();
-            hypothetical_board.apply_move(opponent_move);
-            hypothetical_board.is_king_in_check(&opponent_color)
-        });
+        for (opponent_piece, from_position) in possible_moves_by_opponent_to_remove_check {
+            for to_position in opponent_piece.possible_moves(board, &from_position) {
+                let mut hypothetical_board = board.clone();
 
-        if checkmate {
-            game_state.state = State::Finished(GameEnding::Checkmate(opponent_color));
-            return;
+                hypothetical_board.apply_move(&PlayerMove {
+                    from: from_position.clone(),
+                    to: to_position.clone(),
+                });
+
+                if !hypothetical_board.is_king_in_check(&opponent_color) {
+                    game_state.current_turn = opponent_color;
+                    return;
+                }
+            }
         }
+
+        game_state.state = State::Finished(GameEnding::Checkmate(opponent_color));
+        return;
     }
 
-    game_state.current_turn = player_color.opponent_color();
+    game_state.in_check = None;
+    game_state.current_turn = opponent_color;
 }
 
 pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result<(), &'static str> {
