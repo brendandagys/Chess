@@ -41,14 +41,14 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   return (
     <div className={`board rank-count-${board.length % 2 ? "odd" : "even"}`}>
       {board.map((row, rowIndex) => {
-        const rank = shouldRotate ? rowIndex : board.length - rowIndex - 1;
+        const rank =
+          1 + (shouldRotate ? rowIndex : board.length - rowIndex - 1);
 
         return (
           <div key={rowIndex} className="board-row">
             {row.map((piece, colIndex) => {
-              const file = shouldRotate
-                ? board.length - colIndex - 1
-                : colIndex;
+              const file =
+                1 + (shouldRotate ? board.length - colIndex - 1 : colIndex);
 
               return (
                 <div key={colIndex} className="square">
