@@ -66,7 +66,7 @@ export const App: React.FC = () => {
           ...response.messages.map(({ message, messageType }) => ({
             id: `${
               gameRecord?.game_id ? `${gameRecord.game_id}-` : ""
-            }${crypto.randomUUID()}`,
+            }${Math.random().toString(36).slice(2)}`,
             message,
             messageType,
             duration: 5000,
