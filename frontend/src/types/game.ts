@@ -1,14 +1,27 @@
 import { Board, BoardSetup, Position } from "./board";
 import { Color } from "./piece";
 
-interface GameEndingCheckmate { 'checkmate': Color; }
-interface GameEndingResignation { 'resignation': Color; }
-interface GameEndingOutOfTime { 'out-of-time': Color; }
-type GameEndingStalemate = 'stalemate';
-type GameEndingDrawByThreefoldRepetition = 'draw-by-threefold-repetition';
-type GameEndingDrawByFiftyMoveRule = 'draw-by-fifty-move-rule';
-type GameEndingDrawByInsufficientMaterial = 'draw-by-insufficient-material';
-type GameEndingDrawByMutualAgreement = 'draw-by-mutual-agreement';
+export enum GameEndingType {
+  Checkmate = 'checkmate',
+  Resignation = 'resignation',
+  OutOfTime = 'out-of-time',
+  Stalemate = 'stalemate',
+  DrawByThreefoldRepetition = 'draw-by-threefold-repetition',
+  DrawByFiftyMoveRule = 'draw-by-fifty-move-rule',
+  DrawByInsufficientMaterial = 'draw-by-insufficient-material',
+  DrawByMutualAgreement = 'draw-by-mutual-agreement',
+}
+
+export interface GameEndingCheckmate { [GameEndingType.Checkmate]: Color; }
+interface GameEndingResignation { [GameEndingType.Resignation]: Color; }
+interface GameEndingOutOfTime { [GameEndingType.OutOfTime]: Color; }
+type GameEndingStalemate = GameEndingType.Stalemate;
+type GameEndingDrawByThreefoldRepetition =
+  GameEndingType.DrawByThreefoldRepetition;
+type GameEndingDrawByFiftyMoveRule = GameEndingType.DrawByFiftyMoveRule;
+type GameEndingDrawByInsufficientMaterial =
+  GameEndingType.DrawByInsufficientMaterial;
+type GameEndingDrawByMutualAgreement = GameEndingType.DrawByMutualAgreement;
 
 type GameEnding =
   | GameEndingCheckmate
@@ -20,10 +33,16 @@ type GameEnding =
   | GameEndingDrawByInsufficientMaterial
   | GameEndingDrawByMutualAgreement;
 
-type StateNotStarted = 'not-started';
-type StateInProgress = 'in-progress';
+export enum GameStateType {
+  NotStarted = 'not-started',
+  InProgress = 'in-progress',
+  Finished = 'finished',
+}
+
+type StateNotStarted = GameStateType.NotStarted;
+type StateInProgress = GameStateType.InProgress;
 interface StateFinished {
-  'finished': GameEnding;
+  [GameStateType.Finished]: GameEnding;
 }
 
 type State =
