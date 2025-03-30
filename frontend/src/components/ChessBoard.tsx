@@ -6,6 +6,7 @@ import { useDrag } from "../hooks/useDrag";
 import { GameRequest } from "../types/api";
 
 import "../css/ChessBoard.css";
+
 interface ChessBoardProps {
   board: Board;
   playerColor: Color;
