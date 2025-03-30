@@ -174,6 +174,8 @@ impl Board {
 
     /// Returns all pieces on the board, optionally filtered to a specific color
     pub fn get_all_pieces(&self, color: Option<&Color>) -> Vec<(Piece, Position)> {
+        let num_ranks = self.squares.len();
+
         self.squares
             .iter()
             .enumerate()
@@ -185,7 +187,7 @@ impl Board {
                             let piece_and_position = Some((
                                 piece.clone(),
                                 Position {
-                                    rank: Rank(rank_index + 1),
+                                    rank: Rank(num_ranks - rank_index),
                                     file: File(file_index + 1),
                                 },
                             ));
@@ -315,11 +317,17 @@ impl Board {
 
     /// This function assumes the move has been validated
     pub fn apply_move(&mut self, player_move: &PlayerMove) {
-        self.set_piece_at_position(
-            &player_move.to,
-            self.get_piece_at_position(&player_move.from).cloned(),
-        );
+        let mut piece = self
+            .get_piece_at_position(&player_move.from)
+            .cloned()
+            .expect(&format!(
+                "Did not find any piece to move at position: {:?}",
+                player_move.from
+            ));
 
+        piece.has_moved = true;
+
+        self.set_piece_at_position(&player_move.to, Some(piece));
         self.set_piece_at_position(&player_move.from, None);
     }
 
