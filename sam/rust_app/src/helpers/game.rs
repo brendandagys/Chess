@@ -77,6 +77,19 @@ pub fn assign_player_to_remaining_slot(
         }
     }
 
+    for (color, connection_id_option) in [
+        ("white", &game.white_connection_id),
+        ("black", &game.black_connection_id),
+    ] {
+        if let Some(existing_connection_id) = connection_id_option {
+            if connection_id == existing_connection_id {
+                return Err(Error::from(format!(
+                    "You are already connected to this game as {color}",
+                )));
+            }
+        }
+    }
+
     match &game.white_username {
         Some(white_username) if white_username == username => {
             if let Some(white_connection_id) = &game.white_connection_id {
