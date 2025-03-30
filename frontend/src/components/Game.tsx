@@ -70,7 +70,9 @@ export const Game: React.FC<GameProps> = ({
         )}
       </div>
 
-      <div className={`chess-board-container ${isTurn && "is-player-turn"}`}>
+      <div
+        className={`chess-board-container ${isTurn ? "is-player-turn" : ""}`}
+      >
         <ChessBoard
           board={gameState.board}
           playerColor={playerColor}
