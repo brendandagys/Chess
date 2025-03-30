@@ -206,13 +206,17 @@ impl Board {
             return None;
         }
 
-        let rank_index = position.rank.to_index();
+        let rank_index = self.squares.len() - 1 - position.rank.to_index();
         let file_index = position.file.to_index();
         self.squares[rank_index][file_index].as_ref()
     }
 
     pub fn set_piece_at_position(&mut self, position: &Position, piece: Option<Piece>) {
-        let rank_index = position.rank.to_index();
+        if !self.is_valid_board_position(position) {
+            return;
+        }
+
+        let rank_index = self.squares.len() - 1 - position.rank.to_index();
         let file_index = position.file.to_index();
         self.squares[rank_index][file_index] = piece;
     }
@@ -246,24 +250,20 @@ impl Board {
     /// any pieces on the way to that square.
     pub fn get_valid_positions_for_bishop_or_rook_or_queen(
         &self,
-        rank_index: isize,
-        file_index: isize,
+        position: &Position,
         color: &Color,
         offsets: &[(isize, isize)],
     ) -> Vec<Position> {
         offsets
             .iter()
             .fold(Vec::new(), |mut acc, (offset_r, offset_f)| {
-                let mut rank_index_ = rank_index;
-                let mut file_index_ = file_index;
-
                 loop {
-                    rank_index_ += offset_r;
-                    file_index_ += offset_f;
+                    let new_rank = position.rank.to_index() + *offset_r as usize;
+                    let new_file = position.file.to_index() + *offset_f as usize;
 
                     let tentative_position = Position {
-                        rank: Rank(rank_index_ as usize),
-                        file: File(file_index_ as usize),
+                        rank: Rank(new_rank + 1),
+                        file: File(new_file + 1),
                     };
 
                     if !self.is_valid_board_position(&tentative_position) {
@@ -293,17 +293,21 @@ impl Board {
         let (_king, king_position) = pieces_and_positions_for_color
             .iter()
             .find(|(piece, _position)| piece.piece_type == PieceType::King)
-            .unwrap();
+            .expect(&format!(
+                "Did not find {color} king when checking for check"
+            ));
 
-        let opponent_attacking_squares: Vec<Position> = self
-            .get_all_pieces(Some(&color.opponent_color()))
-            .iter()
-            .fold(Vec::new(), |mut acc, (piece, position)| {
-                acc.extend(piece.possible_moves(self, position));
-                acc
-            });
+        let opponent_pieces = self.get_all_pieces(Some(&color.opponent_color()));
 
-        opponent_attacking_squares.contains(king_position)
+        for (piece, position) in opponent_pieces {
+            for move_position in piece.possible_moves(self, &position) {
+                if move_position == *king_position {
+                    return true;
+                }
+            }
+        }
+
+        false
     }
 
     /// This function assumes the move has been validated
