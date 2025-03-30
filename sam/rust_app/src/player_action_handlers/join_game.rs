@@ -106,7 +106,7 @@ pub async fn join_game(
         connection_id,
         &game,
         Some(vec![ApiMessage {
-            message: format!("{username} has joined game `{}`", game.game_id),
+            message: format!("{username} has joined the game"),
             message_type: chess::types::api::ApiMessageType::Success,
         }]),
     )
