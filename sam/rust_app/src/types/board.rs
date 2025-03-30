@@ -257,13 +257,16 @@ impl Board {
         offsets
             .iter()
             .fold(Vec::new(), |mut acc, (offset_r, offset_f)| {
+                let mut new_rank = position.rank.to_index() as isize;
+                let mut new_file = position.file.to_index() as isize;
+
                 loop {
-                    let new_rank = position.rank.to_index() + *offset_r as usize;
-                    let new_file = position.file.to_index() + *offset_f as usize;
+                    new_rank += *offset_r;
+                    new_file += *offset_f;
 
                     let tentative_position = Position {
-                        rank: Rank(new_rank + 1),
-                        file: File(new_file + 1),
+                        rank: Rank((new_rank + 1) as usize),
+                        file: File((new_file + 1) as usize),
                     };
 
                     if !self.is_valid_board_position(&tentative_position) {
