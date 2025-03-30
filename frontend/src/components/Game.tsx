@@ -1,10 +1,16 @@
-/* eslint-disable @typescript-eslint/no-base-to-string */
-import { GameRecord } from "../types/game";
-import { Color } from "../types/piece";
+import {
+  GameEndingCheckmate,
+  GameEndingType,
+  GameRecord,
+  GameStateType,
+} from "../types/game";
+import { Color, getOppositePlayerColor } from "../types/piece";
 import { ChessBoard } from "./ChessBoard";
 import { Alert } from "./Alert";
 import { GameMessage } from "../types/sharedComponentTypes";
 import { GameRequest } from "../types/api";
+import { useMemo } from "react";
+import { capitalizeFirstLetter } from "../utils";
 
 import "../css/Game.css";
 
@@ -24,11 +30,56 @@ export const Game: React.FC<GameProps> = ({
   dismissMessage,
 }) => {
   const gameState = gameRecord.game_state;
+  const gameStateType = gameState.state;
+
+  const bothPlayersReady = ![
+    gameRecord.black_connection_id ?? "<disconnected>",
+    gameRecord.white_connection_id ?? "<disconnected>",
+  ].includes("<disconnected>");
+
+  const gameIsInProgress = gameStateType === GameStateType.InProgress;
+  const gameIsFinished = typeof gameStateType === "object";
 
   const playerColor =
     connectionId === gameRecord.white_connection_id ? Color.White : Color.Black;
 
   const isTurn = playerColor === gameState.currentTurn;
+
+  const stateOfGame = useMemo(() => {
+    if (gameIsInProgress) {
+      return gameState.inCheck
+        ? [
+            `${
+              gameState.inCheck === Color.White ? "White" : "Black"
+            } is in check!`,
+            "red",
+          ]
+        : ["Game in progress", "blue"];
+    }
+
+    if (gameStateType === GameStateType.NotStarted) {
+      return ["Game not started", "red"];
+    }
+
+    const gameEnding = gameStateType[GameStateType.Finished];
+
+    if (typeof gameEnding === "object") {
+      const gameEndingType = Object.keys(gameEnding)[0] as GameEndingType;
+
+      if (gameEndingType === GameEndingType.Checkmate) {
+        const winningColor = getOppositePlayerColor(
+          (gameEnding as GameEndingCheckmate)[gameEndingType]
+        );
+
+        return [
+          `Checkmate! ${capitalizeFirstLetter(winningColor)} wins!`,
+          playerColor === winningColor ? "green" : "red",
+        ];
+      }
+    }
+
+    return ["Game over", "gray"];
+  }, [gameIsInProgress, gameState.inCheck, gameStateType, playerColor]);
 
   const opponentUsername =
     playerColor === Color.White
@@ -52,20 +103,23 @@ export const Game: React.FC<GameProps> = ({
           ))
         ) : (
           <>
-            <p className="pill pill--blue">
-              Game {gameState.state.toString().replace("-", " ")}
-            </p>
-            <p className={`pill pill--green ${!isTurn ? "pill--faded" : ""}`}>
-              {isTurn
-                ? "Your turn!"
-                : `${playerColor === Color.White ? "Black" : "White"}'s turn`}
-            </p>
+            <p className={`pill pill--${stateOfGame[1]}`}>{stateOfGame[0]}</p>
 
-            <p className="pill pill--gray">
-              {opponentUsername
-                ? `Opponent: ${opponentUsername}`
-                : "Waiting for other player..."}
-            </p>
+            {!gameIsFinished && (
+              <p className="pill pill--gray">
+                {bothPlayersReady
+                  ? `Opponent: ${opponentUsername}`
+                  : `Waiting for ${opponentUsername ?? "other player"}...`}
+              </p>
+            )}
+
+            {gameIsInProgress && bothPlayersReady && (
+              <p className={`pill pill--green ${!isTurn ? "pill--faded" : ""}`}>
+                {isTurn
+                  ? "Your turn!"
+                  : `${playerColor === Color.White ? "Black" : "White"}'s turn`}
+              </p>
+            )}
           </>
         )}
       </div>
