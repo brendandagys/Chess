@@ -55,7 +55,7 @@ pub enum PieceType {
 pub struct Piece {
     pub piece_type: PieceType,
     pub color: Color,
-    pub has_moved: bool,
+    pub move_count: usize,
 }
 
 impl Piece {
@@ -63,7 +63,7 @@ impl Piece {
         Piece {
             piece_type,
             color,
-            has_moved: false,
+            move_count: 0,
         }
     }
 
@@ -148,7 +148,7 @@ impl Piece {
                     moves.push(tentative_single_jump_position);
 
                     // Double-square forward; single-jump must also be valid
-                    if !self.has_moved {
+                    if self.move_count == 0 {
                         let new_double_jump_rank = position.rank.to_index() as isize
                             + match self.color {
                                 Color::White => 2isize,

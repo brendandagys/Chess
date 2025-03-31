@@ -18,5 +18,5 @@ export enum PieceType {
 export interface Piece {
   pieceType: PieceType;
   color: Color;
-  hasMoved: boolean;
+  moveCount: number;
 }

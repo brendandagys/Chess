@@ -339,7 +339,7 @@ impl Board {
                 player_move.from
             ));
 
-        piece.has_moved = true;
+        piece.move_count += 1;
 
         self.check_for_pawn_promotion(&mut piece, player_move);
 
