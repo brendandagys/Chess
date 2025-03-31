@@ -27,6 +27,7 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 16px;
 }
 
 .game-details-container button[type="submit"]:hover {
@@ -112,12 +113,13 @@
 }
 
 .board-setup-select {
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  max-height: 30px;
   text-align-last: center;
   background-color: white;
+  height: 30px;
+  font-size: 16px;
 }
 
 .game-form .game-preferences-form-component input[type="number"] {
