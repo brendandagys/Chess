@@ -315,6 +315,20 @@ impl Board {
         false
     }
 
+    fn check_for_pawn_promotion(&self, piece: &mut Piece, player_move: &PlayerMove) {
+        if piece.piece_type == PieceType::Pawn
+            && piece.color == Color::Black
+            && player_move.to.rank.0 - 1 == 0
+        {
+            piece.piece_type = PieceType::Queen;
+        } else if piece.piece_type == PieceType::Pawn
+            && piece.color == Color::White
+            && player_move.to.rank.0 == self.squares.len()
+        {
+            piece.piece_type = PieceType::Queen;
+        }
+    }
+
     /// This function assumes the move has been validated
     pub fn apply_move(&mut self, player_move: &PlayerMove) {
         let mut piece = self
@@ -327,12 +341,7 @@ impl Board {
 
         piece.has_moved = true;
 
-        // Handle pawn promotion
-        if player_move.to.rank.0 - 1 == 0 && piece.color == Color::Black {
-            piece.piece_type = PieceType::Queen;
-        } else if player_move.to.rank.0 == self.squares.len() && piece.color == Color::White {
-            piece.piece_type = PieceType::Queen;
-        }
+        self.check_for_pawn_promotion(&mut piece, player_move);
 
         self.set_piece_at_position(&player_move.to, Some(piece));
         self.set_piece_at_position(&player_move.from, None);
