@@ -8,8 +8,9 @@
 }
 
 .board .square {
-  align-items: center;
+  display: flex;
   justify-content: center;
+  align-items: center;
   max-width: var(--piece-diameter);
   max-height: var(--piece-diameter);
   user-select: none;
