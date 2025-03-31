@@ -171,6 +171,7 @@ export const GameForm: React.FC<GameFormProps> = ({
 
       <div className="game-details-container">
         <input
+          type="text"
           className="username-field"
           placeholder="Username"
           value={username}
@@ -180,6 +181,7 @@ export const GameForm: React.FC<GameFormProps> = ({
         />
 
         <input
+          type="text"
           className="game-id-field"
           placeholder={`Game ID${
             mode === FormToShow.Create ? " (optional)" : ""

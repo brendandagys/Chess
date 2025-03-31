@@ -16,4 +16,11 @@
   text-align: center;
 
   background-color: #f5f3e7;
+  font-size: 16px;
+}
+
+/* Avoid mobile zoom */
+input[type='text'],
+input[type='number'] {
+  font-size: 16px;
 }
