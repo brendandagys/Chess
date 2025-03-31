@@ -404,7 +404,7 @@ pub fn validate_move(
         .possible_moves(board, &player_move.from)
         .contains(&player_move.to)
     {
-        return Err("Invalid move for this piece");
+        return Err("Invalid move");
     }
 
     if does_move_create_self_check(board, player_move, player_color) {
