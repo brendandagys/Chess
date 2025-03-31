@@ -5,16 +5,11 @@
   height: 30px;
   padding: 0.5rem 0.5rem 0.5rem 1rem;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   text-align: center;
   transition: opacity 0.3s ease, transform 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
-
-/* .alert.hidden {
-  opacity: 0;
-  transform: translateY(-10px);
-} */
 
 .alert .message {
   margin-right: 0.75rem;
