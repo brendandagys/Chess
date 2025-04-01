@@ -146,6 +146,20 @@ Resources:
       ApiId: !Ref WebSocketApi
       AutoDeploy: true
 
+  WebSocketDomainName:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: !Sub api.${Domain}
+      DomainNameConfigurations:
+        - CertificateArn: !Ref Certificate
+
+  WebSocketBasePathMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Properties:
+      ApiId: !Ref WebSocketApi
+      DomainName: !Ref WebSocketDomainName
+      Stage: Prod
+
   # DISCONNECT
   DisconnectFunction:
     Type: AWS::Serverless::Function
@@ -473,10 +487,13 @@ Resources:
       DomainName: !Ref Domain
       SubjectAlternativeNames:
         - !Sub www.${Domain}
+        - !Sub api.${Domain}
       DomainValidationOptions:
         - DomainName: !Ref Domain
           HostedZoneId: "{{resolve:secretsmanager:my-secrets:SecretString:PORTFOLIO_HOSTED_ZONE_ID}}"
         - DomainName: !Sub www.${Domain}
+          HostedZoneId: "{{resolve:secretsmanager:my-secrets:SecretString:PORTFOLIO_HOSTED_ZONE_ID}}"
+        - DomainName: !Sub api.${Domain}
           HostedZoneId: "{{resolve:secretsmanager:my-secrets:SecretString:PORTFOLIO_HOSTED_ZONE_ID}}"
       ValidationMethod: DNS
 
@@ -597,3 +614,7 @@ Outputs:
     Value: !Ref Certificate
     Export:
       Name: !Sub ${AWS::StackName}-certificate-arn
+
+  WebSocketCustomDomainUrl:
+    Value: !Sub wss://${Domain}
+    Description: Custom WebSocket API Gateway URL
