@@ -42,9 +42,10 @@
 
 .game-form .username-field,
 .game-form .game-id-field {
-  padding: 0.5rem;
+  padding: 0 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
+  height: 35px;
 }
 
 .game-preferences-form-component {
@@ -113,7 +114,7 @@
 }
 
 .board-setup-select {
-  padding: 0.25rem 0.5rem;
+  padding: 0 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
   text-align-last: center;
@@ -124,7 +125,7 @@
 
 .game-form .game-preferences-form-component input[type="number"] {
   width: 50px;
-  padding: 0.3rem;
+  padding: 0 0.25rem;
   border: 1px solid #ccc;
   border-radius: 4px;
   text-align: center;
