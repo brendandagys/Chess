@@ -608,13 +608,7 @@ Resources:
 
 Outputs:
   WebSocketApiUrl:
-    Value: !Sub wss://${WebSocketApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
+    Value: !Sub ${WebSocketApi.ApiEndpoint}/Prod
 
   CertificateArn:
     Value: !Ref Certificate
-    Export:
-      Name: !Sub ${AWS::StackName}-certificate-arn
-
-  WebSocketCustomDomainUrl:
-    Value: !Sub wss://${Domain}
-    Description: Custom WebSocket API Gateway URL
