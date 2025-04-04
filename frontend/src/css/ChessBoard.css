@@ -25,6 +25,10 @@
   visibility: hidden;
 }
 
+.piece {
+  touch-action: none;
+}
+
 .piece.dragging {
   visibility: hidden;
 }

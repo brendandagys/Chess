@@ -70,6 +70,11 @@
   }
 } */
 
+.game-area {
+  display: inline-block;
+  margin: 1rem auto 0;
+}
+
 .game-container .chess-board-container {
   display: inline-flex;
   justify-content: center;
@@ -77,12 +82,11 @@
   border: 9px solid transparent;
   border-radius: 8px;
   transition: border-color 1s ease;
-  margin-top: 1rem;
 }
 
 .game-container .chess-board-container.is-player-turn {
   border-color: #713c0b;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); */
 
   /* Modern board style */
   /* border: 8px solid #333;

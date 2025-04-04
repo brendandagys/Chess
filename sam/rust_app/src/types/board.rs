@@ -82,7 +82,10 @@ impl BoardSetup {
                 squares[7][6] = Some(Piece::new(PieceType::Knight, Color::White));
                 squares[7][7] = Some(Piece::new(PieceType::Rook, Color::White));
 
-                Board { squares }
+                Board {
+                    squares,
+                    move_count: 0,
+                }
             }
             Self::Random(dimensions) => {
                 let mut squares = vec![vec![None; dimensions.files]; dimensions.ranks];
@@ -124,7 +127,10 @@ impl BoardSetup {
                 squares[dimensions.ranks - 1][king_file] =
                     Some(Piece::new(PieceType::King, Color::White));
 
-                Board { squares }
+                Board {
+                    squares,
+                    move_count: 0,
+                }
             }
             Self::KingAndOneOtherPiece(dimensions) => {
                 let mut squares = vec![vec![None; dimensions.files]; dimensions.ranks];
@@ -155,7 +161,10 @@ impl BoardSetup {
                 squares[dimensions.ranks - 1][king_file] =
                     Some(Piece::new(PieceType::King, Color::White));
 
-                Board { squares }
+                Board {
+                    squares,
+                    move_count: 0,
+                }
             }
         }
     }
@@ -163,8 +172,9 @@ impl BoardSetup {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Board {
-    pub squares: Vec<Vec<Option<Piece>>>,
     // Indexes follow the chess board labels, minus one
+    pub squares: Vec<Vec<Option<Piece>>>,
+    pub move_count: usize,
 }
 
 impl Board {
@@ -208,7 +218,7 @@ impl Board {
             return None;
         }
 
-        let rank_index = self.squares.len() - 1 - position.rank.to_index();
+        let rank_index = self.squares.len() - position.rank.0;
         let file_index = position.file.to_index();
         self.squares[rank_index][file_index].as_ref()
     }
@@ -218,14 +228,16 @@ impl Board {
             return;
         }
 
-        let rank_index = self.squares.len() - 1 - position.rank.to_index();
+        let rank_index = self.squares.len() - position.rank.0;
         let file_index = position.file.to_index();
         self.squares[rank_index][file_index] = piece;
     }
 
     pub fn is_valid_board_position(&self, position: &Position) -> bool {
-        position.rank.to_index() < self.squares.len()
-            && position.file.to_index() < self.squares[0].len()
+        position.rank.0 > 0
+            && position.file.0 > 0
+            && position.rank.0 <= self.squares.len()
+            && position.file.0 <= self.squares[0].len()
     }
 
     /// Helper function for King and Knight pieces, whose on-board moves can only
@@ -329,22 +341,127 @@ impl Board {
         }
     }
 
+    /// Only called if the destination square is empty
+    fn check_for_en_passant_pawn_capture(
+        &mut self,
+        player_piece: &Piece,
+        player_move: &PlayerMove,
+    ) -> Option<Piece> {
+        if player_piece.piece_type == PieceType::Pawn
+            && player_move.from.file != player_move.to.file
+        {
+            let captured_pawn_position = Position {
+                rank: player_move.from.rank.clone(),
+                file: player_move.to.file.clone(),
+            };
+
+            let captured_pawn = self.get_piece_at_position(&captured_pawn_position).cloned();
+            self.set_piece_at_position(&captured_pawn_position, None);
+
+            return captured_pawn;
+        }
+
+        None
+    }
+
+    fn check_for_captured_piece(
+        &mut self,
+        player_piece: &Piece,
+        player_move: &PlayerMove,
+    ) -> Option<Piece> {
+        let captured_piece_at_destination = self.get_piece_at_position(&player_move.to).cloned();
+
+        match captured_piece_at_destination {
+            Some(captured_piece) => Some(captured_piece),
+            None => self.check_for_en_passant_pawn_capture(&player_piece, player_move),
+        }
+    }
+
+    fn check_for_castling(&mut self, player_piece: &Piece, player_move: &PlayerMove) -> bool {
+        if player_piece.piece_type == PieceType::King
+            && (player_move.to.file.0 == 1 || player_move.to.file.0 == self.squares[0].len())
+            && (player_move.from.file.0 as isize - player_move.to.file.0 as isize).abs() > 1
+        {
+            let (old_rook_file, new_rook_file, new_king_file) =
+                if player_move.from.file.0 < player_move.to.file.0 {
+                    (
+                        self.squares[0].len(),
+                        player_move.from.file.0 + 1,
+                        player_move.from.file.0 + 2,
+                    )
+                } else {
+                    (1, player_move.from.file.0 - 1, player_move.from.file.0 - 2)
+                };
+
+            let old_rook_position = Position {
+                rank: player_move.from.rank.clone(),
+                file: File(old_rook_file),
+            };
+
+            let new_rook_position = Position {
+                rank: player_move.from.rank.clone(),
+                file: File(new_rook_file),
+            };
+
+            let new_king_position = Position {
+                rank: player_move.from.rank.clone(),
+                file: File(new_king_file),
+            };
+
+            let rook = self
+                .get_piece_at_position(&old_rook_position)
+                .cloned()
+                .expect(&format!(
+                    "Did not find rook at position when castling: {:?}",
+                    old_rook_position
+                ));
+
+            self.set_piece_at_position(&new_rook_position, Some(rook));
+            self.set_piece_at_position(&old_rook_position, None);
+
+            let king = self
+                .get_piece_at_position(&player_move.from)
+                .cloned()
+                .expect(&format!(
+                    "Did not find king at position when castling: {:?}",
+                    player_move.from
+                ));
+
+            self.set_piece_at_position(&new_king_position, Some(king));
+            self.set_piece_at_position(&player_move.from, None);
+
+            return true;
+        }
+
+        false
+    }
+
     /// This function assumes the move has been validated
-    pub fn apply_move(&mut self, player_move: &PlayerMove) {
-        let mut piece = self
+    pub fn apply_move(&mut self, player_move: &PlayerMove) -> Option<Piece> {
+        let mut player_piece = self
             .get_piece_at_position(&player_move.from)
             .cloned()
             .expect(&format!(
-                "Did not find any piece to move at position: {:?}",
-                player_move.from
+                "Did not find any piece to move from {:?} to {:?}",
+                player_move.from, player_move.to
             ));
 
-        piece.move_count += 1;
+        self.move_count += 1;
+        player_piece.last_game_move = Some(self.move_count);
 
-        self.check_for_pawn_promotion(&mut piece, player_move);
+        self.check_for_pawn_promotion(&mut player_piece, player_move);
 
-        self.set_piece_at_position(&player_move.to, Some(piece));
-        self.set_piece_at_position(&player_move.from, None);
+        match self.check_for_castling(&player_piece, player_move) {
+            true => None,
+            false => {
+                let captured_piece = self.check_for_captured_piece(&player_piece, player_move);
+
+                self.set_piece_at_position(&player_move.to, Some(player_piece));
+                self.set_piece_at_position(&player_move.from, None);
+
+                captured_piece
+            }
+        }
     }
 
     // TODO: pub fn unapply_move()

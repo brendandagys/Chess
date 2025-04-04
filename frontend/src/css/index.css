@@ -12,6 +12,11 @@
   --font: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   --piece-diameter: 70px;
 
+  /* Controls dragged piece size */
+  --piece-diameter-small: 60px;
+  --piece-diameter-smaller: 52px;
+  --piece-diameter-smallest: 45px;
+
   font-family: var(--font);
   text-align: center;
 

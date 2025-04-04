@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     board::{Board, BoardSetup, Position},
-    piece::Color,
+    piece::{Color, Piece},
 };
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -28,6 +28,15 @@ pub enum State {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct CapturedPieces {
+    pub white: Vec<Piece>,
+    pub white_points: u16,
+    pub black: Vec<Piece>,
+    pub black_points: u16,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GameState {
     pub game_id: String,
     pub state: State,
@@ -35,11 +44,19 @@ pub struct GameState {
     pub in_check: Option<Color>,
     pub board: Board,
     pub move_history: Vec<(Position, Position)>, // TODO: Implement
+    pub captured_pieces: CapturedPieces,
 }
 
 impl GameState {
     pub fn new(game_id: String, board_setup: &BoardSetup) -> Self {
         let board = Board::new(board_setup);
+
+        let captured_pieces = CapturedPieces {
+            white: Vec::new(),
+            black: Vec::new(),
+            white_points: 0,
+            black_points: 0,
+        };
 
         GameState {
             game_id,
@@ -48,6 +65,7 @@ impl GameState {
             in_check: None,
             board,
             move_history: Vec::new(),
+            captured_pieces,
         }
     }
 }

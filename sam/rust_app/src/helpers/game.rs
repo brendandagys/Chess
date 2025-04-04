@@ -450,7 +450,18 @@ fn check_for_mates(game_state: &mut GameState) {
 }
 
 pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result<(), &'static str> {
-    game_state.board.apply_move(player_move);
+    if let Some(captured_piece) = game_state.board.apply_move(player_move) {
+        match game_state.current_turn {
+            Color::White => {
+                game_state.captured_pieces.white.push(captured_piece);
+                game_state.captured_pieces.white_points += captured_piece.get_point_value();
+            }
+            Color::Black => {
+                game_state.captured_pieces.black.push(captured_piece);
+                game_state.captured_pieces.black_points += captured_piece.get_point_value();
+            }
+        }
+    }
 
     if game_state.state == State::NotStarted {
         game_state.state = State::InProgress;

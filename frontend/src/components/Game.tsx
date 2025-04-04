@@ -7,6 +7,7 @@ import {
 import { Color, getOppositePlayerColor } from "../types/piece";
 import { ChessBoard } from "./ChessBoard";
 import { Alert } from "./Alert";
+import { CapturedPieces } from "./CapturedPieces";
 import { GameMessage } from "../types/sharedComponentTypes";
 import { GameRequest } from "../types/api";
 import { useMemo } from "react";
@@ -44,6 +45,25 @@ export const Game: React.FC<GameProps> = ({
     connectionId === gameRecord.white_connection_id ? Color.White : Color.Black;
 
   const isTurn = playerColor === gameState.currentTurn;
+
+  const playerCapturedPieces = gameState.capturedPieces[playerColor];
+
+  const playerPointsLead =
+    playerColor === Color.White
+      ? gameState.capturedPieces.whitePoints -
+        gameState.capturedPieces.blackPoints
+      : gameState.capturedPieces.blackPoints -
+        gameState.capturedPieces.whitePoints;
+
+  const opponentPointsLead =
+    playerColor === Color.White
+      ? gameState.capturedPieces.blackPoints -
+        gameState.capturedPieces.whitePoints
+      : gameState.capturedPieces.whitePoints -
+        gameState.capturedPieces.blackPoints;
+
+  const opponentCapturedPieces =
+    gameState.capturedPieces[getOppositePlayerColor(playerColor)];
 
   const stateOfGame = useMemo(() => {
     if (gameIsInProgress) {
@@ -124,14 +144,26 @@ export const Game: React.FC<GameProps> = ({
         )}
       </div>
 
-      <div
-        className={`chess-board-container ${isTurn ? "is-player-turn" : ""}`}
-      >
-        <ChessBoard
-          board={gameState.board}
-          playerColor={playerColor}
-          gameId={gameRecord.game_id}
-          sendWebSocketMessage={sendWebSocketMessage}
+      <div className="game-area">
+        <CapturedPieces
+          pieces={opponentCapturedPieces}
+          pointsLead={opponentPointsLead}
+        />
+
+        <div
+          className={`chess-board-container ${isTurn ? "is-player-turn" : ""}`}
+        >
+          <ChessBoard
+            board={gameState.board}
+            playerColor={playerColor}
+            gameId={gameRecord.game_id}
+            sendWebSocketMessage={sendWebSocketMessage}
+          />
+        </div>
+
+        <CapturedPieces
+          pieces={playerCapturedPieces}
+          pointsLead={playerPointsLead}
         />
       </div>
     </div>

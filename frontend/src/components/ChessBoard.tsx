@@ -1,4 +1,4 @@
-import { images } from "../images";
+import { imageMap } from "../images";
 import { Color, PieceType } from "../types/piece";
 import { Board } from "../types/board";
 import { rotateMatrix180Degrees } from "../utils";
@@ -13,15 +13,6 @@ interface ChessBoardProps {
   gameId: string;
   sendWebSocketMessage: (action: GameRequest) => void;
 }
-
-const imageMap = {
-  [PieceType.Pawn]: { white: images.wp, black: images.bp },
-  [PieceType.Rook]: { white: images.wr, black: images.br },
-  [PieceType.Knight]: { white: images.wn, black: images.bn },
-  [PieceType.Bishop]: { white: images.wb, black: images.bb },
-  [PieceType.Queen]: { white: images.wq, black: images.bq },
-  [PieceType.King]: { white: images.wk, black: images.bk },
-};
 
 export const ChessBoard: React.FC<ChessBoardProps> = ({
   board: _board,
@@ -38,6 +29,15 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     gameId,
     sendWebSocketMessage
   );
+
+  const pieceDiameterClass =
+    window.innerWidth < 400
+      ? "--piece-diameter-smallest"
+      : window.innerWidth < 450
+      ? "--piece-diameter-smaller"
+      : window.innerWidth < 500
+      ? "--piece-diameter-small"
+      : "--piece-diameter";
 
   return (
     <div className={`board rank-count-${board.length % 2 ? "odd" : "even"}`}>
@@ -82,7 +82,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       {/* Floating piece */}
       {draggingPiece && (
         <img
-          className="dragging-piece"
           src={
             imageMap[draggingPiece.piece.pieceType][draggingPiece.piece.color]
           }
@@ -92,7 +91,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
               draggingPiece.x -
               (parseFloat(
                 getComputedStyle(document.documentElement).getPropertyValue(
-                  "--piece-diameter"
+                  pieceDiameterClass
                 )
               ) / 2 || 0) +
               window.scrollX,
@@ -100,13 +99,13 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
               draggingPiece.y -
               (parseFloat(
                 getComputedStyle(document.documentElement).getPropertyValue(
-                  "--piece-diameter"
+                  pieceDiameterClass
                 )
               ) / 2 || 0) +
               window.scrollY,
             pointerEvents: "none",
-            width: "var(--piece-diameter)",
-            height: "var(--piece-diameter)",
+            width: `var(${pieceDiameterClass})`,
+            height: `var(${pieceDiameterClass})`,
             opacity: 1,
           }}
         />

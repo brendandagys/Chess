@@ -1,5 +1,5 @@
 import { Board, BoardSetup, Position } from "./board";
-import { Color } from "./piece";
+import { Color, Piece } from "./piece";
 
 export enum GameEndingType {
   Checkmate = 'checkmate',
@@ -50,6 +50,13 @@ type State =
   | StateInProgress
   | StateFinished;
 
+export interface CapturedPieces {
+  [Color.White]: Piece[];
+  [Color.Black]: Piece[];
+  whitePoints: number;
+  blackPoints: number;
+}
+
 export interface GameState {
   gameId: string;
   state: State;
@@ -57,6 +64,7 @@ export interface GameState {
   inCheck: Color | null;
   board: Board;
   move_history: unknown[];
+  capturedPieces: CapturedPieces;
 }
 
 export interface PlayerMove {

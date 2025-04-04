@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::types::game::PlayerMove;
+
 use super::board::{Board, File, Position, Rank};
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -55,7 +57,7 @@ pub enum PieceType {
 pub struct Piece {
     pub piece_type: PieceType,
     pub color: Color,
-    pub move_count: usize,
+    pub last_game_move: Option<usize>,
 }
 
 impl Piece {
@@ -63,7 +65,18 @@ impl Piece {
         Piece {
             piece_type,
             color,
-            move_count: 0,
+            last_game_move: None,
+        }
+    }
+
+    pub fn get_point_value(&self) -> u16 {
+        match self.piece_type {
+            PieceType::King => 0,
+            PieceType::Queen => 9,
+            PieceType::Rook => 5,
+            PieceType::Bishop => 3,
+            PieceType::Knight => 3,
+            PieceType::Pawn => 1,
         }
     }
 
@@ -77,30 +90,178 @@ impl Piece {
         }
     }
 
+    fn get_allowed_castling_positions_lower_ranks(
+        &self,
+        board: &Board,
+        king_position: &Position,
+    ) -> Option<Position> {
+        let no_pieces_between_king_and_rook_and_not_moving_through_check =
+            (2..king_position.file.0).all(|file| {
+                let position_to_check = Position {
+                    rank: king_position.rank.clone(),
+                    file: File(file),
+                };
+
+                board.get_piece_at_position(&position_to_check).is_none()
+                    && (file < king_position.file.0 - 2 || {
+                        let mut hypothetical_board = board.clone();
+                        hypothetical_board.apply_move(&PlayerMove {
+                            from: king_position.clone(),
+                            to: position_to_check.clone(),
+                        });
+                        !hypothetical_board.is_king_in_check(&self.color)
+                    })
+            });
+
+        if no_pieces_between_king_and_rook_and_not_moving_through_check {
+            let rook_position = Position {
+                rank: king_position.rank.clone(),
+                file: File(1),
+            };
+
+            if let Some(piece) = board.get_piece_at_position(&rook_position) {
+                if piece.piece_type == PieceType::Rook && piece.last_game_move.is_none() {
+                    let mut hypothetical_board = board.clone();
+
+                    let tentative_new_king_position = Position {
+                        rank: king_position.rank.clone(),
+                        file: File(king_position.file.0 - 2),
+                    };
+
+                    hypothetical_board.apply_move(&PlayerMove {
+                        from: king_position.clone(),
+                        to: tentative_new_king_position,
+                    });
+
+                    hypothetical_board.apply_move(&PlayerMove {
+                        from: rook_position.clone(),
+                        to: Position {
+                            rank: king_position.rank.clone(),
+                            file: File(king_position.file.0 - 1),
+                        },
+                    });
+
+                    if !hypothetical_board.is_king_in_check(&self.color) {
+                        return Some(rook_position);
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    fn get_allowed_castling_positions_upper_ranks(
+        &self,
+        board: &Board,
+        king_position: &Position,
+    ) -> Option<Position> {
+        let no_pieces_between_king_and_rook_and_not_moving_through_check =
+            (king_position.file.0 + 1..board.squares[0].len()).all(|file| {
+                let position_to_check = Position {
+                    rank: king_position.rank.clone(),
+                    file: File(file),
+                };
+
+                board.get_piece_at_position(&position_to_check).is_none()
+                    && (file > king_position.file.0 + 2 || {
+                        let mut hypothetical_board = board.clone();
+                        hypothetical_board.apply_move(&PlayerMove {
+                            from: king_position.clone(),
+                            to: position_to_check.clone(),
+                        });
+                        !hypothetical_board.is_king_in_check(&self.color)
+                    })
+            });
+
+        if no_pieces_between_king_and_rook_and_not_moving_through_check {
+            let rook_position = Position {
+                rank: king_position.rank.clone(),
+                file: File(board.squares[0].len()),
+            };
+
+            if let Some(piece) = board.get_piece_at_position(&rook_position) {
+                if piece.piece_type == PieceType::Rook && piece.last_game_move.is_none() {
+                    let mut hypothetical_board = board.clone();
+
+                    let tentative_new_king_position = Position {
+                        rank: king_position.rank.clone(),
+                        file: File(king_position.file.0 + 2),
+                    };
+
+                    hypothetical_board.apply_move(&PlayerMove {
+                        from: king_position.clone(),
+                        to: tentative_new_king_position,
+                    });
+
+                    hypothetical_board.apply_move(&PlayerMove {
+                        from: rook_position.clone(),
+                        to: Position {
+                            rank: king_position.rank.clone(),
+                            file: File(king_position.file.0 + 1),
+                        },
+                    });
+
+                    if !hypothetical_board.is_king_in_check(&self.color) {
+                        return Some(rook_position);
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    fn get_allowed_castling_positions(
+        &self,
+        board: &Board,
+        king_position: &Position,
+    ) -> Vec<Position> {
+        if self.piece_type != PieceType::King || self.last_game_move.is_some() {
+            return vec![];
+        }
+
+        [
+            self.get_allowed_castling_positions_lower_ranks(board, king_position),
+            self.get_allowed_castling_positions_upper_ranks(board, king_position),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
+    }
+
     pub fn possible_moves(&self, board: &Board, position: &Position) -> Vec<Position> {
         match self.piece_type {
-            PieceType::King => [
-                (-1, -1),
-                (-1, 0),
-                (-1, 1),
-                (0, -1),
-                (0, 1),
-                (1, -1),
-                (1, 0),
-                (1, 1),
-            ]
-            .iter()
-            .filter_map(|(offset_r, offset_f)| {
-                let tentative_position =
-                    self.get_tentative_position(position, (offset_r, offset_f));
+            PieceType::King => {
+                let standard_king_moves = [
+                    (-1, -1),
+                    (-1, 0),
+                    (-1, 1),
+                    (0, -1),
+                    (0, 1),
+                    (1, -1),
+                    (1, 0),
+                    (1, 1),
+                ]
+                .iter()
+                .filter_map(|(offset_r, offset_f)| {
+                    let tentative_position =
+                        self.get_tentative_position(position, (offset_r, offset_f));
 
-                match board.is_valid_position_for_king_or_knight_in_game(&tentative_position, self)
-                {
-                    true => Some(tentative_position),
-                    false => None,
-                }
-            })
-            .collect::<Vec<Position>>(),
+                    match board
+                        .is_valid_position_for_king_or_knight_in_game(&tentative_position, self)
+                    {
+                        true => Some(tentative_position),
+                        false => None,
+                    }
+                })
+                .collect::<Vec<Position>>();
+
+                standard_king_moves
+                    .into_iter()
+                    .chain(self.get_allowed_castling_positions(board, position))
+                    .collect::<Vec<Position>>()
+            }
 
             PieceType::Knight => [
                 (-2, -1),
@@ -148,7 +309,7 @@ impl Piece {
                     moves.push(tentative_single_jump_position);
 
                     // Double-square forward; single-jump must also be valid
-                    if self.move_count == 0 {
+                    if self.last_game_move.is_none() {
                         let new_double_jump_rank = position.rank.to_index() as isize
                             + match self.color {
                                 Color::White => 2isize,
@@ -190,10 +351,78 @@ impl Piece {
                     }
                 }
 
-                // TODO: En passant capture
-                // Store move COUNT on each piece and last game move (#),
-                // to validate we are capturing a pawn that JUST moved forward two squares,
-                // and that we are capturing on the very next move
+                // En passant capture
+                if self.color == Color::White && position.rank.0 == board.squares.len() - 3 {
+                    let left_position = Position {
+                        rank: Rank(position.rank.0),
+                        file: File(position.file.0 - 1),
+                    };
+
+                    let right_position = Position {
+                        rank: Rank(position.rank.0),
+                        file: File(position.file.0 + 1),
+                    };
+
+                    if let Some(piece) = board.get_piece_at_position(&left_position) {
+                        if piece.piece_type == PieceType::Pawn
+                            && piece.color == Color::Black
+                            && piece.last_game_move == Some(board.move_count)
+                        {
+                            moves.push(Position {
+                                rank: Rank(position.rank.0 + 1),
+                                file: File(position.file.0 - 1),
+                            });
+                        }
+                    }
+
+                    if let Some(piece) = board.get_piece_at_position(&right_position) {
+                        if piece.piece_type == PieceType::Pawn
+                            && piece.color == Color::Black
+                            && piece.last_game_move == Some(board.move_count)
+                        {
+                            moves.push(Position {
+                                rank: Rank(position.rank.0 + 1),
+                                file: File(position.file.0 + 1),
+                            });
+                        }
+                    }
+                }
+
+                if self.color == Color::Black && position.rank.0 == 4 {
+                    let left_position = Position {
+                        rank: Rank(position.rank.0),
+                        file: File(position.file.0 + 1),
+                    };
+
+                    let right_position = Position {
+                        rank: Rank(position.rank.0),
+                        file: File(position.file.0 - 1),
+                    };
+
+                    if let Some(piece) = board.get_piece_at_position(&left_position) {
+                        if piece.piece_type == PieceType::Pawn
+                            && piece.color == Color::White
+                            && piece.last_game_move == Some(board.move_count)
+                        {
+                            moves.push(Position {
+                                rank: Rank(position.rank.0 - 1),
+                                file: File(position.file.0 + 1),
+                            });
+                        }
+                    }
+
+                    if let Some(piece) = board.get_piece_at_position(&right_position) {
+                        if piece.piece_type == PieceType::Pawn
+                            && piece.color == Color::White
+                            && piece.last_game_move == Some(board.move_count)
+                        {
+                            moves.push(Position {
+                                rank: Rank(position.rank.0 - 1),
+                                file: File(position.file.0 - 1),
+                            });
+                        }
+                    }
+                }
 
                 moves
             }
