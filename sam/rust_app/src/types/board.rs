@@ -378,62 +378,63 @@ impl Board {
     }
 
     fn check_for_castling(&mut self, player_piece: &Piece, player_move: &PlayerMove) -> bool {
-        if player_piece.piece_type == PieceType::King
+        let is_castling = player_piece.piece_type == PieceType::King
             && (player_move.to.file.0 == 1 || player_move.to.file.0 == self.squares[0].len())
-            && (player_move.from.file.0 as isize - player_move.to.file.0 as isize).abs() > 1
-        {
-            let (old_rook_file, new_rook_file, new_king_file) =
-                if player_move.from.file.0 < player_move.to.file.0 {
-                    (
-                        self.squares[0].len(),
-                        player_move.from.file.0 + 1,
-                        player_move.from.file.0 + 2,
-                    )
-                } else {
-                    (1, player_move.from.file.0 - 1, player_move.from.file.0 - 2)
-                };
+            && (player_move.from.file.0 as isize - player_move.to.file.0 as isize).abs() > 1;
 
-            let old_rook_position = Position {
-                rank: player_move.from.rank.clone(),
-                file: File(old_rook_file),
-            };
-
-            let new_rook_position = Position {
-                rank: player_move.from.rank.clone(),
-                file: File(new_rook_file),
-            };
-
-            let new_king_position = Position {
-                rank: player_move.from.rank.clone(),
-                file: File(new_king_file),
-            };
-
-            let rook = self
-                .get_piece_at_position(&old_rook_position)
-                .cloned()
-                .expect(&format!(
-                    "Did not find rook at position when castling: {:?}",
-                    old_rook_position
-                ));
-
-            self.set_piece_at_position(&new_rook_position, Some(rook));
-            self.set_piece_at_position(&old_rook_position, None);
-
-            let king = self
-                .get_piece_at_position(&player_move.from)
-                .cloned()
-                .expect(&format!(
-                    "Did not find king at position when castling: {:?}",
-                    player_move.from
-                ));
-
-            self.set_piece_at_position(&new_king_position, Some(king));
-            self.set_piece_at_position(&player_move.from, None);
-
-            return true;
+        if !is_castling {
+            return false;
         }
 
-        false
+        let (old_rook_file, new_rook_file, new_king_file) =
+            if player_move.from.file.0 < player_move.to.file.0 {
+                (
+                    self.squares[0].len(),
+                    player_move.from.file.0 + 1,
+                    player_move.from.file.0 + 2,
+                )
+            } else {
+                (1, player_move.from.file.0 - 1, player_move.from.file.0 - 2)
+            };
+
+        let old_rook_position = Position {
+            rank: player_move.from.rank.clone(),
+            file: File(old_rook_file),
+        };
+
+        let new_rook_position = Position {
+            rank: player_move.from.rank.clone(),
+            file: File(new_rook_file),
+        };
+
+        let new_king_position = Position {
+            rank: player_move.from.rank.clone(),
+            file: File(new_king_file),
+        };
+
+        let rook = self
+            .get_piece_at_position(&old_rook_position)
+            .cloned()
+            .expect(&format!(
+                "Did not find rook at position when castling: {:?}",
+                old_rook_position
+            ));
+
+        self.set_piece_at_position(&new_rook_position, Some(rook));
+        self.set_piece_at_position(&old_rook_position, None);
+
+        let king = self
+            .get_piece_at_position(&player_move.from)
+            .cloned()
+            .expect(&format!(
+                "Did not find king at position when castling: {:?}",
+                player_move.from
+            ));
+
+        self.set_piece_at_position(&new_king_position, Some(king));
+        self.set_piece_at_position(&player_move.from, None);
+
+        return true;
     }
 
     /// This function assumes the move has been validated
