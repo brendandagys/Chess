@@ -80,13 +80,13 @@ impl Piece {
         }
     }
 
-    fn get_tentative_position(&self, position: &Position, offset: (&i32, &i32)) -> Position {
-        let new_rank = position.rank.to_index() + *offset.0 as usize;
-        let new_file = position.file.to_index() + *offset.1 as usize;
+    fn calculate_offset(&self, position: &Position, offset: (&i32, &i32)) -> Position {
+        let new_rank = position.rank.0 + *offset.0 as usize;
+        let new_file = position.file.0 + *offset.1 as usize;
 
         Position {
-            rank: Rank(new_rank + 1),
-            file: File(new_file + 1),
+            rank: Rank(new_rank),
+            file: File(new_file),
         }
     }
 
@@ -245,8 +245,7 @@ impl Piece {
                 ]
                 .iter()
                 .filter_map(|(offset_r, offset_f)| {
-                    let tentative_position =
-                        self.get_tentative_position(position, (offset_r, offset_f));
+                    let tentative_position = self.calculate_offset(position, (offset_r, offset_f));
 
                     match board
                         .is_valid_position_for_king_or_knight_in_game(&tentative_position, self)
@@ -275,8 +274,7 @@ impl Piece {
             ]
             .iter()
             .filter_map(|(offset_r, offset_f)| {
-                let tentative_position =
-                    self.get_tentative_position(position, (offset_r, offset_f));
+                let tentative_position = self.calculate_offset(position, (offset_r, offset_f));
 
                 match board.is_valid_position_for_king_or_knight_in_game(&tentative_position, self)
                 {
@@ -290,14 +288,14 @@ impl Piece {
                 let mut moves = Vec::new();
 
                 // Single-square forward
-                let new_single_jump_rank = position.rank.to_index() as isize
+                let new_single_jump_rank = position.rank.0 as isize
                     + match self.color {
                         Color::White => 1isize,
                         Color::Black => -1isize,
                     };
 
                 let tentative_single_jump_position = Position {
-                    rank: Rank((new_single_jump_rank + 1) as usize),
+                    rank: Rank(new_single_jump_rank as usize),
                     file: File(position.file.0),
                 };
 
@@ -310,14 +308,14 @@ impl Piece {
 
                     // Double-square forward; single-jump must also be valid
                     if self.last_game_move.is_none() {
-                        let new_double_jump_rank = position.rank.to_index() as isize
+                        let new_double_jump_rank = position.rank.0 as isize
                             + match self.color {
                                 Color::White => 2isize,
                                 Color::Black => -2isize,
                             };
 
                         let tentative_double_jump_position = Position {
-                            rank: Rank((new_double_jump_rank + 1) as usize),
+                            rank: Rank(new_double_jump_rank as usize),
                             file: File(position.file.0),
                         };
 
@@ -333,11 +331,11 @@ impl Piece {
 
                 // Regular capture
                 for file_offset in &[-1, 1] {
-                    let capture_file = position.file.to_index() as isize + file_offset;
+                    let capture_file = position.file.0 as isize + file_offset;
 
                     let tentative_capture_position = Position {
-                        rank: Rank((new_single_jump_rank + 1) as usize),
-                        file: File((capture_file + 1) as usize),
+                        rank: Rank(new_single_jump_rank as usize),
+                        file: File(capture_file as usize),
                     };
 
                     if board.is_valid_board_position(&tentative_capture_position) {
