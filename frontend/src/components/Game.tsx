@@ -101,6 +101,11 @@ export const Game: React.FC<GameProps> = ({
     return ["Game over", "gray"];
   }, [gameIsInProgress, gameState.inCheck, gameStateType, playerColor]);
 
+  const playerUsername =
+    playerColor === Color.White
+      ? gameRecord.white_username
+      : gameRecord.black_username;
+
   const opponentUsername =
     playerColor === Color.White
       ? gameRecord.black_username
@@ -128,7 +133,7 @@ export const Game: React.FC<GameProps> = ({
             {!gameIsFinished && (
               <p className="pill pill--gray">
                 {bothPlayersReady
-                  ? `Opponent: ${opponentUsername}`
+                  ? `${playerUsername} vs. ${opponentUsername}`
                   : `Waiting for ${opponentUsername ?? "other player"}...`}
               </p>
             )}
