@@ -19,10 +19,17 @@ export const useDrag = (
 
   const [from, setFrom] = useState<Position | null>(null);
 
-  const handlePointerDown = (
-    event: React.PointerEvent<HTMLImageElement>,
+  const handleDragStart = (
+    event: React.DragEvent<HTMLImageElement>,
     piece: Piece
   ) => {
+    // Prevent native drag behavior (which wasn't working in Firefox)
+    event.preventDefault();
+
+    document.querySelectorAll(".square--selected").forEach((el) => {
+      el.classList.remove("square--selected");
+    });
+
     const elem = event.currentTarget;
 
     elem.classList.add("dragging");
@@ -32,27 +39,46 @@ export const useDrag = (
         rank: parseInt(elem.dataset.rank),
         file: parseInt(elem.dataset.file),
       });
+
+      setDraggingPiece({
+        piece,
+        x: event.clientX,
+        y: event.clientY,
+      });
     }
-
-    setDraggingPiece({
-      piece,
-      x: event.clientX,
-      y: event.clientY,
-    });
-
-    event.preventDefault();
   };
 
   const handlePointerMove = useCallback(
     (event: PointerEvent) => {
       if (draggingPiece) {
         setDraggingPiece((prev) =>
-          prev ? { ...prev, x: event.clientX, y: event.clientY } : null
+          prev
+            ? {
+                ...prev,
+                x: event.clientX,
+                y: event.clientY,
+              }
+            : null
         );
       }
     },
     [draggingPiece]
   );
+
+  const getPieceFromElement = (element: HTMLElement): HTMLElement | null => {
+    const classes = element.classList;
+
+    if (classes.contains("square")) {
+      return (
+        element.querySelector(".piece") ??
+        element.querySelector(".hidden-piece")
+      );
+    } else if (classes.contains("piece") || classes.contains("hidden-piece")) {
+      return element;
+    }
+
+    return null;
+  };
 
   const handlePointerUp = useCallback(() => {
     if (draggingPiece) {
@@ -62,19 +88,7 @@ export const useDrag = (
       );
 
       if (elementUnderPointer && elementUnderPointer instanceof HTMLElement) {
-        const classes = elementUnderPointer.classList;
-        let piece: HTMLElement | null = null;
-
-        if (classes.contains("square")) {
-          piece =
-            elementUnderPointer.querySelector(".piece") ??
-            elementUnderPointer.querySelector(".hidden-piece");
-        } else if (
-          classes.contains("piece") ||
-          classes.contains("hidden-piece")
-        ) {
-          piece = elementUnderPointer;
-        }
+        const piece = getPieceFromElement(elementUnderPointer);
 
         if (from && piece?.dataset.rank && piece.dataset.file) {
           const toRank = parseInt(piece.dataset.rank);
@@ -105,14 +119,14 @@ export const useDrag = (
           }
         }
       }
+
+      document.querySelectorAll(".piece.dragging").forEach((el) => {
+        el.classList.remove("dragging");
+      });
+
+      setDraggingPiece(null);
+      setFrom(null);
     }
-
-    document.querySelectorAll(".piece.dragging").forEach((el) => {
-      el.classList.remove("dragging");
-    });
-
-    setDraggingPiece(null);
-    setFrom(null);
   }, [draggingPiece, from, gameId, onPointerUp]);
 
   useEffect(() => {
@@ -130,5 +144,5 @@ export const useDrag = (
     };
   }, [draggingPiece, handlePointerMove, handlePointerUp]);
 
-  return [draggingPiece, handlePointerDown] as const;
+  return [draggingPiece, handleDragStart] as const;
 };

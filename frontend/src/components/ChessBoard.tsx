@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { imageMap } from "../images";
-import { Color, PieceType } from "../types/piece";
-import { Board } from "../types/board";
 import { rotateMatrix180Degrees } from "../utils";
 import { useDrag } from "../hooks/useDrag";
 import { GameRequest } from "../types/api";
+import { PlayerActionName } from "../types/game";
+import { Board, Position } from "../types/board";
+import { Color, Piece, PieceType } from "../types/piece";
+import { API_ROUTE } from "../constants";
 
 import "../css/ChessBoard.css";
 
@@ -25,7 +28,12 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     ? rotateMatrix180Degrees(_board.squares)
     : _board.squares;
 
-  const [draggingPiece, handlePointerDown] = useDrag(
+  const [selectedSquare, setSelectedSquare] = useState<{
+    rank: number;
+    file: number;
+  } | null>(null);
+
+  const [draggingPiece, handleDragStart] = useDrag(
     gameId,
     sendWebSocketMessage
   );
@@ -38,6 +46,41 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       : window.innerWidth < 500
       ? "--piece-diameter-small"
       : "--piece-diameter";
+
+  const onClickSquare = (
+    _event: React.MouseEvent<HTMLDivElement>,
+    pieceOnSquare: Piece | null,
+    position: Position
+  ) => {
+    setSelectedSquare((old) => {
+      if (!old) {
+        return pieceOnSquare ? position : null;
+      }
+
+      if (old.rank !== position.rank || old.file !== position.file) {
+        sendWebSocketMessage({
+          route: API_ROUTE,
+          data: {
+            [PlayerActionName.MovePiece]: {
+              gameId,
+              playerMove: {
+                from: {
+                  rank: old.rank,
+                  file: old.file,
+                },
+                to: {
+                  rank: position.rank,
+                  file: position.file,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      return null;
+    });
+  };
 
   return (
     <div className={`board rank-count-${board.length % 2 ? "odd" : "even"}`}>
@@ -52,7 +95,18 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                 1 + (shouldRotate ? board.length - colIndex - 1 : colIndex);
 
               return (
-                <div key={colIndex} className="square">
+                <div
+                  key={colIndex}
+                  className={`square${
+                    selectedSquare?.rank === rank &&
+                    selectedSquare.file === file
+                      ? " square--selected"
+                      : ""
+                  }`}
+                  onClick={(e) => {
+                    onClickSquare(e, piece, { rank, file });
+                  }}
+                >
                   {piece ? (
                     <img
                       className="piece"
@@ -60,8 +114,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                       alt={`${piece.color} ${piece.pieceType}`}
                       data-rank={rank}
                       data-file={file}
-                      onPointerDown={(e) => {
-                        handlePointerDown(e, piece);
+                      onDragStart={(e) => {
+                        handleDragStart(e, piece);
                       }}
                     />
                   ) : (
@@ -85,6 +139,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           src={
             imageMap[draggingPiece.piece.pieceType][draggingPiece.piece.color]
           }
+          className="floating-piece"
           style={{
             position: "absolute",
             left:

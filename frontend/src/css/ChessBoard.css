@@ -33,6 +33,24 @@
   visibility: hidden;
 }
 
+.square--selected,
+.floating-piece {
+  box-shadow: 0 0 6px 3px rgba(255, 255, 0, 0.8);
+  z-index: 10;
+}
+
+.floating-piece {
+  border-radius: 50%;
+  box-shadow: 0 0 10px 5px rgba(255, 255, 0, 0.8);
+}
+
+@media (min-width: 600px) {
+  .floating-piece {
+    border-radius: unset;
+    box-shadow: unset;
+  }
+}
+
 .board .board-row .square {
   background-color: #779556;
 }
