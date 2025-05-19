@@ -120,10 +120,6 @@ export const useDrag = (
         }
       }
 
-      document.querySelectorAll(".piece.dragging").forEach((el) => {
-        el.classList.remove("dragging");
-      });
-
       setDraggingPiece(null);
       setFrom(null);
     }
