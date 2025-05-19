@@ -114,6 +114,9 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                       onDragStart={(e) => {
                         handleDragStart(e, piece);
                       }}
+                      onTouchMove={(e) => {
+                        handleDragStart(e, piece);
+                      }}
                     />
                   ) : (
                     <img

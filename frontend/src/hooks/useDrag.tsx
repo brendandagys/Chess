@@ -20,7 +20,9 @@ export const useDrag = (
   const [from, setFrom] = useState<Position | null>(null);
 
   const handleDragStart = (
-    event: React.DragEvent<HTMLImageElement>,
+    event:
+      | React.DragEvent<HTMLImageElement>
+      | React.TouchEvent<HTMLImageElement>,
     piece: Piece
   ) => {
     // Prevent native drag behavior (which wasn't working in Firefox)
@@ -40,10 +42,22 @@ export const useDrag = (
         file: parseInt(elem.dataset.file),
       });
 
+      let clientX: number, clientY: number;
+      if ("touches" in event && event.touches.length > 0) {
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+      } else if ("clientX" in event) {
+        clientX = event.clientX;
+        clientY = event.clientY;
+      } else {
+        clientX = 0;
+        clientY = 0;
+      }
+
       setDraggingPiece({
         piece,
-        x: event.clientX,
-        y: event.clientY,
+        x: clientX,
+        y: clientY,
       });
     }
   };
