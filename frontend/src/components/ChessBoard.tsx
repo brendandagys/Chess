@@ -28,10 +28,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     ? rotateMatrix180Degrees(_board.squares)
     : _board.squares;
 
-  const [selectedSquare, setSelectedSquare] = useState<{
-    rank: number;
-    file: number;
-  } | null>(null);
+  const [selectedSquare, setSelectedSquare] = useState<Position | null>(null);
 
   const [draggingPiece, handleDragStart] = useDrag(
     gameId,
