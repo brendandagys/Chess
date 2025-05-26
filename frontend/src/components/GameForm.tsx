@@ -13,15 +13,21 @@ interface GameFormProps {
   sendWebSocketMessage: (action: GameRequest) => void;
   mode: FormToShow;
   setShowForm: React.Dispatch<React.SetStateAction<boolean>>;
+  setUsername: (username: string) => void;
+  gameIds: string[];
 }
 
 export const GameForm: React.FC<GameFormProps> = ({
   sendWebSocketMessage,
   mode,
   setShowForm,
+  setUsername,
+  gameIds,
 }) => {
-  const [username, setUsername] = useLocalStorage("username", "");
-  const [gameId, setGameId] = useState("");
+  const [username, setUsernameInLocalStorage] = useLocalStorage("username", "");
+  const [gameId, setGameId] = useState(
+    gameIds.length === 1 && !username ? gameIds[0] : ""
+  );
   const [boardSetupName, setBoardSetupName] = useState<BoardSetupName>(
     BoardSetupName.Standard
   );
@@ -176,7 +182,9 @@ export const GameForm: React.FC<GameFormProps> = ({
           placeholder="Username"
           value={username}
           onChange={(e) => {
-            setUsername(e.target.value);
+            const username = e.target.value.trim();
+            setUsernameInLocalStorage(username);
+            setUsername(username);
           }}
         />
 

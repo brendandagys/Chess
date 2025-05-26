@@ -129,7 +129,11 @@ export const useDrag = (
               },
             });
 
-            console.log(`Piece placed at rank: ${toRank}, file: ${toFile}`);
+            console.info(`Piece placed at rank: ${toRank}, file: ${toFile}`);
+          } else {
+            document.querySelectorAll(".dragging").forEach((el) => {
+              el.classList.remove("dragging");
+            });
           }
         }
       }

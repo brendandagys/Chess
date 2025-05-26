@@ -1,24 +1,38 @@
-import { useState, useCallback, useRef } from "react";
-import { useWebSocket } from "../hooks/useWebSocket";
-import { GameForm } from "./GameForm";
-import { FormToShow } from "../types/sharedComponentTypes";
-import { GameRecord } from "../types/game";
-import { Game } from "./Game";
-import { WEBSOCKET_ENDPOINT } from "../constants";
-import { useMessageDisplay } from "../hooks/useMessageDisplay";
-import { Alert } from "./Alert";
-import { ApiResponse } from "../types/api";
+import { useState, useCallback, useRef, useEffect } from "react";
 
-import _moveSound from "../sounds/move-self.mp3";
+import { useNav } from "../context/useNav";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import { useMessageDisplay } from "../hooks/useMessageDisplay";
+import { useWebSocket } from "../hooks/useWebSocket";
+
+import { GameForm } from "./GameForm";
+import { Alert } from "./Alert";
+import { Game } from "./Game";
+
+import { ApiResponse } from "../types/api";
+import { GameRecord, PlayerActionName } from "../types/game";
+import { FormToShow } from "../types/sharedComponentTypes";
+import { API_ROUTE, WEBSOCKET_ENDPOINT } from "../constants";
+
 import "../css/App.css";
+import _moveSound from "../sounds/move-self.mp3";
 
 export const App: React.FC = () => {
+  const { username, gameIds, addGameId, setUsername } = useNav();
+  const [usernameFromLocalStorage] = useLocalStorage("username", "");
+
+  const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
+
   const [appMessages, setAppMessages, dismissAppMessage] = useMessageDisplay();
   const [gameMessages, setGameMessages, dismissGameMessage] =
     useMessageDisplay();
-  const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
-  const [showForm, setShowForm] = useState(true);
-  const [formToShow, setFormToShow] = useState<FormToShow>(FormToShow.Create);
+
+  const [formToShow, setFormToShow] = useState<FormToShow>(
+    !username && gameIds.length ? FormToShow.Join : FormToShow.Create
+  );
+  const [showForm, setShowForm] = useState(
+    !/^\/game\/(.+)$/.exec(window.location.pathname) || !username
+  );
 
   const moveSound = useRef<HTMLAudioElement>(new Audio(_moveSound));
 
@@ -34,6 +48,7 @@ export const App: React.FC = () => {
           );
 
           if (index === -1) {
+            addGameId(gameRecord.game_id);
             return [...old, gameRecord];
           }
 
@@ -78,13 +93,42 @@ export const App: React.FC = () => {
         ]);
       }
     },
-    [setAppMessages, setGameMessages]
+    [addGameId, setAppMessages, setGameMessages]
   );
 
-  const [connectionId, sendWebSocketMessage] = useWebSocket(
+  const [connectionId, sendWebSocketMessage, isWebsocketOpen] = useWebSocket(
     WEBSOCKET_ENDPOINT,
     onWebSocketMessage
   );
+
+  const [joinedGameIds, setJoinedGameIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    setUsername(usernameFromLocalStorage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!isWebsocketOpen || !gameIds.length || !username) {
+      return;
+    }
+
+    gameIds
+      .filter((gameId) => !joinedGameIds.includes(gameId))
+      .forEach((gameId) => {
+        setJoinedGameIds((old) => [...old, gameId]);
+
+        sendWebSocketMessage({
+          route: API_ROUTE,
+          data: {
+            [PlayerActionName.JoinGame]: {
+              username,
+              gameId,
+            },
+          },
+        });
+      });
+  }, [gameIds, username, isWebsocketOpen, sendWebSocketMessage, joinedGameIds]);
 
   return (
     <div className="app-container">
@@ -141,6 +185,8 @@ export const App: React.FC = () => {
               sendWebSocketMessage={sendWebSocketMessage}
               mode={formToShow}
               setShowForm={setShowForm}
+              setUsername={setUsername}
+              gameIds={gameIds}
             />
           </div>
         </>
