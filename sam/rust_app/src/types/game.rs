@@ -43,7 +43,7 @@ pub struct GameState {
     pub current_turn: Color,
     pub in_check: Option<Color>,
     pub board: Board,
-    pub move_history: Vec<(Position, Position)>, // TODO: Implement
+    pub board_history: Vec<Board>,
     pub captured_pieces: CapturedPieces,
 }
 
@@ -64,7 +64,7 @@ impl GameState {
             current_turn: Color::White,
             in_check: None,
             board,
-            move_history: Vec::new(),
+            board_history: Vec::new(),
             captured_pieces,
         }
     }

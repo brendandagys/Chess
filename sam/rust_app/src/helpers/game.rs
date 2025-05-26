@@ -463,6 +463,8 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
         }
     }
 
+    game_state.board_history.push(game_state.board.clone());
+
     if game_state.state == State::NotStarted {
         game_state.state = State::InProgress;
     }

@@ -63,7 +63,7 @@ export interface GameState {
   currentTurn: Color;
   inCheck: Color | null;
   board: Board;
-  move_history: unknown[];
+  boardHistory: Board[];
   capturedPieces: CapturedPieces;
 }
 
