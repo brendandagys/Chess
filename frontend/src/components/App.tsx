@@ -8,6 +8,7 @@ import { useWebSocket } from "../hooks/useWebSocket";
 import { GameForm } from "./GameForm";
 import { Alert } from "./Alert";
 import { Game } from "./Game";
+import { CopyLinkButton } from "./CopyLinkButton";
 
 import { ApiResponse } from "../types/api";
 import { GameRecord, PlayerActionName } from "../types/game";
@@ -31,7 +32,8 @@ export const App: React.FC = () => {
     !username && gameIds.length ? FormToShow.Join : FormToShow.Create
   );
   const [showForm, setShowForm] = useState(
-    !/^\/game\/(.+)$/.exec(window.location.pathname) || !username
+    !/^\/game\/(.+)$/.exec(window.location.pathname) ||
+      !usernameFromLocalStorage
   );
 
   const moveSound = useRef<HTMLAudioElement>(new Audio(_moveSound));
@@ -132,6 +134,8 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
+      {gameIds.length ? <CopyLinkButton /> : null}
+
       <div className="title-container">
         {appMessages.length ? (
           appMessages.map((message) => (
