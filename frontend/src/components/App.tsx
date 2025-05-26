@@ -56,6 +56,10 @@ export const App: React.FC = () => {
           const newGames = [...old];
           newGames[index] = gameRecord;
 
+          document.querySelectorAll(".dragging").forEach((el) => {
+            el.classList.remove("dragging");
+          });
+
           return newGames;
         });
       }
