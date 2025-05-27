@@ -159,7 +159,7 @@ export const Game: React.FC<GameProps> = ({
           className={`chess-board-container ${isTurn ? "is-player-turn" : ""}`}
         >
           <ChessBoard
-            board={gameState.board}
+            gameState={gameState}
             playerColor={playerColor}
             gameId={gameRecord.game_id}
             sendWebSocketMessage={sendWebSocketMessage}

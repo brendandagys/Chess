@@ -3,30 +3,30 @@ import { imageMap } from "../images";
 import { rotateMatrix180Degrees } from "../utils";
 import { useDrag } from "../hooks/useDrag";
 import { GameRequest } from "../types/api";
-import { PlayerActionName } from "../types/game";
-import { Board, Position } from "../types/board";
+import { GameState, PlayerActionName } from "../types/game";
+import { Position } from "../types/board";
 import { Color, Piece, PieceType } from "../types/piece";
 import { API_ROUTE } from "../constants";
 
 import "../css/ChessBoard.css";
 
 interface ChessBoardProps {
-  board: Board;
+  gameState: GameState;
   playerColor: Color;
   gameId: string;
   sendWebSocketMessage: (action: GameRequest) => void;
 }
 
 export const ChessBoard: React.FC<ChessBoardProps> = ({
-  board: _board,
+  gameState,
   playerColor,
   gameId,
   sendWebSocketMessage,
 }) => {
   const shouldRotate = playerColor === Color.Black;
   const board = shouldRotate
-    ? rotateMatrix180Degrees(_board.squares)
-    : _board.squares;
+    ? rotateMatrix180Degrees(gameState.board.squares)
+    : gameState.board.squares;
 
   const [selectedSquare, setSelectedSquare] = useState<Position | null>(null);
 
@@ -79,6 +79,34 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     });
   };
 
+  const lastMoveSquares: Position[] = [];
+
+  if (gameState.boardHistory.length >= 2) {
+    const one = gameState.boardHistory[gameState.boardHistory.length - 2];
+    const two = gameState.boardHistory[gameState.boardHistory.length - 1];
+
+    const numRanks = one.squares.length;
+
+    two.squares.forEach((row, rowIndex) => {
+      row.forEach((piece, colIndex) => {
+        const oldPiece = one.squares[rowIndex][colIndex];
+
+        if (
+          (!piece && oldPiece) ||
+          (piece && !oldPiece) ||
+          (piece &&
+            (piece.color !== oldPiece?.color ||
+              piece.pieceType !== oldPiece.pieceType))
+        ) {
+          lastMoveSquares.push({
+            rank: numRanks - rowIndex,
+            file: 1 + colIndex,
+          });
+        }
+      });
+    });
+  }
+
   return (
     <div className={`board rank-count-${board.length % 2 ? "odd" : "even"}`}>
       {board.map((row, rowIndex) => {
@@ -98,6 +126,12 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                     selectedSquare?.rank === rank &&
                     selectedSquare.file === file
                       ? " square--selected"
+                      : ""
+                  }${
+                    lastMoveSquares.some(
+                      (move) => move.rank === rank && move.file === file
+                    )
+                      ? " square--previous-move"
                       : ""
                   }`}
                   onClick={(e) => {

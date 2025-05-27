@@ -33,6 +33,10 @@
   visibility: hidden;
 }
 
+.square--previous-move {
+  background: yellow !important;
+}
+
 .square--selected,
 .floating-piece {
   background: yellow !important;
@@ -45,6 +49,7 @@
 
 @media (min-width: 600px) {
   .floating-piece {
+    background: unset !important;
     border-radius: unset;
     box-shadow: unset;
   }
