@@ -85,7 +85,7 @@ export const App: React.FC = () => {
         (gameRecord ? setGameMessages : setAppMessages)((old) => [
           ...old.filter(
             (o) =>
-              !response.messages.find(
+              !response.messages.some(
                 (m) =>
                   m.message === o.message && m.messageType === o.messageType
               )
