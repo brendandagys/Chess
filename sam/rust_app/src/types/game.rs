@@ -63,8 +63,8 @@ impl GameState {
             state: State::NotStarted,
             current_turn: Color::White,
             in_check: None,
-            board,
-            board_history: Vec::new(),
+            board: board.clone(),
+            board_history: vec![board],
             captured_pieces,
         }
     }
