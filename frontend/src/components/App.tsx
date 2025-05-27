@@ -83,7 +83,13 @@ export const App: React.FC = () => {
 
       if (response.messages.length) {
         (gameRecord ? setGameMessages : setAppMessages)((old) => [
-          ...old,
+          ...old.filter(
+            (o) =>
+              !response.messages.find(
+                (m) =>
+                  m.message === o.message && m.messageType === o.messageType
+              )
+          ),
           ...response.messages.map(({ message, messageType }) => ({
             id: `${
               gameRecord?.game_id ? `${gameRecord.game_id}-` : ""
