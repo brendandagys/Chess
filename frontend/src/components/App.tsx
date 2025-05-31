@@ -96,7 +96,7 @@ export const App: React.FC = () => {
             }${Math.random().toString(36).slice(2)}`,
             message,
             messageType,
-            duration: 5000,
+            duration: 3000,
           })),
         ]);
       }
