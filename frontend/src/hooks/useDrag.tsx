@@ -101,6 +101,8 @@ export const useDrag = (
         draggingPiece.y
       );
 
+      let movedPiece = false;
+
       if (elementUnderPointer && elementUnderPointer instanceof HTMLElement) {
         const piece = getPieceFromElement(elementUnderPointer);
 
@@ -129,13 +131,17 @@ export const useDrag = (
               },
             });
 
+            movedPiece = true;
+
             console.info(`Piece placed at rank: ${toRank}, file: ${toFile}`);
-          } else {
-            document.querySelectorAll(".dragging").forEach((el) => {
-              el.classList.remove("dragging");
-            });
           }
         }
+      }
+
+      if (!movedPiece) {
+        document.querySelectorAll(".dragging").forEach((el) => {
+          el.classList.remove("dragging");
+        });
       }
 
       setDraggingPiece(null);
