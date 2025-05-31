@@ -1,6 +1,7 @@
 .board {
   display: inline-block;
   max-width: 900px;
+  border: 2px solid #634832;
 }
 
 .board-row {
@@ -14,11 +15,43 @@
   max-width: var(--piece-diameter);
   max-height: var(--piece-diameter);
   user-select: none;
+  position: relative;
 }
 
 .board .square img {
   width: 100%;
   height: 100%;
+}
+
+.board .square .rank-file-label {
+  position: absolute;
+  font-size: 0.6rem;
+  font-weight: 500;
+  left: 2px;
+  bottom: 1px;
+}
+
+@media (max-width: 450px) {
+  .board .square .rank-file-label {
+    font-size: 0.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .board .square .rank-file-label {
+    font-size: 0.45rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .board .square .rank-file-label {
+    font-size: 0.4rem;
+  }
+}
+
+.board .square .rank-file-label--corner {
+  left: 1px;
+  bottom: 0;
 }
 
 .hidden-piece {

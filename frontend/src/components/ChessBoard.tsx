@@ -107,17 +107,68 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     });
   }
 
+  const numRanks = board.length;
+  const numFiles = board[0].length;
+
+  const rankNumberToLetterMap: Record<number, string> = {
+    1: "A",
+    2: "B",
+    3: "C",
+    4: "D",
+    5: "E",
+    6: "F",
+    7: "G",
+    8: "H",
+    9: "I",
+    10: "J",
+    11: "K",
+    12: "L",
+  };
+
+  /**
+   * Get position label for a square from its rank, file, and player color.
+   * Labels show only for the bottom-left-most square from the player's POV.
+   * Also returns whether the current square is the bottom-left-most square.
+   */
+  const getPositionLabel = (rank: number, file: number): [string, boolean] => {
+    const isLeftMostFile =
+      (playerColor === Color.Black && file === numFiles) ||
+      (playerColor === Color.White && file === 1);
+
+    const isBottomRank =
+      (playerColor === Color.Black && rank === numRanks) ||
+      (playerColor === Color.White && rank === 1);
+
+    if (isLeftMostFile && isBottomRank) {
+      return [`${rankNumberToLetterMap[file]}${rank}`, true];
+    }
+
+    if (isLeftMostFile) {
+      return [`${rank}`, false];
+    }
+
+    if (isBottomRank) {
+      return [rankNumberToLetterMap[file], false];
+    }
+
+    return ["", false];
+  };
+
   return (
-    <div className={`board rank-count-${board.length % 2 ? "odd" : "even"}`}>
+    <div className={`board rank-count-${numRanks % 2 ? "odd" : "even"}`}>
       {board.map((row, rowIndex) => {
-        const rank =
-          1 + (shouldRotate ? rowIndex : board.length - rowIndex - 1);
+        const rank = 1 + (shouldRotate ? rowIndex : numRanks - rowIndex - 1);
 
         return (
           <div key={rowIndex} className="board-row">
             {row.map((piece, colIndex) => {
               const file =
-                1 + (shouldRotate ? board.length - colIndex - 1 : colIndex);
+                1 + (shouldRotate ? numFiles - colIndex - 1 : colIndex);
+
+              const [positionLabel, isBottomLeftMost] = getPositionLabel(
+                rank,
+                file
+              );
 
               return (
                 <div
@@ -140,6 +191,15 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                     onClickSquare(e, piece, { rank, file });
                   }}
                 >
+                  {
+                    <span
+                      className={`rank-file-label${
+                        isBottomLeftMost ? " rank-file-label--corner" : ""
+                      }`}
+                    >
+                      {positionLabel}
+                    </span>
+                  }
                   {piece ? (
                     <img
                       className="piece"
