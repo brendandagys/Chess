@@ -131,7 +131,9 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                     lastMoveSquares.some(
                       (move) => move.rank === rank && move.file === file
                     )
-                      ? " square--previous-move"
+                      ? (rank + file) % 2 === 0
+                        ? " square--previous-move-dark-square"
+                        : " square--previous-move-light-square"
                       : ""
                   }`}
                   onClick={(e) => {

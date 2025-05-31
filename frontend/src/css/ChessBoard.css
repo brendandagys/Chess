@@ -33,11 +33,18 @@
   visibility: hidden;
 }
 
-.square--previous-move {
+.square--previous-move-light-square {
+  background: #f5f580 !important;
+}
+
+.square--previous-move-dark-square {
+  background: #b9ca42 !important;
+}
+
+.square--selected {
   background: yellow !important;
 }
 
-.square--selected,
 .floating-piece {
   background: rgba(255, 208, 0, 0.627) !important;
 }
