@@ -40,6 +40,7 @@
 @media (max-width: 400px) {
   .board .square .rank-file-label {
     font-size: 0.45rem;
+    left: 1px;
   }
 }
 
