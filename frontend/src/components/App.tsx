@@ -19,7 +19,7 @@ import "../css/App.css";
 import _moveSound from "../sounds/move-self.mp3";
 
 export const App: React.FC = () => {
-  const { username, gameIds, addGameId, setUsername } = useNav();
+  const { username, gameIds, addGameId, removeGameId, setUsername } = useNav();
   const [usernameFromLocalStorage] = useLocalStorage("username", "");
 
   const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
@@ -138,6 +138,14 @@ export const App: React.FC = () => {
       });
   }, [gameIds, username, isWebsocketOpen, sendWebSocketMessage, joinedGameIds]);
 
+  const [hiddenGameIds, setHiddenGameIds] = useState<string[]>([]);
+
+  const onHideGame = (gameId: string) => {
+    setGameRecords((old) => old.filter((g) => g.game_id !== gameId));
+    setHiddenGameIds((old) => [...old, gameId]);
+    removeGameId(gameId);
+  };
+
   return (
     <div className="app-container">
       {gameIds.length ? <CopyLinkButton /> : null}
@@ -197,6 +205,7 @@ export const App: React.FC = () => {
               setShowForm={setShowForm}
               setUsername={setUsername}
               gameIds={gameIds}
+              hiddenGameIds={hiddenGameIds}
             />
           </div>
         </>
@@ -208,6 +217,7 @@ export const App: React.FC = () => {
             <Game
               key={gameRecord.game_id}
               gameRecord={gameRecord}
+              onHideGame={onHideGame}
               connectionId={connectionId}
               messages={gameMessages.filter((message) =>
                 message.id.includes(gameRecord.game_id)

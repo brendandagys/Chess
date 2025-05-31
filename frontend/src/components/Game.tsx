@@ -17,6 +17,7 @@ import "../css/Game.css";
 
 interface GameProps {
   gameRecord: GameRecord;
+  onHideGame: (gameId: string) => void;
   connectionId: string;
   messages: GameMessage[];
   sendWebSocketMessage: (action: GameRequest) => void;
@@ -25,6 +26,7 @@ interface GameProps {
 
 export const Game: React.FC<GameProps> = ({
   gameRecord,
+  onHideGame,
   connectionId,
   messages,
   sendWebSocketMessage,
@@ -113,7 +115,19 @@ export const Game: React.FC<GameProps> = ({
 
   return (
     <div className="game-container">
-      <h2 className="game-id">Game: {gameRecord.game_id}</h2>
+      <div className="game-id-container">
+        <h2 className="game-id">Game: {gameRecord.game_id}</h2>
+
+        <button
+          className="leave-game-button"
+          onClick={() => {
+            onHideGame(gameRecord.game_id);
+          }}
+        >
+          <span className="leave-game-button__icon">×</span>
+          Hide game
+        </button>
+      </div>
 
       <div className="status-container">
         {messages.length ? (

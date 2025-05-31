@@ -15,6 +15,7 @@ interface GameFormProps {
   setShowForm: React.Dispatch<React.SetStateAction<boolean>>;
   setUsername: (username: string) => void;
   gameIds: string[];
+  hiddenGameIds: string[];
 }
 
 export const GameForm: React.FC<GameFormProps> = ({
@@ -23,14 +24,18 @@ export const GameForm: React.FC<GameFormProps> = ({
   setShowForm,
   setUsername,
   gameIds,
+  hiddenGameIds,
 }) => {
   const [username, setUsernameInLocalStorage] = useLocalStorage("username", "");
+
   const [gameId, setGameId] = useState(
     gameIds.length === 1 && !username ? gameIds[0] : ""
   );
+
   const [boardSetupName, setBoardSetupName] = useState<BoardSetupName>(
     BoardSetupName.Standard
   );
+
   const [dimensions, setDimensions] = useState({
     ranks: "8",
     files: "8",
@@ -64,6 +69,19 @@ export const GameForm: React.FC<GameFormProps> = ({
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const joinPayload = hiddenGameIds.includes(gameId)
+      ? {
+          [PlayerActionName.GetGameState]: {
+            gameId,
+          },
+        }
+      : {
+          [PlayerActionName.JoinGame]: {
+            username,
+            gameId,
+          },
+        };
+
     const data =
       mode === FormToShow.Create
         ? {
@@ -74,12 +92,7 @@ export const GameForm: React.FC<GameFormProps> = ({
               colorPreference,
             },
           }
-        : {
-            [PlayerActionName.JoinGame]: {
-              username,
-              gameId,
-            },
-          };
+        : joinPayload;
 
     sendWebSocketMessage({
       route: API_ROUTE,

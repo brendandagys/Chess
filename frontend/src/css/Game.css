@@ -2,10 +2,6 @@
   flex: 1 0 48%;
 }
 
-.game-container .game-id {
-  margin-bottom: 1rem;
-}
-
 .game-container .status-container,
 .app-container .title-container {
   display: flex;
@@ -14,6 +10,38 @@
   align-items: center;
   gap: 1rem;
   min-height: 30px;
+}
+
+.game-container .game-id-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.game-container .leave-game-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  background-color: red;
+  border: none;
+  border-radius: 5px;
+  padding: 2px 9px;
+  padding-bottom: 3px;
+  cursor: pointer;
+  gap: 6px;
+}
+
+.game-container .leave-game-button:hover {
+  background-color: rgb(216, 1, 1);
+}
+
+.game-container .leave-game-button__icon {
+  font-size: 1rem;
+  position: relative;
+  bottom: 1px;
 }
 
 .game-container .status-container .pill {
