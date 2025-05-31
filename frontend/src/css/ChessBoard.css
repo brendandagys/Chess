@@ -55,10 +55,6 @@
   bottom: 0;
 }
 
-.hidden-piece {
-  visibility: hidden;
-}
-
 .piece {
   touch-action: none;
 }

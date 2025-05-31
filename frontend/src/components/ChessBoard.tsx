@@ -220,6 +220,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                       src={imageMap[PieceType.Pawn][Color.White]}
                       data-rank={rank}
                       data-file={file}
+                      style={{
+                        visibility: "hidden",
+                        opacity: 0,
+                      }}
                     />
                   )}
                 </div>
