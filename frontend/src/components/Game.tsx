@@ -133,8 +133,7 @@ export const Game: React.FC<GameProps> = ({
             onHideGame(gameRecord.game_id);
           }}
         >
-          <span className="leave-game-button__icon">×</span>
-          Hide game
+          Leave game
         </button>
       </div>
 
