@@ -15,6 +15,7 @@ interface ChessBoardProps {
   playerColor: Color;
   gameId: string;
   sendWebSocketMessage: (action: GameRequest) => void;
+  boardHistoryIndex: number;
 }
 
 export const ChessBoard: React.FC<ChessBoardProps> = ({
@@ -22,17 +23,29 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   playerColor,
   gameId,
   sendWebSocketMessage,
+  boardHistoryIndex,
 }) => {
   const shouldRotate = playerColor === Color.Black;
-  const board = shouldRotate
-    ? rotateMatrix180Degrees(gameState.board.squares)
-    : gameState.board.squares;
+
+  const viewedBoardState = gameState.boardHistory[boardHistoryIndex];
+  const viewedBoardStateSquares = viewedBoardState.squares;
+
+  const boardForRendering = shouldRotate
+    ? rotateMatrix180Degrees(viewedBoardStateSquares)
+    : viewedBoardStateSquares;
+
+  const numRanks = viewedBoardStateSquares.length;
+  const numFiles = viewedBoardStateSquares[0].length;
 
   const [selectedSquare, setSelectedSquare] = useState<Position | null>(null);
 
+  const isViewingLatestBoard =
+    boardHistoryIndex === gameState.boardHistory.length - 1;
+
   const [draggingPiece, handleDragStart] = useDrag(
     gameId,
-    sendWebSocketMessage
+    sendWebSocketMessage,
+    !isViewingLatestBoard
   );
 
   const pieceDiameterClass =
@@ -49,6 +62,11 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     pieceOnSquare: Piece | null,
     position: Position
   ) => {
+    if (!isViewingLatestBoard) {
+      setSelectedSquare(null);
+      return;
+    }
+
     setSelectedSquare((old) => {
       if (!old) {
         return pieceOnSquare ? position : null;
@@ -85,8 +103,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     const one = gameState.boardHistory[gameState.boardHistory.length - 2];
     const two = gameState.boardHistory[gameState.boardHistory.length - 1];
 
-    const numRanks = one.squares.length;
-
     two.squares.forEach((row, rowIndex) => {
       row.forEach((piece, colIndex) => {
         const oldPiece = one.squares[rowIndex][colIndex];
@@ -106,9 +122,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       });
     });
   }
-
-  const numRanks = board.length;
-  const numFiles = board[0].length;
 
   const rankNumberToLetterMap: Record<number, string> = {
     1: "A",
@@ -156,7 +169,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   return (
     <div className={`board rank-count-${numRanks % 2 ? "odd" : "even"}`}>
-      {board.map((row, rowIndex) => {
+      {boardForRendering.map((row, rowIndex) => {
         const rank = 1 + (shouldRotate ? rowIndex : numRanks - rowIndex - 1);
 
         return (
@@ -174,11 +187,13 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                 <div
                   key={colIndex}
                   className={`square${
+                    isViewingLatestBoard &&
                     selectedSquare?.rank === rank &&
                     selectedSquare.file === file
                       ? " square--selected"
                       : ""
                   }${
+                    isViewingLatestBoard &&
                     lastMoveSquares.some(
                       (move) => move.rank === rank && move.file === file
                     )

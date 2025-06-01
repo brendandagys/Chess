@@ -9,7 +9,8 @@ import "../css/ChessBoard.css";
 
 export const useDrag = (
   gameId: string,
-  onPointerUp: (action: GameRequest) => void
+  onPointerUp: (action: GameRequest) => void,
+  disabled = false
 ) => {
   const [draggingPiece, setDraggingPiece] = useState<{
     piece: Piece;
@@ -25,6 +26,10 @@ export const useDrag = (
       | React.TouchEvent<HTMLImageElement>,
     piece: Piece
   ) => {
+    if (disabled) {
+      return;
+    }
+
     // Prevent native drag behavior (which wasn't working in Firefox)
     event.preventDefault();
 
@@ -64,7 +69,7 @@ export const useDrag = (
 
   const handlePointerMove = useCallback(
     (event: PointerEvent) => {
-      if (draggingPiece) {
+      if (draggingPiece && !disabled) {
         setDraggingPiece((prev) =>
           prev
             ? {
@@ -76,7 +81,7 @@ export const useDrag = (
         );
       }
     },
-    [draggingPiece]
+    [draggingPiece, disabled]
   );
 
   const getPieceFromElement = (element: HTMLElement): HTMLElement | null => {
@@ -95,7 +100,7 @@ export const useDrag = (
   };
 
   const handlePointerUp = useCallback(() => {
-    if (draggingPiece) {
+    if (draggingPiece && !disabled) {
       const elementUnderPointer = document.elementFromPoint(
         draggingPiece.x,
         draggingPiece.y
@@ -147,10 +152,10 @@ export const useDrag = (
       setDraggingPiece(null);
       setFrom(null);
     }
-  }, [draggingPiece, from, gameId, onPointerUp]);
+  }, [draggingPiece, from, gameId, onPointerUp, disabled]);
 
   useEffect(() => {
-    if (draggingPiece) {
+    if (draggingPiece && !disabled) {
       window.addEventListener("pointermove", handlePointerMove);
       window.addEventListener("pointerup", handlePointerUp);
     } else {
@@ -162,7 +167,7 @@ export const useDrag = (
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [draggingPiece, handlePointerMove, handlePointerUp]);
+  }, [draggingPiece, handlePointerMove, handlePointerUp, disabled]);
 
   return [draggingPiece, handleDragStart] as const;
 };

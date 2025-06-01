@@ -10,7 +10,7 @@ import { Alert } from "./Alert";
 import { CapturedPieces } from "./CapturedPieces";
 import { GameMessage } from "../types/sharedComponentTypes";
 import { GameRequest } from "../types/api";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { capitalizeFirstLetter } from "../utils";
 
 import "../css/Game.css";
@@ -34,6 +34,15 @@ export const Game: React.FC<GameProps> = ({
 }) => {
   const gameState = gameRecord.game_state;
   const gameStateType = gameState.state;
+
+  const [boardHistoryIndex, setBoardHistoryIndex] = useState(
+    gameState.boardHistory.length - 1
+  );
+
+  // Reset to latest board when game state updates
+  useEffect(() => {
+    setBoardHistoryIndex(gameState.boardHistory.length - 1);
+  }, [gameState.boardHistory.length]);
 
   const bothPlayersReady = ![
     gameRecord.black_connection_id ?? "<disconnected>",
@@ -177,7 +186,32 @@ export const Game: React.FC<GameProps> = ({
             playerColor={playerColor}
             gameId={gameRecord.game_id}
             sendWebSocketMessage={sendWebSocketMessage}
+            boardHistoryIndex={boardHistoryIndex}
           />
+        </div>
+
+        <div className="board-history-controls">
+          <button
+            disabled={boardHistoryIndex === 0}
+            onClick={() => {
+              setBoardHistoryIndex((prev) => Math.max(0, prev - 1));
+            }}
+          >
+            &lt; Previous
+          </button>
+          <span>
+            State {boardHistoryIndex + 1} of {gameState.boardHistory.length}
+          </span>
+          <button
+            disabled={boardHistoryIndex === gameState.boardHistory.length - 1}
+            onClick={() => {
+              setBoardHistoryIndex((prev) =>
+                Math.min(gameState.boardHistory.length - 1, prev + 1)
+              );
+            }}
+          >
+            Next &gt;
+          </button>
         </div>
 
         <CapturedPieces
