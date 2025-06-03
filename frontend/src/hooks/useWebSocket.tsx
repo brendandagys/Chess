@@ -34,7 +34,14 @@ export const useWebSocket = (
     };
 
     return () => {
-      websocket.current?.close();
+      if (websocket.current) {
+        websocket.current.onopen = null;
+        websocket.current.onmessage = null;
+        websocket.current.onerror = null;
+        websocket.current.onclose = null;
+        websocket.current.close();
+        websocket.current = null;
+      }
     };
   }, [url, onMessage]);
 
