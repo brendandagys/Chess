@@ -188,7 +188,14 @@ export const App: React.FC = () => {
             />
           ))
         ) : (
-          <img src={hero} alt="Play Chess" className="hero-image" />
+          <img
+            src={hero}
+            alt="Play Chess"
+            className="hero-image"
+            onClick={() => {
+              window.location.href = "/";
+            }}
+          />
         )}
       </div>
 

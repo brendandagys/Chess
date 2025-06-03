@@ -12,6 +12,10 @@
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
 }
 
+.app-container .title-container .hero-image:hover {
+  cursor: pointer;
+}
+
 @media (max-width: 600px) {
   .app-container .title-container .hero-image {
     max-height: 100px;
