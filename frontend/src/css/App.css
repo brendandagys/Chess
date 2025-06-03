@@ -3,7 +3,17 @@
 }
 
 .app-container .title-container {
-  margin: 1rem 0;
+  margin: 2.7rem 0 1rem;
+}
+
+.app-container .app-messages-container {
+  position: fixed;
+  width: 100%;
+  padding: 0 0.5rem;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
 }
 
 .app-container .title-container .hero-image {

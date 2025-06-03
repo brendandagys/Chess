@@ -2,8 +2,7 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  height: 30px;
-  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  padding: 0 0.5rem 0 0.75rem;
   border-radius: 8px;
   font-size: 0.8rem;
   text-align: center;
@@ -12,7 +11,7 @@
 }
 
 .alert .message {
-  margin-right: 0.75rem;
+  margin: 0.4rem 0.75rem 0.4rem 0.25rem;
 }
 
 .alert--info {

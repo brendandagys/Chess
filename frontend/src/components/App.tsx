@@ -176,9 +176,9 @@ export const App: React.FC = () => {
     <div className="app-container">
       {gameIds.length ? <CopyLinkButton /> : null}
 
-      <div className="title-container">
-        {appMessages.length ? (
-          appMessages.map((message) => (
+      {appMessages.length ? (
+        <div className="app-messages-container">
+          {appMessages.map((message) => (
             <Alert
               key={message.id}
               message={message}
@@ -186,17 +186,19 @@ export const App: React.FC = () => {
                 dismissAppMessage(message.id);
               }}
             />
-          ))
-        ) : (
-          <img
-            src={hero}
-            alt="Play Chess"
-            className="hero-image"
-            onClick={() => {
-              window.location.href = "/";
-            }}
-          />
-        )}
+          ))}
+        </div>
+      ) : null}
+
+      <div className="title-container">
+        <img
+          src={hero}
+          alt="Play Chess"
+          className="hero-image"
+          onClick={() => {
+            window.location.href = "/";
+          }}
+        />
       </div>
 
       <p className="sub-title">
