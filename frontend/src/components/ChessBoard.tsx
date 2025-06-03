@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { imageMap } from "../images";
 import { rotateMatrix180Degrees } from "../utils";
 import { useDrag } from "../hooks/useDrag";
@@ -97,31 +97,40 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     });
   };
 
-  const lastMoveSquares: Position[] = [];
+  const lastMoveSquares: Position[] = useMemo(() => {
+    const squares: Position[] = [];
 
-  if (gameState.boardHistory.length >= 2) {
-    const one = gameState.boardHistory[gameState.boardHistory.length - 2];
-    const two = gameState.boardHistory[gameState.boardHistory.length - 1];
+    if (boardHistoryIndex > 0) {
+      const one = gameState.boardHistory[boardHistoryIndex - 1].squares;
+      const two = viewedBoardStateSquares;
 
-    two.squares.forEach((row, rowIndex) => {
-      row.forEach((piece, colIndex) => {
-        const oldPiece = one.squares[rowIndex][colIndex];
+      two.forEach((row, rowIndex) => {
+        row.forEach((piece, colIndex) => {
+          const oldPiece = one[rowIndex][colIndex];
 
-        if (
-          (!piece && oldPiece) ||
-          (piece && !oldPiece) ||
-          (piece &&
-            (piece.color !== oldPiece?.color ||
-              piece.pieceType !== oldPiece.pieceType))
-        ) {
-          lastMoveSquares.push({
-            rank: numRanks - rowIndex,
-            file: 1 + colIndex,
-          });
-        }
+          if (
+            (!piece && oldPiece) ||
+            (piece && !oldPiece) ||
+            (piece &&
+              (piece.color !== oldPiece?.color ||
+                piece.pieceType !== oldPiece.pieceType))
+          ) {
+            squares.push({
+              rank: numRanks - rowIndex,
+              file: 1 + colIndex,
+            });
+          }
+        });
       });
-    });
-  }
+    }
+
+    return squares;
+  }, [
+    boardHistoryIndex,
+    gameState.boardHistory,
+    numRanks,
+    viewedBoardStateSquares,
+  ]);
 
   const rankNumberToLetterMap: Record<number, string> = {
     1: "A",
@@ -193,7 +202,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                       ? " square--selected"
                       : ""
                   }${
-                    isViewingLatestBoard &&
                     lastMoveSquares.some(
                       (move) => move.rank === rank && move.file === file
                     )
