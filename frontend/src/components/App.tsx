@@ -19,7 +19,15 @@ import "../css/App.css";
 import _moveSound from "../sounds/move-self.mp3";
 
 export const App: React.FC = () => {
-  const { username, gameIds, addGameId, removeGameId, setUsername } = useNav();
+  const {
+    username,
+    gameIds,
+    addGameId: addGameIdToURL,
+    removeGameId,
+    setUsername,
+  } = useNav();
+  const [gameIdsFromUrl] = useState([...gameIds]);
+
   const [usernameFromLocalStorage] = useLocalStorage("username", "");
 
   const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
@@ -50,7 +58,6 @@ export const App: React.FC = () => {
           );
 
           if (index === -1) {
-            addGameId(gameRecord.game_id);
             return [...old, gameRecord];
           }
 
@@ -101,7 +108,7 @@ export const App: React.FC = () => {
         ]);
       }
     },
-    [addGameId, setAppMessages, setGameMessages]
+    [setGameMessages, setAppMessages]
   );
 
   const [connectionId, sendWebSocketMessage, isWebsocketOpen] = useWebSocket(
@@ -109,34 +116,52 @@ export const App: React.FC = () => {
     onWebSocketMessage
   );
 
-  const [joinedGameIds, setJoinedGameIds] = useState<string[]>([]);
+  useEffect(() => {
+    gameRecords.forEach((record) => {
+      if (!gameIds.includes(record.game_id)) {
+        addGameIdToURL(record.game_id);
+      }
+    });
+  }, [gameRecords, gameIds, addGameIdToURL]);
 
   useEffect(() => {
     setUsername(usernameFromLocalStorage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [hasSentInitialJoinRequests, setHasSentInitialJoinRequests] =
+    useState(false);
+
   useEffect(() => {
-    if (!isWebsocketOpen || !gameIds.length || !username) {
+    if (
+      !isWebsocketOpen ||
+      !gameIdsFromUrl.length ||
+      !username ||
+      hasSentInitialJoinRequests
+    ) {
       return;
     }
 
-    gameIds
-      .filter((gameId) => !joinedGameIds.includes(gameId))
-      .forEach((gameId) => {
-        setJoinedGameIds((old) => [...old, gameId]);
-
-        sendWebSocketMessage({
-          route: API_ROUTE,
-          data: {
-            [PlayerActionName.JoinGame]: {
-              username,
-              gameId,
-            },
+    gameIdsFromUrl.forEach((gameId) => {
+      sendWebSocketMessage({
+        route: API_ROUTE,
+        data: {
+          [PlayerActionName.JoinGame]: {
+            username,
+            gameId,
           },
-        });
+        },
       });
-  }, [gameIds, username, isWebsocketOpen, sendWebSocketMessage, joinedGameIds]);
+    });
+
+    setHasSentInitialJoinRequests(true);
+  }, [
+    gameIdsFromUrl,
+    hasSentInitialJoinRequests,
+    isWebsocketOpen,
+    sendWebSocketMessage,
+    username,
+  ]);
 
   const [hiddenGameIds, setHiddenGameIds] = useState<string[]>([]);
 
