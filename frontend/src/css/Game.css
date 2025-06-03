@@ -15,6 +15,7 @@
 .game-container .status-container {
   gap: 0.25rem 0.5rem;
   min-height: 65px;
+  margin-bottom: 0.5rem;
 }
 
 .game-container .game-id-container {
