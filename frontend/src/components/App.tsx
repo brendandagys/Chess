@@ -17,6 +17,7 @@ import { API_ROUTE, WEBSOCKET_ENDPOINT } from "../constants";
 
 import "../css/App.css";
 import _moveSound from "../sounds/move-self.mp3";
+import hero from "../images/hero.png";
 
 export const App: React.FC = () => {
   const {
@@ -187,7 +188,7 @@ export const App: React.FC = () => {
             />
           ))
         ) : (
-          <h1 className="main-title">Play Chess</h1>
+          <img src={hero} alt="Play Chess" className="hero-image" />
         )}
       </div>
 

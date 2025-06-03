@@ -6,8 +6,16 @@
   margin: 1rem 0;
 }
 
-.app-container .title-container .main-title {
-  max-height: 30px;
+.app-container .title-container .hero-image {
+  max-height: 150px;
+  border-radius: 8px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 600px) {
+  .app-container .title-container .hero-image {
+    max-height: 100px;
+  }
 }
 
 .sub-title {

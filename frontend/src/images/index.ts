@@ -13,26 +13,11 @@ import bk from "../images/bk.png";
 
 import { PieceType } from "../types/piece";
 
-export const images = {
-  wp,
-  bp,
-  wr,
-  br,
-  wn,
-  bn,
-  wb,
-  bb,
-  wq,
-  bq,
-  wk,
-  bk,
-};
-
 export const imageMap = {
-  [PieceType.Pawn]: { white: images.wp, black: images.bp },
-  [PieceType.Rook]: { white: images.wr, black: images.br },
-  [PieceType.Knight]: { white: images.wn, black: images.bn },
-  [PieceType.Bishop]: { white: images.wb, black: images.bb },
-  [PieceType.Queen]: { white: images.wq, black: images.bq },
-  [PieceType.King]: { white: images.wk, black: images.bk },
+  [PieceType.Pawn]: { white: wp, black: bp },
+  [PieceType.Rook]: { white: wr, black: br },
+  [PieceType.Knight]: { white: wn, black: bn },
+  [PieceType.Bishop]: { white: wb, black: bb },
+  [PieceType.Queen]: { white: wq, black: bq },
+  [PieceType.King]: { white: wk, black: bk },
 };
