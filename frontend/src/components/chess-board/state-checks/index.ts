@@ -5,6 +5,9 @@ import { moveSelf } from './move-self';
 import { moveOpponent } from './move-opponent';
 import { moveCheck } from './check';
 import { capture } from './capture';
+import { gameStart } from './game-start';
+import { promote } from './promote';
+import { castle } from './castle';
 
 interface StateCheck {
   didStateChange: (
@@ -17,7 +20,10 @@ interface StateCheck {
 }
 
 export const stateChecks: StateCheck[] = [
+  gameStart,
   moveCheck,
+  promote,
+  castle,
   capture,
   moveSelf,
   moveOpponent,
