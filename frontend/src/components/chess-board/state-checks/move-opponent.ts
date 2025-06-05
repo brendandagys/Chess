@@ -26,10 +26,8 @@ const action = () => {
   playMoveOpponentSound();
 };
 
-const name = "move-opponent";
-
 export const moveOpponent = {
   didStateChange,
   action,
-  name,
+  name: "move-opponent",
 };

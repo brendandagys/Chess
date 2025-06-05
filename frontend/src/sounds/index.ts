@@ -1,5 +1,8 @@
 import moveSelfSound from "../sounds/move-self.mp3";
 import moveOpponentSound from "../sounds/move-opponent.mp3";
+import moveCheckSound from "../sounds/move-check.mp3";
+import captureSound from "../sounds/capture.mp3";
+import illegalSound from "../sounds/illegal.mp3";
 
 const playSound = (sound: string) => {
   void new Audio(sound).play().catch((error: unknown) => {
@@ -9,8 +12,14 @@ const playSound = (sound: string) => {
 
 const playMoveSelfSound = () => { playSound(moveSelfSound); };
 const playMoveOpponentSound = () => { playSound(moveOpponentSound); };
+const playMoveCheckSound = () => { playSound(moveCheckSound); };
+const playCaptureSound = () => { playSound(captureSound); };
+const playIllegalSound = () => { playSound(illegalSound); };
 
 export {
   playMoveSelfSound,
   playMoveOpponentSound,
+  playMoveCheckSound,
+  playCaptureSound,
+  playIllegalSound,
 };

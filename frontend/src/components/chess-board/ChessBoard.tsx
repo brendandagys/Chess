@@ -59,15 +59,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       const one = gameState.history[prevHistoryIndex.current];
       const two = gameState.history[historyIndex];
 
-      const immediateExitChecks = ["move-self"];
-
-      for (const { didStateChange, action, name } of stateChecks) {
+      for (const { didStateChange, action } of stateChecks) {
         if (didStateChange(one, two, playerColor)) {
           action();
-
-          if (immediateExitChecks.includes(name)) {
-            break;
-          }
+          break;
         }
       }
     }

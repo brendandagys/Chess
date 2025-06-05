@@ -10,13 +10,14 @@ import { Alert } from "./Alert";
 import { Game } from "./Game";
 import { CopyLinkButton } from "./CopyLinkButton";
 
-import { ApiResponse } from "../types/api";
+import { ApiMessageType, ApiResponse } from "../types/api";
 import { GameRecord, PlayerActionName } from "../types/game";
 import { FormToShow } from "../types/sharedComponentTypes";
 import { API_ROUTE, WEBSOCKET_ENDPOINT } from "../constants";
 
 import "../css/App.css";
 import hero from "../images/hero.png";
+import { playIllegalSound } from "../sounds";
 
 export const App: React.FC = () => {
   const {
@@ -71,6 +72,12 @@ export const App: React.FC = () => {
       }
 
       if (response.messages.length) {
+        if (
+          response.messages.some((m) => m.messageType === ApiMessageType.Error)
+        ) {
+          playIllegalSound();
+        }
+
         (gameRecord ? setGameMessages : setAppMessages)((old) => [
           ...old.filter(
             (o) =>

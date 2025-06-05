@@ -26,10 +26,8 @@ const action = () => {
   playMoveSelfSound();
 };
 
-const name = "move-self";
-
 export const moveSelf = {
   didStateChange,
   action,
-  name,
+  name: "move-self",
 };

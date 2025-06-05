@@ -3,6 +3,8 @@ import { Color } from '../../../types/piece';
 
 import { moveSelf } from './move-self';
 import { moveOpponent } from './move-opponent';
+import { moveCheck } from './check';
+import { capture } from './capture';
 
 interface StateCheck {
   didStateChange: (
@@ -15,6 +17,8 @@ interface StateCheck {
 }
 
 export const stateChecks: StateCheck[] = [
+  moveCheck,
+  capture,
   moveSelf,
-  moveOpponent
+  moveOpponent,
 ];
