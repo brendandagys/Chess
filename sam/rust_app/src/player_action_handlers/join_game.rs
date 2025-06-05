@@ -58,12 +58,6 @@ pub async fn join_game(
                 }
             );
 
-            let existing_game_current_state_mut = existing_game.game_state.current_state_mut();
-
-            if existing_game_current_state_mut.state == chess::types::game::State::NotStarted {
-                existing_game_current_state_mut.state = chess::types::game::State::InProgress;
-            }
-
             save_game(&dynamo_db_client, game_table, &existing_game).await?;
 
             existing_game

@@ -467,6 +467,11 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
     }
 
     check_for_mates(&mut next_state);
+
+    if current_state.state == State::NotStarted {
+        next_state.state = State::InProgress;
+    }
+
     game_state.history.push(next_state);
 
     Ok(())
