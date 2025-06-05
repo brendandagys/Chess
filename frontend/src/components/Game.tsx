@@ -57,24 +57,26 @@ export const Game: React.FC<GameProps> = ({
 
   const isTurn = playerColor === currentGameState.currentTurn;
 
-  const playerCapturedPieces = currentGameState.capturedPieces[playerColor];
+  const viewedGameState = gameState.history[historyIndex];
+
+  const playerCapturedPieces = viewedGameState.capturedPieces[playerColor];
 
   const playerPointsLead =
     playerColor === Color.White
-      ? currentGameState.capturedPieces.whitePoints -
-        currentGameState.capturedPieces.blackPoints
-      : currentGameState.capturedPieces.blackPoints -
-        currentGameState.capturedPieces.whitePoints;
+      ? viewedGameState.capturedPieces.whitePoints -
+        viewedGameState.capturedPieces.blackPoints
+      : viewedGameState.capturedPieces.blackPoints -
+        viewedGameState.capturedPieces.whitePoints;
 
   const opponentPointsLead =
     playerColor === Color.White
-      ? currentGameState.capturedPieces.blackPoints -
-        currentGameState.capturedPieces.whitePoints
-      : currentGameState.capturedPieces.whitePoints -
-        currentGameState.capturedPieces.blackPoints;
+      ? viewedGameState.capturedPieces.blackPoints -
+        viewedGameState.capturedPieces.whitePoints
+      : viewedGameState.capturedPieces.whitePoints -
+        viewedGameState.capturedPieces.blackPoints;
 
   const opponentCapturedPieces =
-    currentGameState.capturedPieces[getOppositePlayerColor(playerColor)];
+    viewedGameState.capturedPieces[getOppositePlayerColor(playerColor)];
 
   const stateOfGame = useMemo(() => {
     if (gameIsInProgress) {
