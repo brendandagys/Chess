@@ -5,7 +5,7 @@ use super::{
     piece::{Color, Piece},
 };
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum GameEnding {
     Checkmate(Color),
@@ -18,7 +18,7 @@ pub enum GameEnding {
     DrawByMutualAgreement,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum State {
     NotStarted,
@@ -26,7 +26,7 @@ pub enum State {
     Finished(GameEnding),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CapturedPieces {
     pub white: Vec<Piece>,
@@ -35,16 +35,21 @@ pub struct CapturedPieces {
     pub black_points: u16,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GameState {
-    pub game_id: String,
+pub struct GameStateAtPointInTime {
     pub state: State,
     pub current_turn: Color,
     pub in_check: Option<Color>,
     pub board: Board,
-    pub board_history: Vec<Board>,
     pub captured_pieces: CapturedPieces,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameState {
+    pub game_id: String,
+    pub history: Vec<GameStateAtPointInTime>,
 }
 
 impl GameState {
@@ -60,13 +65,26 @@ impl GameState {
 
         GameState {
             game_id,
-            state: State::NotStarted,
-            current_turn: Color::White,
-            in_check: None,
-            board: board.clone(),
-            board_history: vec![board],
-            captured_pieces,
+            history: vec![GameStateAtPointInTime {
+                state: State::NotStarted,
+                current_turn: Color::White,
+                in_check: None,
+                board: board.clone(),
+                captured_pieces: captured_pieces.clone(),
+            }],
         }
+    }
+
+    pub fn current_state(&self) -> &GameStateAtPointInTime {
+        self.history
+            .last()
+            .expect("Game history should not be empty")
+    }
+
+    pub fn current_state_mut(&mut self) -> &mut GameStateAtPointInTime {
+        self.history
+            .last_mut()
+            .expect("Game history should not be empty")
     }
 }
 

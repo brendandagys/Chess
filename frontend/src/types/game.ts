@@ -57,14 +57,17 @@ export interface CapturedPieces {
   blackPoints: number;
 }
 
-export interface GameState {
-  gameId: string;
+export interface GameStateAtPointInTime {
   state: State;
   currentTurn: Color;
   inCheck: Color | null;
   board: Board;
-  boardHistory: Board[];
   capturedPieces: CapturedPieces;
+}
+
+export interface GameState {
+  gameId: string;
+  history: GameStateAtPointInTime[];
 }
 
 export interface PlayerMove {

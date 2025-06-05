@@ -1,7 +1,7 @@
 use crate::types::api::{ApiMessage, ApiResponse};
 use crate::types::board::{Board, BoardSetup, Position};
 use crate::types::dynamo_db::GameRecord;
-use crate::types::game::{GameEnding, GameState, PlayerMove, State};
+use crate::types::game::{GameEnding, GameState, GameStateAtPointInTime, PlayerMove, State};
 use crate::types::piece::{Color, Piece};
 use crate::utils::api_gateway::post_to_connection;
 use crate::utils::dynamo_db::{get_item, put_item};
@@ -292,7 +292,7 @@ pub async fn notify_other_player_about_game_update(
 }
 
 pub fn is_game_over(game: &GameRecord) -> bool {
-    match game.game_state.state {
+    match game.game_state.current_state().state {
         State::Finished(_) => true,
         _ => false,
     }
@@ -307,7 +307,7 @@ fn are_both_players_present(game: &GameRecord) -> bool {
 
 /// Confirm it is this player's turn
 fn is_turn(game: &GameRecord, player_color: &Color) -> bool {
-    *player_color == game.game_state.current_turn
+    *player_color == game.game_state.current_state().current_turn
 }
 
 pub fn can_player_make_a_move(game: &GameRecord, player_color: &Color) -> Result<(), &'static str> {
@@ -415,7 +415,7 @@ pub fn validate_move(
 }
 
 /// Called after a move is made. Checks if the opponent's king is in check or checkmate.
-fn check_for_mates(game_state: &mut GameState) {
+fn check_for_mates(game_state: &mut GameStateAtPointInTime) {
     let board = &game_state.board;
     let opponent_color = game_state.current_turn.opponent_color();
 
@@ -450,26 +450,24 @@ fn check_for_mates(game_state: &mut GameState) {
 }
 
 pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result<(), &'static str> {
-    if let Some(captured_piece) = game_state.board.apply_move(player_move) {
-        match game_state.current_turn {
+    let current_state = game_state.current_state();
+    let mut next_state = (*current_state).clone();
+
+    if let Some(captured_piece) = next_state.board.apply_move(player_move) {
+        match next_state.current_turn {
             Color::White => {
-                game_state.captured_pieces.white.push(captured_piece);
-                game_state.captured_pieces.white_points += captured_piece.get_point_value();
+                next_state.captured_pieces.white.push(captured_piece);
+                next_state.captured_pieces.white_points += captured_piece.get_point_value();
             }
             Color::Black => {
-                game_state.captured_pieces.black.push(captured_piece);
-                game_state.captured_pieces.black_points += captured_piece.get_point_value();
+                next_state.captured_pieces.black.push(captured_piece);
+                next_state.captured_pieces.black_points += captured_piece.get_point_value();
             }
         }
     }
 
-    game_state.board_history.push(game_state.board.clone());
-
-    if game_state.state == State::NotStarted {
-        game_state.state = State::InProgress;
-    }
-
-    check_for_mates(game_state);
+    check_for_mates(&mut next_state);
+    game_state.history.push(next_state);
 
     Ok(())
 }

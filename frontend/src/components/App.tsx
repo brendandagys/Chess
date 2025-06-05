@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 import { useNav } from "../context/useNav";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -16,7 +16,6 @@ import { FormToShow } from "../types/sharedComponentTypes";
 import { API_ROUTE, WEBSOCKET_ENDPOINT } from "../constants";
 
 import "../css/App.css";
-import _moveSound from "../sounds/move-self.mp3";
 import hero from "../images/hero.png";
 
 export const App: React.FC = () => {
@@ -45,8 +44,6 @@ export const App: React.FC = () => {
       !usernameFromLocalStorage
   );
 
-  const moveSound = useRef<HTMLAudioElement>(new Audio(_moveSound));
-
   const onWebSocketMessage = useCallback(
     (response: ApiResponse<unknown>) => {
       const isGameRecord = Object.keys(response.data ?? {}).includes("game_id");
@@ -60,22 +57,6 @@ export const App: React.FC = () => {
 
           if (index === -1) {
             return [...old, gameRecord];
-          }
-
-          // Play move-piece sound if board has changed since last update
-          if (
-            !old[index].game_state.board.squares.every((row, r) =>
-              row.every((oldPiece, c) => {
-                const newBoardPiece = gameRecord.game_state.board.squares[r][c];
-
-                return (
-                  newBoardPiece?.color === oldPiece?.color &&
-                  newBoardPiece?.pieceType === oldPiece?.pieceType
-                );
-              })
-            )
-          ) {
-            void moveSound.current.play();
           }
 
           const newGames = [...old];

@@ -5,13 +5,13 @@ import {
   GameStateType,
 } from "../types/game";
 import { Color, getOppositePlayerColor } from "../types/piece";
-import { ChessBoard } from "./ChessBoard";
+import { ChessBoard } from "./chess-board/ChessBoard";
 import { Alert } from "./Alert";
 import { CapturedPieces } from "./CapturedPieces";
 import { GameMessage } from "../types/sharedComponentTypes";
 import { GameRequest } from "../types/api";
 import { useMemo, useState, useEffect } from "react";
-import { capitalizeFirstLetter } from "../utils";
+import { capitalizeFirstLetter, getLast } from "../utils";
 
 import "../css/Game.css";
 
@@ -33,16 +33,16 @@ export const Game: React.FC<GameProps> = ({
   dismissMessage,
 }) => {
   const gameState = gameRecord.game_state;
-  const gameStateType = gameState.state;
+  const currentGameState = getLast(gameState.history);
+  const gameStateType = currentGameState.state;
+  const numStates = gameState.history.length;
 
-  const [boardHistoryIndex, setBoardHistoryIndex] = useState(
-    gameState.boardHistory.length - 1
-  );
+  const [historyIndex, setHistoryIndex] = useState(numStates - 1);
 
   // Reset to latest board when game state updates
   useEffect(() => {
-    setBoardHistoryIndex(gameState.boardHistory.length - 1);
-  }, [gameState.boardHistory.length]);
+    setHistoryIndex(numStates - 1);
+  }, [numStates]);
 
   const bothPlayersReady = ![
     gameRecord.black_connection_id ?? "<disconnected>",
@@ -55,33 +55,33 @@ export const Game: React.FC<GameProps> = ({
   const playerColor =
     connectionId === gameRecord.white_connection_id ? Color.White : Color.Black;
 
-  const isTurn = playerColor === gameState.currentTurn;
+  const isTurn = playerColor === currentGameState.currentTurn;
 
-  const playerCapturedPieces = gameState.capturedPieces[playerColor];
+  const playerCapturedPieces = currentGameState.capturedPieces[playerColor];
 
   const playerPointsLead =
     playerColor === Color.White
-      ? gameState.capturedPieces.whitePoints -
-        gameState.capturedPieces.blackPoints
-      : gameState.capturedPieces.blackPoints -
-        gameState.capturedPieces.whitePoints;
+      ? currentGameState.capturedPieces.whitePoints -
+        currentGameState.capturedPieces.blackPoints
+      : currentGameState.capturedPieces.blackPoints -
+        currentGameState.capturedPieces.whitePoints;
 
   const opponentPointsLead =
     playerColor === Color.White
-      ? gameState.capturedPieces.blackPoints -
-        gameState.capturedPieces.whitePoints
-      : gameState.capturedPieces.whitePoints -
-        gameState.capturedPieces.blackPoints;
+      ? currentGameState.capturedPieces.blackPoints -
+        currentGameState.capturedPieces.whitePoints
+      : currentGameState.capturedPieces.whitePoints -
+        currentGameState.capturedPieces.blackPoints;
 
   const opponentCapturedPieces =
-    gameState.capturedPieces[getOppositePlayerColor(playerColor)];
+    currentGameState.capturedPieces[getOppositePlayerColor(playerColor)];
 
   const stateOfGame = useMemo(() => {
     if (gameIsInProgress) {
-      return gameState.inCheck
+      return currentGameState.inCheck
         ? [
             `${
-              gameState.inCheck === Color.White ? "White" : "Black"
+              currentGameState.inCheck === Color.White ? "White" : "Black"
             } is in check!`,
             "red",
           ]
@@ -110,7 +110,7 @@ export const Game: React.FC<GameProps> = ({
     }
 
     return ["Game over", "gray"];
-  }, [gameIsInProgress, gameState.inCheck, gameStateType, playerColor]);
+  }, [gameIsInProgress, currentGameState.inCheck, gameStateType, playerColor]);
 
   const playerUsername =
     playerColor === Color.White
@@ -185,28 +185,26 @@ export const Game: React.FC<GameProps> = ({
             playerColor={playerColor}
             gameId={gameRecord.game_id}
             sendWebSocketMessage={sendWebSocketMessage}
-            boardHistoryIndex={boardHistoryIndex}
+            historyIndex={historyIndex}
           />
         </div>
 
         <div className="board-history-controls">
           <button
-            disabled={boardHistoryIndex === 0}
+            disabled={historyIndex === 0}
             onClick={() => {
-              setBoardHistoryIndex((prev) => Math.max(0, prev - 1));
+              setHistoryIndex((prev) => Math.max(0, prev - 1));
             }}
           >
             &lt; Previous
           </button>
           <span>
-            State {boardHistoryIndex + 1} of {gameState.boardHistory.length}
+            State {historyIndex + 1} of {numStates}
           </span>
           <button
-            disabled={boardHistoryIndex === gameState.boardHistory.length - 1}
+            disabled={historyIndex === numStates - 1}
             onClick={() => {
-              setBoardHistoryIndex((prev) =>
-                Math.min(gameState.boardHistory.length - 1, prev + 1)
-              );
+              setHistoryIndex((prev) => Math.min(numStates - 1, prev + 1));
             }}
           >
             Next &gt;

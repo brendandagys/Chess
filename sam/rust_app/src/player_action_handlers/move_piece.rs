@@ -21,7 +21,9 @@ async fn handle_if_game_is_finished(
     username: &str,
     game_state: &GameState,
 ) -> Result<(), Error> {
-    if let State::Finished(GameEnding::Checkmate(checkmated_color)) = game_state.state {
+    if let State::Finished(GameEnding::Checkmate(checkmated_color)) =
+        game_state.current_state().state
+    {
         let mut user_game =
             get_user_game(dynamo_db_client, user_table, &username, &game_state.game_id)
                 .await?
@@ -77,7 +79,11 @@ pub async fn move_piece(
                 );
             }
 
-            if let Err(e) = validate_move(&game.game_state.board, &player_move, &player_color) {
+            if let Err(e) = validate_move(
+                &game.game_state.current_state().board,
+                &player_move,
+                &player_color,
+            ) {
                 return build_response(
                     StatusCode::BAD_REQUEST,
                     Some(connection_id.to_string()),

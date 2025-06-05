@@ -5,3 +5,10 @@ export const rotateMatrix180Degrees = <T>(matrix: T[][]): T[][] => (
 
 export const capitalizeFirstLetter = (str: string): string =>
   str.charAt(0).toUpperCase() + str.slice(1);
+
+export const getLast = <T>(arr: T[]): T => {
+  if (arr.length === 0) {
+    throw new Error("Array is empty");
+  }
+  return arr[arr.length - 1];
+};
