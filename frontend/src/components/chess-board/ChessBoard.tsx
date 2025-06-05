@@ -49,13 +49,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       prevHistoryIndex.current !== null &&
       prevHistoryIndex.current !== historyIndex
     ) {
-      console.log(
-        "historyIndex changed from",
-        prevHistoryIndex.current,
-        "to",
-        historyIndex
-      );
-
       const one = gameState.history[prevHistoryIndex.current];
       const two = gameState.history[historyIndex];
 
