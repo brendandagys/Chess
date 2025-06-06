@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useViewportWidth } from "../hooks/useViewportWidth";
 
 import "../css/CopyLinkButton.css";
 
 export const CopyLinkButton: React.FC = () => {
   const [copied, setCopied] = useState(false);
+
+  const { width } = useViewportWidth();
 
   const copyLinkToClipboard = () => {
     const currentUrl = window.location.href;
@@ -25,7 +28,7 @@ export const CopyLinkButton: React.FC = () => {
       });
   };
 
-  const showButtonText = window.innerWidth >= 500 || copied;
+  const showButtonText = width >= 600 || copied;
   const buttonText = copied ? "Copied!" : "Link to join";
 
   return (
