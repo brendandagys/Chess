@@ -189,27 +189,26 @@ export const App: React.FC = () => {
         />
       </div>
 
-      <p className="sub-title">
+      <div className="sub-title-container">
         <button
           onClick={() => {
             setFormToShow(FormToShow.Create);
             setShowForm(true);
           }}
-          className="button-link"
+          className="main-action-button main-action-button--secondary"
         >
-          Start a new game
+          Start new game
         </button>
-        {" or "}
         <button
           onClick={() => {
             setFormToShow(FormToShow.Join);
             setShowForm(true);
           }}
-          className="button-link"
+          className="main-action-button main-action-button"
         >
-          Join an existing game
+          Join existing game
         </button>
-      </p>
+      </div>
 
       {showForm && (
         <>

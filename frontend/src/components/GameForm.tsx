@@ -218,7 +218,10 @@ export const GameForm: React.FC<GameFormProps> = ({
           disabled={
             !username.trim() || (mode === FormToShow.Join && !gameId.trim())
           }
-        >{`${mode === FormToShow.Create ? "Create" : "Join"} Game`}</button>
+          className={`main-action-button main-action-button${
+            mode === FormToShow.Create ? "--secondary" : ""
+          }`}
+        >{`${mode === FormToShow.Create ? "Start" : "Join"} game`}</button>
       </div>
     </form>
   );
