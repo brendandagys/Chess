@@ -105,28 +105,3 @@
 .rank-count-even .board-row:nth-child(even) .square:nth-child(even) {
   background-color: #ebecd0;
 }
-
-.board-history-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-.board-history-controls button {
-  padding: 5px 10px;
-  border: 1px solid #ccc;
-  background-color: #f0f0f0;
-  cursor: pointer;
-}
-
-.board-history-controls button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.board-history-controls span {
-  font-size: 0.9rem;
-}
