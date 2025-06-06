@@ -92,28 +92,32 @@ pub fn assign_player_to_remaining_slot(
 
     match &game.white_username {
         Some(white_username) if white_username == username => {
-            if let Some(white_connection_id) = &game.white_connection_id {
-                if white_connection_id != "<disconnected>" {
-                    return Err(Error::from(format!(
-                        "{username} has already joined this game (ID: {}) as white",
-                        game.game_id
-                    )));
-                }
-            }
+            // NOTE: Commented to handle bug where disconnect function doesn't run
+
+            // if let Some(white_connection_id) = &game.white_connection_id {
+            //     if white_connection_id != "<disconnected>" {
+            //         return Err(Error::from(format!(
+            //             "{username} has already joined this game (ID: {}) as white",
+            //             game.game_id
+            //         )));
+            //     }
+            // }
 
             game.white_connection_id = Some(connection_id.to_string());
         }
         Some(_) => {
-            if let Some(black_username) = &game.black_username {
-                if let Some(black_connection_id) = &game.black_connection_id {
-                    if black_connection_id != "<disconnected>" {
-                        return Err(Error::from(format!(
-                            "{} has already joined this game (ID: {}) as black",
-                            black_username, game.game_id
-                        )));
-                    }
-                }
-            }
+            // NOTE: Commented to handle bug where disconnect function doesn't run
+
+            // if let Some(black_username) = &game.black_username {
+            //     if let Some(black_connection_id) = &game.black_connection_id {
+            //         if black_connection_id != "<disconnected>" {
+            //             return Err(Error::from(format!(
+            //                 "{} has already joined this game (ID: {}) as black",
+            //                 black_username, game.game_id
+            //             )));
+            //         }
+            //     }
+            // }
 
             game.black_username = Some(username.to_string());
             game.black_connection_id = Some(connection_id.to_string());
