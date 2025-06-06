@@ -191,6 +191,11 @@ export const Game: React.FC<GameProps> = ({
           />
         </div>
 
+        <CapturedPieces
+          pieces={playerCapturedPieces}
+          pointsLead={playerPointsLead}
+        />
+
         <div className="board-history-controls">
           <button
             disabled={historyIndex === 0}
@@ -212,11 +217,6 @@ export const Game: React.FC<GameProps> = ({
             Next &gt;
           </button>
         </div>
-
-        <CapturedPieces
-          pieces={playerCapturedPieces}
-          pointsLead={playerPointsLead}
-        />
       </div>
     </div>
   );
