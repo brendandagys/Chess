@@ -11,8 +11,20 @@ export const BoardHistoryControls: React.FC<BoardHistoryControlsProps> = ({
   setHistoryIndex,
   numStates,
 }) => {
+  const isViewingFirst = historyIndex === 0;
+  const isViewingLatest = historyIndex === numStates - 1;
+
   return (
     <div className="board-history-controls">
+      <button
+        disabled={isViewingFirst}
+        onClick={() => {
+          setHistoryIndex(0);
+        }}
+      >
+        &lt;&lt;
+      </button>
+
       <button
         disabled={historyIndex === 0}
         onClick={() => {
@@ -21,16 +33,27 @@ export const BoardHistoryControls: React.FC<BoardHistoryControlsProps> = ({
       >
         &lt; Previous
       </button>
+
       <span>
         State {historyIndex + 1} of {numStates}
       </span>
+
       <button
-        disabled={historyIndex === numStates - 1}
+        disabled={isViewingLatest}
         onClick={() => {
           setHistoryIndex((prev) => Math.min(numStates - 1, prev + 1));
         }}
       >
         Next &gt;
+      </button>
+
+      <button
+        disabled={isViewingLatest}
+        onClick={() => {
+          setHistoryIndex(numStates - 1);
+        }}
+      >
+        &gt;&gt;
       </button>
     </div>
   );
