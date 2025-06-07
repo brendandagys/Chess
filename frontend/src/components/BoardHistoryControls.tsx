@@ -1,4 +1,5 @@
 import "../css/BoardHistoryControls.css";
+import { useViewportWidth } from "../hooks/useViewportWidth";
 
 interface BoardHistoryControlsProps {
   historyIndex: number;
@@ -13,6 +14,8 @@ export const BoardHistoryControls: React.FC<BoardHistoryControlsProps> = ({
 }) => {
   const isViewingFirst = historyIndex === 0;
   const isViewingLatest = historyIndex === numStates - 1;
+
+  const { width } = useViewportWidth();
 
   return (
     <div className="board-history-controls">
@@ -31,7 +34,7 @@ export const BoardHistoryControls: React.FC<BoardHistoryControlsProps> = ({
           setHistoryIndex((prev) => Math.max(0, prev - 1));
         }}
       >
-        &lt; Previous
+        &lt; {width >= 425 && "Previous"}
       </button>
 
       <span>
@@ -44,7 +47,7 @@ export const BoardHistoryControls: React.FC<BoardHistoryControlsProps> = ({
           setHistoryIndex((prev) => Math.min(numStates - 1, prev + 1));
         }}
       >
-        Next &gt;
+        {width >= 425 && "Next"} &gt;
       </button>
 
       <button
