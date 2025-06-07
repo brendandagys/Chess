@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiResponse, GameRequest } from "../types/api";
+import { PlayerActionName } from "../types/game";
+import { API_ROUTE } from "../constants";
 
 export const useWebSocket = (
   url: string,
@@ -53,6 +55,17 @@ export const useWebSocket = (
       console.error("WebSocket is not open");
     }
   }, []);
+
+  // Keep the connection alive
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      sendMessage({ route: API_ROUTE, data: PlayerActionName.Heartbeat });
+    }, 30 * 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [sendMessage]);
 
   return [connectionId, sendMessage, isWebsocketOpen] as const;
 };

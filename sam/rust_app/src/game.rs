@@ -107,6 +107,12 @@ async fn function_handler(
             )
             .await
         }
+        PlayerAction::Heartbeat => build_response(
+            StatusCode::OK,
+            Some(connection_id.clone()),
+            None,
+            None::<()>,
+        ),
         PlayerAction::Resign { game_id } => resign(&game_id),
         PlayerAction::OfferDraw { game_id } => offer_draw(&game_id),
     }

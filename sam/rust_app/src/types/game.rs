@@ -105,16 +105,26 @@ pub enum PlayerAction {
         color_preference: Option<Color>,
     },
     #[serde(rename_all = "camelCase")]
-    JoinGame { username: String, game_id: String },
+    JoinGame {
+        username: String,
+        game_id: String,
+    },
     #[serde(rename_all = "camelCase")]
-    GetGameState { game_id: String },
+    GetGameState {
+        game_id: String,
+    },
     #[serde(rename_all = "camelCase")]
     MovePiece {
         game_id: String,
         player_move: PlayerMove,
     },
+    Heartbeat,
     #[serde(rename_all = "camelCase")]
-    Resign { game_id: String },
+    Resign {
+        game_id: String,
+    },
     #[serde(rename_all = "camelCase")]
-    OfferDraw { game_id: String },
+    OfferDraw {
+        game_id: String,
+    },
 }

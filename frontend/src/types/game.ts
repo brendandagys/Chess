@@ -80,6 +80,7 @@ export enum PlayerActionName {
   JoinGame = 'join-game',
   GetGameState = 'get-game-state',
   MovePiece = 'move-piece',
+  Heartbeat = 'heartbeat',
   Resign = 'resign',
   OfferDraw = 'offer-draw',
 }
@@ -114,6 +115,8 @@ interface PlayerActionMovePiece {
   };
 }
 
+type PlayerActionHeartbeat = PlayerActionName.Heartbeat;
+
 interface PlayerActionResign {
   [PlayerActionName.Resign]: {
     gameId: string;
@@ -131,6 +134,7 @@ export type PlayerAction =
   | PlayerActionJoinGame
   | PlayerActionGetGameState
   | PlayerActionMovePiece
+  | PlayerActionHeartbeat
   | PlayerActionResign
   | PlayerActionOfferDraw;
 
