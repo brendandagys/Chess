@@ -5,10 +5,11 @@ import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useMessageDisplay } from "../hooks/useMessageDisplay";
 import { useWebSocket } from "../hooks/useWebSocket";
 
-import { GameForm } from "./GameForm";
 import { Alert } from "./Alert";
-import { Game } from "./Game";
 import { CopyLinkButton } from "./CopyLinkButton";
+import { HeaderSection } from "./HeaderSection";
+import { GameForm } from "./GameForm";
+import { Game } from "./Game";
 
 import { ApiMessageType, ApiResponse } from "../types/api";
 import { GameRecord, PlayerActionName } from "../types/game";
@@ -16,7 +17,6 @@ import { FormToShow } from "../types/sharedComponentTypes";
 import { API_ROUTE, WEBSOCKET_ENDPOINT } from "../constants";
 
 import "../css/App.css";
-import hero from "../images/hero.png";
 import { playIllegalSound } from "../sounds";
 
 export const App: React.FC = () => {
@@ -178,37 +178,7 @@ export const App: React.FC = () => {
         </div>
       ) : null}
 
-      <div className="title-container">
-        <img
-          src={hero}
-          alt="Play Chess"
-          className="hero-image"
-          onClick={() => {
-            window.location.href = "/";
-          }}
-        />
-      </div>
-
-      <div className="sub-title-container">
-        <button
-          onClick={() => {
-            setFormToShow(FormToShow.Create);
-            setShowForm(true);
-          }}
-          className="main-action-button main-action-button--secondary"
-        >
-          Start new game
-        </button>
-        <button
-          onClick={() => {
-            setFormToShow(FormToShow.Join);
-            setShowForm(true);
-          }}
-          className="main-action-button main-action-button"
-        >
-          Join existing game
-        </button>
-      </div>
+      <HeaderSection setFormToShow={setFormToShow} setShowForm={setShowForm} />
 
       {showForm && (
         <>
