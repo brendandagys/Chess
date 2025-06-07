@@ -103,7 +103,7 @@ export const App: React.FC = () => {
         ]);
       }
     },
-    [setGameMessages, setAppMessages]
+    [scrollTo, setGameMessages, setAppMessages]
   );
 
   const [connectionId, sendWebSocketMessage, isWebsocketOpen] = useWebSocket(
@@ -150,12 +150,14 @@ export const App: React.FC = () => {
     });
 
     setHasSentInitialJoinRequests(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     gameIdsFromUrl,
     hasSentInitialJoinRequests,
     isWebsocketOpen,
     sendWebSocketMessage,
-    username,
+    // `username` left out to avoid sending a join request on first character,
+    // when visiting 'join game' link without a username in local storage
   ]);
 
   const [hiddenGameIds, setHiddenGameIds] = useState<string[]>([]);
