@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useNav } from "../context/useNav";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useMessageDisplay } from "../hooks/useMessageDisplay";
+import { useScroll } from "../hooks/useScroll";
 import { useWebSocket } from "../hooks/useWebSocket";
 
 import { Alert } from "./Alert";
@@ -45,6 +46,8 @@ export const App: React.FC = () => {
       !usernameFromLocalStorage
   );
 
+  const scrollTo = useScroll();
+
   const onWebSocketMessage = useCallback(
     (response: ApiResponse<unknown>) => {
       const isGameRecord = Object.keys(response.data ?? {}).includes("game_id");
@@ -57,6 +60,9 @@ export const App: React.FC = () => {
           );
 
           if (index === -1) {
+            setTimeout(() => {
+              scrollTo(`game-${gameRecord.game_id}`);
+            }, 100);
             return [...old, gameRecord];
           }
 

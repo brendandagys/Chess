@@ -126,7 +126,7 @@ export const Game: React.FC<GameProps> = ({
       : gameRecord.white_username;
 
   return (
-    <div className="game-container">
+    <div id={`game-${gameRecord.game_id}`} className="game-container">
       <div className="game-id-container">
         <h2 className="game-id">Game: {gameRecord.game_id}</h2>
 
