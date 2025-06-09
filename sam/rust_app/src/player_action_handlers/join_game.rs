@@ -1,6 +1,7 @@
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
 use chess::types::api::ApiMessage;
+use chess::types::dynamo_db::GameRecord;
 use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
 
@@ -9,6 +10,24 @@ use chess::helpers::game::{
 };
 use chess::helpers::user::{create_user_game, get_user_game, save_user_record};
 use chess::utils::api::build_response;
+
+fn check_if_both_players_just_joined(game_record: &mut GameRecord) {
+    if let Some(game_time) = &mut game_record.game_state.game_time {
+        if game_record
+            .white_connection_id
+            .as_deref()
+            .unwrap_or("<disconnected>".into())
+            != "<disconnected>"
+            && game_record
+                .black_connection_id
+                .as_deref()
+                .unwrap_or("<disconnected>".into())
+                != "<disconnected>"
+        {
+            game_time.both_players_last_connected_at = Some(chrono::Utc::now().to_rfc3339());
+        }
+    }
+}
 
 pub async fn join_game(
     sdk_config: &aws_config::SdkConfig,
@@ -46,6 +65,8 @@ pub async fn join_game(
                     None::<()>,
                 );
             }
+
+            check_if_both_players_just_joined(&mut existing_game);
 
             tracing::info!(
                 "User ({username}) joined game (ID: {}) as {}",

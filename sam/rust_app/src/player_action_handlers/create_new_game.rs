@@ -18,6 +18,7 @@ pub async fn create_new_game(
     game_id: Option<&str>,
     board_setup: Option<BoardSetup>,
     color_preference: Option<Color>,
+    seconds_per_player: Option<usize>,
 ) -> Result<ApiGatewayProxyResponse, Error> {
     if username.trim().is_empty() {
         return build_response(
@@ -47,10 +48,18 @@ pub async fn create_new_game(
                 username,
                 board_setup,
                 color_preference,
+                seconds_per_player,
                 connection_id,
             )
         }
-        None => create_game(None, username, board_setup, color_preference, connection_id),
+        None => create_game(
+            None,
+            username,
+            board_setup,
+            color_preference,
+            seconds_per_player,
+            connection_id,
+        ),
     };
 
     save_game(&dynamo_db_client, game_table, &new_game).await?;

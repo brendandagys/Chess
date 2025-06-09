@@ -62,6 +62,7 @@ async fn function_handler(
             game_id,
             board_setup,
             color_preference,
+            seconds_per_player,
         } => {
             create_new_game(
                 dynamo_db_client,
@@ -72,6 +73,7 @@ async fn function_handler(
                 game_id.as_deref(),
                 board_setup,
                 color_preference,
+                seconds_per_player,
             )
             .await
         }
@@ -89,7 +91,7 @@ async fn function_handler(
             .await
         }
         PlayerAction::GetGameState { game_id } => {
-            return get_game_state(dynamo_db_client, connection_id, &game_table, &game_id).await;
+            get_game_state(dynamo_db_client, connection_id, &game_table, &game_id).await
         }
         PlayerAction::MovePiece {
             game_id,
@@ -113,6 +115,16 @@ async fn function_handler(
             None,
             None::<()>,
         ),
+        PlayerAction::LoseViaOutOfTime { game_id } => {
+            player_action_handlers::lose_via_out_of_time::lose_via_out_of_time(
+                dynamo_db_client,
+                connection_id,
+                &game_table,
+                &user_table,
+                &game_id,
+            )
+            .await
+        }
         PlayerAction::Resign { game_id } => resign(&game_id),
         PlayerAction::OfferDraw { game_id } => offer_draw(&game_id),
     }

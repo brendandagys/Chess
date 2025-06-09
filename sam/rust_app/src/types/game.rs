@@ -35,6 +35,15 @@ pub struct CapturedPieces {
     pub black_points: u16,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameTime {
+    pub both_players_last_connected_at: Option<String>,
+    pub last_move_at: Option<String>,
+    pub white_seconds_left: usize,
+    pub black_seconds_left: usize,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameStateAtPointInTime {
@@ -49,11 +58,16 @@ pub struct GameStateAtPointInTime {
 #[serde(rename_all = "camelCase")]
 pub struct GameState {
     pub game_id: String,
+    pub game_time: Option<GameTime>,
     pub history: Vec<GameStateAtPointInTime>,
 }
 
 impl GameState {
-    pub fn new(game_id: String, board_setup: &BoardSetup) -> Self {
+    pub fn new(
+        game_id: String,
+        board_setup: &BoardSetup,
+        seconds_per_player: Option<usize>,
+    ) -> Self {
         let board = Board::new(board_setup);
 
         let captured_pieces = CapturedPieces {
@@ -72,6 +86,12 @@ impl GameState {
                 board: board.clone(),
                 captured_pieces: captured_pieces.clone(),
             }],
+            game_time: seconds_per_player.map(|seconds| GameTime {
+                both_players_last_connected_at: None,
+                last_move_at: None,
+                white_seconds_left: seconds,
+                black_seconds_left: seconds,
+            }),
         }
     }
 
@@ -103,6 +123,7 @@ pub enum PlayerAction {
         game_id: Option<String>,
         board_setup: Option<BoardSetup>,
         color_preference: Option<Color>,
+        seconds_per_player: Option<usize>,
     },
     #[serde(rename_all = "camelCase")]
     JoinGame {
@@ -119,6 +140,9 @@ pub enum PlayerAction {
         player_move: PlayerMove,
     },
     Heartbeat,
+    LoseViaOutOfTime {
+        game_id: String,
+    },
     #[serde(rename_all = "camelCase")]
     Resign {
         game_id: String,

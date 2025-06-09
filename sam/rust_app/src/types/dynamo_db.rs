@@ -1,4 +1,4 @@
-use super::game::GameState;
+use crate::types::game::GameState;
 
 use serde::{Deserialize, Serialize};
 

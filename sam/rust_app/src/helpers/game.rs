@@ -1,7 +1,9 @@
 use crate::types::api::{ApiMessage, ApiResponse};
 use crate::types::board::{Board, BoardSetup, Position};
 use crate::types::dynamo_db::GameRecord;
-use crate::types::game::{GameEnding, GameState, GameStateAtPointInTime, PlayerMove, State};
+use crate::types::game::{
+    GameEnding, GameState, GameStateAtPointInTime, GameTime, PlayerMove, State,
+};
 use crate::types::piece::{Color, Piece};
 use crate::utils::api_gateway::post_to_connection;
 use crate::utils::dynamo_db::{get_item, put_item};
@@ -9,6 +11,7 @@ use crate::utils::dynamo_db::{get_item, put_item};
 use aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequestContext;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Client;
+use chrono::{TimeZone, Utc};
 use lambda_runtime::Error;
 use std::collections::HashMap;
 
@@ -145,6 +148,7 @@ pub fn create_game(
     username: &str,
     board_setup: Option<BoardSetup>,
     color_preference: Option<Color>,
+    seconds_per_player: Option<usize>,
     connection_id: &str,
 ) -> GameRecord {
     let game_id = game_id.map_or_else(generate_id, |id| id.to_string());
@@ -152,6 +156,7 @@ pub fn create_game(
     let game_state = GameState::new(
         game_id.clone(),
         &board_setup.unwrap_or(BoardSetup::Standard),
+        seconds_per_player,
     );
 
     let (white_connection_id, white_username, black_connection_id, black_username) =
@@ -333,6 +338,7 @@ pub fn can_player_make_a_move(game: &GameRecord, player_color: &Color) -> Result
 pub struct PlayerDetails {
     pub color: Color,
     pub username: String,
+    pub opponent_username: Option<String>,
 }
 
 pub fn get_player_details_from_connection_id(
@@ -347,6 +353,7 @@ pub fn get_player_details_from_connection_id(
                     .white_username
                     .clone()
                     .expect("White player must have a username"),
+                opponent_username: game.black_username.clone(),
             });
         }
     }
@@ -359,6 +366,7 @@ pub fn get_player_details_from_connection_id(
                     .black_username
                     .clone()
                     .expect("Black player must have a username"),
+                opponent_username: game.white_username.clone(),
             });
         }
     }
@@ -418,6 +426,48 @@ pub fn validate_move(
     Ok(())
 }
 
+/// Update the game time remaining for both players after a move is made
+fn update_game_time(game_time: &mut GameTime, game_state: &mut GameStateAtPointInTime) {
+    let current_turn = game_state.current_turn;
+
+    let very_old_date = Utc.with_ymd_and_hms(1900, 1, 1, 0, 0, 0).unwrap();
+
+    let last_time_both_players_connected = &game_time
+        .both_players_last_connected_at
+        .as_ref()
+        .map_or(very_old_date, |s| {
+            s.parse()
+                .expect("Invalid date format in `GameTime.both_players_last_connected_at`")
+        });
+
+    let last_move_at = &game_time.last_move_at.as_ref().map_or(very_old_date, |s| {
+        s.parse()
+            .expect("Invalid date format in `GameTime.last_move_at`")
+    });
+
+    let last_action = if last_time_both_players_connected > last_move_at {
+        last_time_both_players_connected
+    } else {
+        last_move_at
+    };
+
+    let elapsed = chrono::Utc::now() - *last_action;
+
+    let seconds_left = match current_turn {
+        Color::White => &mut game_time.white_seconds_left,
+        Color::Black => &mut game_time.black_seconds_left,
+    };
+
+    *seconds_left = seconds_left.saturating_sub(elapsed.num_seconds() as usize);
+
+    if *seconds_left == 0 {
+        game_state.state = State::Finished(GameEnding::OutOfTime(current_turn));
+        return;
+    }
+
+    game_time.last_move_at = Some(chrono::Utc::now().to_rfc3339());
+}
+
 /// Called after a move is made. Checks if the opponent's king is in check or checkmate.
 fn check_for_mates(game_state: &mut GameStateAtPointInTime) {
     let board = &game_state.board;
@@ -454,8 +504,16 @@ fn check_for_mates(game_state: &mut GameStateAtPointInTime) {
 }
 
 pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result<(), &'static str> {
-    let current_state = game_state.current_state();
-    let mut next_state = (*current_state).clone();
+    let current_state = game_state.current_state().state.clone();
+    let mut next_state = game_state.current_state().clone();
+
+    if current_state == State::NotStarted {
+        next_state.state = State::InProgress;
+    }
+
+    if let Some(game_time) = &mut game_state.game_time {
+        update_game_time(game_time, &mut next_state);
+    }
 
     if let Some(captured_piece) = next_state.board.apply_move(player_move) {
         match next_state.current_turn {
@@ -471,10 +529,6 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
     }
 
     check_for_mates(&mut next_state);
-
-    if current_state.state == State::NotStarted {
-        next_state.state = State::InProgress;
-    }
 
     game_state.history.push(next_state);
 
