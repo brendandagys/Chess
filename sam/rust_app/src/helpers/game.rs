@@ -515,20 +515,25 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
         update_game_time(game_time, &mut next_state);
     }
 
-    if let Some(captured_piece) = next_state.board.apply_move(player_move) {
-        match next_state.current_turn {
-            Color::White => {
-                next_state.captured_pieces.white.push(captured_piece);
-                next_state.captured_pieces.white_points += captured_piece.get_point_value();
+    match next_state.state {
+        State::Finished(GameEnding::OutOfTime(_)) => {}
+        _ => {
+            if let Some(captured_piece) = next_state.board.apply_move(player_move) {
+                match next_state.current_turn {
+                    Color::White => {
+                        next_state.captured_pieces.white.push(captured_piece);
+                        next_state.captured_pieces.white_points += captured_piece.get_point_value();
+                    }
+                    Color::Black => {
+                        next_state.captured_pieces.black.push(captured_piece);
+                        next_state.captured_pieces.black_points += captured_piece.get_point_value();
+                    }
+                }
             }
-            Color::Black => {
-                next_state.captured_pieces.black.push(captured_piece);
-                next_state.captured_pieces.black_points += captured_piece.get_point_value();
-            }
-        }
-    }
 
-    check_for_mates(&mut next_state);
+            check_for_mates(&mut next_state);
+        }
+    };
 
     game_state.history.push(next_state);
 
