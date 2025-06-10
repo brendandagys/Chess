@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { API_ROUTE } from "../constants";
-import { PlayerActionName } from "../types/game";
+import { PlayerActionName, TimeOption } from "../types/game";
 import { GameRequest } from "../types/api";
 import { FormToShow } from "../types/sharedComponentTypes";
 import { BoardSetup, BoardSetupName } from "../types/board";
@@ -30,6 +30,10 @@ export const GameForm: React.FC<GameFormProps> = ({
 
   const [gameId, setGameId] = useState(
     gameIds.length === 1 && !username ? gameIds[0] : ""
+  );
+
+  const [timeOption, setTimeOption] = useState<TimeOption>(
+    TimeOption.Unlimited
   );
 
   const [boardSetupName, setBoardSetupName] = useState<BoardSetupName>(
@@ -90,6 +94,8 @@ export const GameForm: React.FC<GameFormProps> = ({
               gameId: gameId || null,
               boardSetup: getBoardSetup(boardSetupName),
               colorPreference,
+              secondsPerPlayer:
+                timeOption === TimeOption.Unlimited ? null : timeOption,
             },
           }
         : joinPayload;
@@ -122,6 +128,27 @@ export const GameForm: React.FC<GameFormProps> = ({
               />
               <span className="slider"></span>
             </label>
+          </div>
+
+          <div className="game-preferences-form-component">
+            <span className="label">Time</span>
+
+            <select
+              className="board-setup-select"
+              value={timeOption}
+              onChange={(e) => {
+                setTimeOption(parseInt(e.target.value, 10) as TimeOption);
+              }}
+            >
+              <option value={TimeOption.OneMinute}>1 Minute</option>
+              <option value={TimeOption.ThreeMinutes}>3 Minutes</option>
+              <option value={TimeOption.FiveMinutes}>5 Minutes</option>
+              <option value={TimeOption.TenMinutes}>10 Minutes</option>
+              <option value={TimeOption.FifteenMinutes}>15 Minutes</option>
+              <option value={TimeOption.ThirtyMinutes}>30 Minutes</option>
+              <option value={TimeOption.OneHour}>1 Hour</option>
+              <option value={TimeOption.Unlimited}>Unlimited</option>
+            </select>
           </div>
 
           <div className="game-preferences-form-component">

@@ -1,0 +1,19 @@
+.player-time {
+  background: black;
+  color: white;
+  font-size: 1.3rem;
+  padding: 0.25rem 0.6rem;
+  margin-right: 0.6rem;
+  border-radius: 5px;
+}
+
+.player-time--low {
+  background: red;
+}
+
+@media (max-width: 500px) {
+  .player-time {
+    font-size: 1.1rem;
+    padding: 0.2rem 0.5rem;
+  }
+}

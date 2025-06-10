@@ -1,18 +1,26 @@
+import { useMemo, useState, useEffect } from "react";
+
+import { capitalizeFirstLetter, getLast } from "../utils";
+
+import { Alert } from "./Alert";
+import { BoardHistoryControls } from "./BoardHistoryControls";
+import { CapturedPieces } from "./CapturedPieces";
+import { Color, getOppositePlayerColor } from "../types/piece";
+import { ChessBoard } from "./chess-board/ChessBoard";
+import { PlayerTime } from "./PlayerTime";
+
+import { GameRequest } from "../types/api";
 import {
   GameEndingCheckmate,
+  GameEndingOutOfTime,
   GameEndingType,
   GameRecord,
   GameStateType,
+  PlayerActionName,
 } from "../types/game";
-import { Color, getOppositePlayerColor } from "../types/piece";
-import { ChessBoard } from "./chess-board/ChessBoard";
-import { Alert } from "./Alert";
-import { CapturedPieces } from "./CapturedPieces";
-import { BoardHistoryControls } from "./BoardHistoryControls";
 import { GameMessage } from "../types/sharedComponentTypes";
-import { GameRequest } from "../types/api";
-import { useMemo, useState, useEffect } from "react";
-import { capitalizeFirstLetter, getLast } from "../utils";
+
+import { API_ROUTE } from "../constants";
 
 import "../css/Game.css";
 
@@ -33,6 +41,8 @@ export const Game: React.FC<GameProps> = ({
   sendWebSocketMessage,
   dismissMessage,
 }) => {
+  const gameId = gameRecord.game_id;
+
   const gameState = gameRecord.game_state;
   const currentGameState = getLast(gameState.history);
   const gameStateType = currentGameState.state;
@@ -79,6 +89,75 @@ export const Game: React.FC<GameProps> = ({
   const opponentCapturedPieces =
     viewedGameState.capturedPieces[getOppositePlayerColor(playerColor)];
 
+  const gameIsTimed = gameState.gameTime !== null;
+
+  const [playerSecondsLeft, setPlayerSecondsLeft] = useState(
+    gameIsTimed
+      ? playerColor === Color.White
+        ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          gameState.gameTime!.whiteSecondsLeft
+        : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          gameState.gameTime!.blackSecondsLeft
+      : null
+  );
+
+  const [opponentSecondsLeft, setOpponentSecondsLeft] = useState(
+    gameIsTimed
+      ? playerColor === Color.White
+        ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          gameState.gameTime!.blackSecondsLeft
+        : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          gameState.gameTime!.whiteSecondsLeft
+      : null
+  );
+
+  useEffect(() => {
+    if (!gameIsTimed || !bothPlayersReady) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      if (playerSecondsLeft === 0 || opponentSecondsLeft === 0) {
+        return;
+      }
+
+      (isTurn ? setPlayerSecondsLeft : setOpponentSecondsLeft)((old) => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const newValue = old! - 1;
+
+        if (newValue === 0) {
+          if (isTurn) {
+            sendWebSocketMessage({
+              route: API_ROUTE,
+              data: {
+                [PlayerActionName.LoseViaOutOfTime]: {
+                  gameId,
+                },
+              },
+            });
+          }
+
+          clearInterval(intervalId);
+        }
+
+        return newValue;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [
+    bothPlayersReady,
+    gameId,
+    gameIsInProgress,
+    gameIsTimed,
+    isTurn,
+    opponentSecondsLeft,
+    playerSecondsLeft,
+    sendWebSocketMessage,
+  ]);
+
   const stateOfGame = useMemo(() => {
     if (gameIsInProgress) {
       return currentGameState.inCheck
@@ -110,6 +189,21 @@ export const Game: React.FC<GameProps> = ({
           playerColor === winningColor ? "green" : "red",
         ];
       }
+
+      if (gameEndingType === GameEndingType.OutOfTime) {
+        const losingColor = (gameEnding as GameEndingOutOfTime)[gameEndingType];
+        const winningColor = getOppositePlayerColor(losingColor);
+
+        return playerColor === winningColor
+          ? [
+              `${capitalizeFirstLetter(losingColor)} is out of time! You win!`,
+              "green",
+            ]
+          : [
+              `Out of time! ${capitalizeFirstLetter(winningColor)} wins!`,
+              "red",
+            ];
+      }
     }
 
     return ["Game over", "gray"];
@@ -126,14 +220,14 @@ export const Game: React.FC<GameProps> = ({
       : gameRecord.white_username;
 
   return (
-    <div id={`game-${gameRecord.game_id}`} className="game-container">
+    <div id={`game-${gameId}`} className="game-container">
       <div className="game-id-container">
-        <h2 className="game-id">Game: {gameRecord.game_id}</h2>
+        <h2 className="game-id">Game: {gameId}</h2>
 
         <button
           className="leave-game-button"
           onClick={() => {
-            onHideGame(gameRecord.game_id);
+            onHideGame(gameId);
           }}
         >
           Leave game
@@ -166,7 +260,7 @@ export const Game: React.FC<GameProps> = ({
             {gameIsInProgress && bothPlayersReady && (
               <p className={`pill pill--green ${!isTurn ? "pill--faded" : ""}`}>
                 {isTurn
-                  ? "Your turn!"
+                  ? "YOUR TURN"
                   : `${playerColor === Color.White ? "Black" : "White"}'s turn`}
               </p>
             )}
@@ -175,10 +269,14 @@ export const Game: React.FC<GameProps> = ({
       </div>
 
       <div className="game-area">
-        <CapturedPieces
-          pieces={opponentCapturedPieces}
-          pointsLead={opponentPointsLead}
-        />
+        <div className="player-status-row">
+          <CapturedPieces
+            pieces={opponentCapturedPieces}
+            pointsLead={opponentPointsLead}
+          />
+
+          {gameIsTimed && <PlayerTime secondsLeft={opponentSecondsLeft ?? 0} />}
+        </div>
 
         <div
           className={`chess-board-container ${isTurn ? "is-player-turn" : ""}`}
@@ -186,16 +284,20 @@ export const Game: React.FC<GameProps> = ({
           <ChessBoard
             gameState={gameState}
             playerColor={playerColor}
-            gameId={gameRecord.game_id}
+            gameId={gameId}
             sendWebSocketMessage={sendWebSocketMessage}
             historyIndex={historyIndex}
           />
         </div>
 
-        <CapturedPieces
-          pieces={playerCapturedPieces}
-          pointsLead={playerPointsLead}
-        />
+        <div className="player-status-row">
+          <CapturedPieces
+            pieces={playerCapturedPieces}
+            pointsLead={playerPointsLead}
+          />
+
+          {gameIsTimed && <PlayerTime secondsLeft={playerSecondsLeft ?? 0} />}
+        </div>
 
         <BoardHistoryControls
           historyIndex={historyIndex}

@@ -14,7 +14,7 @@ export enum GameEndingType {
 
 export interface GameEndingCheckmate { [GameEndingType.Checkmate]: Color; }
 interface GameEndingResignation { [GameEndingType.Resignation]: Color; }
-interface GameEndingOutOfTime { [GameEndingType.OutOfTime]: Color; }
+export interface GameEndingOutOfTime { [GameEndingType.OutOfTime]: Color; }
 type GameEndingStalemate = GameEndingType.Stalemate;
 type GameEndingDrawByThreefoldRepetition =
   GameEndingType.DrawByThreefoldRepetition;
@@ -57,6 +57,24 @@ export interface CapturedPieces {
   blackPoints: number;
 }
 
+export enum TimeOption {
+  OneMinute = 60,
+  ThreeMinutes = 180,
+  FiveMinutes = 300,
+  TenMinutes = 600,
+  FifteenMinutes = 900,
+  ThirtyMinutes = 1800,
+  OneHour = 3600,
+  Unlimited = -1,
+}
+
+interface GameTime {
+  bothPlayersLastConnectedAt: string | null;
+  lastMoveAt: string | null;
+  whiteSecondsLeft: number;
+  blackSecondsLeft: number;
+}
+
 export interface GameStateAtPointInTime {
   state: State;
   currentTurn: Color;
@@ -67,6 +85,7 @@ export interface GameStateAtPointInTime {
 
 export interface GameState {
   gameId: string;
+  gameTime: GameTime | null;
   history: GameStateAtPointInTime[];
 }
 
@@ -81,6 +100,7 @@ export enum PlayerActionName {
   GetGameState = 'get-game-state',
   MovePiece = 'move-piece',
   Heartbeat = 'heartbeat',
+  LoseViaOutOfTime = 'lose-via-out-of-time',
   Resign = 'resign',
   OfferDraw = 'offer-draw',
 }
@@ -117,6 +137,11 @@ interface PlayerActionMovePiece {
 
 type PlayerActionHeartbeat = PlayerActionName.Heartbeat;
 
+interface PlayerActionLoseViaOutOfTime {
+  [PlayerActionName.LoseViaOutOfTime]: {
+    gameId: string;
+  };
+}
 interface PlayerActionResign {
   [PlayerActionName.Resign]: {
     gameId: string;
@@ -135,6 +160,7 @@ export type PlayerAction =
   | PlayerActionGetGameState
   | PlayerActionMovePiece
   | PlayerActionHeartbeat
+  | PlayerActionLoseViaOutOfTime
   | PlayerActionResign
   | PlayerActionOfferDraw;
 

@@ -98,6 +98,12 @@
   margin: 0 auto;
 }
 
+.player-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .game-container .chess-board-container {
   display: inline-flex;
   justify-content: center;
