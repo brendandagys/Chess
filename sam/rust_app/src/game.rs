@@ -117,6 +117,8 @@ async fn function_handler(
         ),
         PlayerAction::LoseViaOutOfTime { game_id } => {
             player_action_handlers::lose_via_out_of_time::lose_via_out_of_time(
+                sdk_config,
+                &request_context,
                 dynamo_db_client,
                 connection_id,
                 &game_table,
