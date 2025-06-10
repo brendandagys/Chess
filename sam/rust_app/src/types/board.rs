@@ -91,7 +91,7 @@ impl BoardSetup {
                 let mut squares = vec![vec![None; dimensions.files]; dimensions.ranks];
                 let mut rng = rand::rng();
 
-                let mut available_pieces = vec![
+                let available_pieces = vec![
                     PieceType::Rook,
                     PieceType::Knight,
                     PieceType::Bishop,
@@ -105,27 +105,21 @@ impl BoardSetup {
                 };
 
                 let outer_row = generate_row(&available_pieces);
-                available_pieces.push(PieceType::Pawn);
-                let inner_row = generate_row(&available_pieces);
-
                 let king_file = dimensions.files / 2;
 
-                // First and last ranks
-                for (i, piece_type) in outer_row.into_iter().enumerate() {
+                for i in 0..dimensions.files {
+                    let piece_type = if i == king_file {
+                        PieceType::King
+                    } else {
+                        outer_row[i]
+                    };
+
                     squares[0][i] = Some(Piece::new(piece_type, Color::Black));
+                    squares[1][i] = Some(Piece::new(PieceType::Pawn, Color::Black));
+                    squares[dimensions.ranks - 2][i] =
+                        Some(Piece::new(PieceType::Pawn, Color::White));
                     squares[dimensions.ranks - 1][i] = Some(Piece::new(piece_type, Color::White));
                 }
-
-                // Second and second-to-last ranks
-                for (i, piece_type) in inner_row.into_iter().enumerate() {
-                    squares[1][i] = Some(Piece::new(piece_type, Color::Black));
-                    squares[dimensions.ranks - 2][i] = Some(Piece::new(piece_type, Color::White));
-                }
-
-                // Place kings
-                squares[0][king_file] = Some(Piece::new(PieceType::King, Color::Black));
-                squares[dimensions.ranks - 1][king_file] =
-                    Some(Piece::new(PieceType::King, Color::White));
 
                 Board {
                     squares,
@@ -144,22 +138,23 @@ impl BoardSetup {
                     PieceType::Pawn,
                 ];
 
-                let chosen_piece = available_pieces.choose(&mut rng).unwrap().clone();
+                let other_piece = available_pieces.choose(&mut rng).unwrap().clone();
                 let king_file = dimensions.files / 2;
 
-                // Place the random piece
                 for i in 0..dimensions.files {
-                    squares[0][i] = Some(Piece::new(chosen_piece, Color::Black));
-                    squares[1][i] = Some(Piece::new(chosen_piece, Color::Black));
+                    let piece_type = if i == king_file {
+                        PieceType::King
+                    } else {
+                        other_piece
+                    };
 
-                    squares[dimensions.ranks - 2][i] = Some(Piece::new(chosen_piece, Color::White));
-                    squares[dimensions.ranks - 1][i] = Some(Piece::new(chosen_piece, Color::White));
+                    squares[0][i] = Some(Piece::new(piece_type, Color::Black));
+                    squares[1][i] = Some(Piece::new(PieceType::Pawn, Color::Black));
+
+                    squares[dimensions.ranks - 2][i] =
+                        Some(Piece::new(PieceType::Pawn, Color::White));
+                    squares[dimensions.ranks - 1][i] = Some(Piece::new(piece_type, Color::White));
                 }
-
-                // Place kings
-                squares[0][king_file] = Some(Piece::new(PieceType::King, Color::Black));
-                squares[dimensions.ranks - 1][king_file] =
-                    Some(Piece::new(PieceType::King, Color::White));
 
                 Board {
                     squares,
