@@ -140,6 +140,7 @@ pub enum PlayerAction {
         player_move: PlayerMove,
     },
     Heartbeat,
+    #[serde(rename_all = "camelCase")]
     LoseViaOutOfTime {
         game_id: String,
     },
