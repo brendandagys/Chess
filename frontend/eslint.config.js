@@ -40,5 +40,12 @@ export default tseslint.config(
       "max-len": 1,
       "react/prop-types": 0,
     },
+    settings: {
+      "import/resolver": {
+        typescript: {
+          project: ["./tsconfig.node.json", "./tsconfig.app.json"],
+        },
+      },
+    },
   }
 );
