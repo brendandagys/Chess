@@ -1,5 +1,6 @@
-import "../css/BoardHistoryControls.css";
-import { useViewportWidth } from "../hooks/useViewportWidth";
+import { useViewportWidth } from "@src/hooks/useViewportWidth";
+
+import "@src/css/BoardHistoryControls.css";
 
 interface BoardHistoryControlsProps {
   historyIndex: number;

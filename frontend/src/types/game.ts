@@ -1,5 +1,5 @@
-import { Board, BoardSetup, Position } from "./board";
-import { Color, Piece } from "./piece";
+import { Board, BoardSetup, Position } from "@src/types/board";
+import { Color, Piece } from "@src/types/piece";
 
 export enum GameEndingType {
   Checkmate = 'checkmate',

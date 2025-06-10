@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { imageMap } from "../../images";
-import { rotateMatrix180Degrees } from "../../utils";
-import { useDrag } from "../../hooks/useDrag";
-import { GameRequest } from "../../types/api";
-import { GameState, PlayerActionName } from "../../types/game";
-import { Position } from "../../types/board";
-import { Color, Piece, PieceType } from "../../types/piece";
-import { API_ROUTE } from "../../constants";
+import { imageMap } from "@src/images";
+import { rotateMatrix180Degrees } from "@src/utils";
+import { useDrag } from "@src/hooks/useDrag";
+import { GameRequest } from "@src/types/api";
+import { GameState, PlayerActionName } from "@src/types/game";
+import { Position } from "@src/types/board";
+import { Color, Piece, PieceType } from "@src/types/piece";
+import { API_ROUTE } from "@src/constants";
+import { stateChecks } from "@src/components/chess-board/state-checks";
 
-import "../../css/ChessBoard.css";
-import { stateChecks } from "./state-checks";
+import "@src/css/ChessBoard.css";
 
 interface ChessBoardProps {
   gameState: GameState;

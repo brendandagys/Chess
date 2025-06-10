@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { GameMessage } from "../types/sharedComponentTypes";
+
+import { GameMessage } from "@src/types/sharedComponentTypes";
 
 export const useMessageDisplay = () => {
   const [messages, setMessages] = useState<GameMessage[]>([]);

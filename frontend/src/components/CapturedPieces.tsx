@@ -1,7 +1,7 @@
-import { imageMap } from "../images";
-import { Piece } from "../types/piece";
+import { imageMap } from "@src/images";
+import { Piece } from "@src/types/piece";
 
-import "../css/CapturedPieces.css";
+import "@src/css/CapturedPieces.css";
 
 interface CapturedPiecesProps {
   pieces: Piece[];

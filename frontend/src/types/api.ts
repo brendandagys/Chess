@@ -1,4 +1,4 @@
-import { PlayerAction } from "./game";
+import { PlayerAction } from "@src/types/game";
 
 export interface GameRequest {
   route: string;

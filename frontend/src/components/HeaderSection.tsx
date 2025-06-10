@@ -1,6 +1,6 @@
-import { FormToShow } from "../types/sharedComponentTypes";
+import { FormToShow } from "@src/types/sharedComponentTypes";
 
-import hero from "../images/hero.png";
+import hero from "@src/images/hero.png";
 
 interface HeaderSectionProps {
   setFormToShow: React.Dispatch<React.SetStateAction<FormToShow>>;

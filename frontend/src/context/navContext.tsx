@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
-import { NavContext } from "./useNav";
+
+import { NavContext } from "@src/context/useNav";
 
 // Helper to parse game IDs from the path
 function parseGameIdsFromPath(pathname: string): string[] {

@@ -1,4 +1,4 @@
-import { Piece } from "./piece";
+import { Piece } from "@src/types/piece";
 
 // 0-indexed
 type Rank = number;

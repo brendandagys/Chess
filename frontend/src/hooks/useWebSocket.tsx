@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiResponse, GameRequest } from "../types/api";
-import { PlayerActionName } from "../types/game";
-import { API_ROUTE } from "../constants";
+
+import { ApiResponse, GameRequest } from "@src/types/api";
+import { PlayerActionName } from "@src/types/game";
+import { API_ROUTE } from "@src/constants";
 
 export const useWebSocket = (
   url: string,

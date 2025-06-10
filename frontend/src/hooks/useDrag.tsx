@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Piece } from "../types/piece";
-import { GameRequest } from "../types/api";
-import { PlayerActionName } from "../types/game";
-import { API_ROUTE } from "../constants";
-import { Position } from "../types/board";
 
-import "../css/ChessBoard.css";
+import { Piece } from "@src/types/piece";
+import { GameRequest } from "@src/types/api";
+import { PlayerActionName } from "@src/types/game";
+import { API_ROUTE } from "@src/constants";
+import { Position } from "@src/types/board";
+
+import "@src/css/ChessBoard.css";
 
 export const useDrag = (
   gameId: string,

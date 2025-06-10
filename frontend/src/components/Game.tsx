@@ -1,15 +1,15 @@
 import { useMemo, useState, useEffect } from "react";
 
-import { capitalizeFirstLetter, getLast } from "../utils";
+import { capitalizeFirstLetter, getLast } from "@src/utils";
 
-import { Alert } from "./Alert";
-import { BoardHistoryControls } from "./BoardHistoryControls";
-import { CapturedPieces } from "./CapturedPieces";
-import { Color, getOppositePlayerColor } from "../types/piece";
-import { ChessBoard } from "./chess-board/ChessBoard";
-import { PlayerTime } from "./PlayerTime";
+import { Alert } from "@src/components/Alert";
+import { BoardHistoryControls } from "@src/components/BoardHistoryControls";
+import { CapturedPieces } from "@src/components/CapturedPieces";
+import { Color, getOppositePlayerColor } from "@src/types/piece";
+import { ChessBoard } from "@src/components/chess-board/ChessBoard";
+import { PlayerTime } from "@src/components/PlayerTime";
 
-import { GameRequest } from "../types/api";
+import { GameRequest } from "@src/types/api";
 import {
   GameEndingCheckmate,
   GameEndingOutOfTime,
@@ -17,12 +17,12 @@ import {
   GameRecord,
   GameStateType,
   PlayerActionName,
-} from "../types/game";
-import { GameMessage } from "../types/sharedComponentTypes";
+} from "@src/types/game";
+import { GameMessage } from "@src/types/sharedComponentTypes";
 
-import { API_ROUTE } from "../constants";
+import { API_ROUTE } from "@src/constants";
 
-import "../css/Game.css";
+import "@src/css/Game.css";
 
 interface GameProps {
   gameRecord: GameRecord;

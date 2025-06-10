@@ -1,13 +1,15 @@
-import { GameStateAtPointInTime } from '../../../types/game';
-import { Color } from '../../../types/piece';
+import { GameStateAtPointInTime } from "@src/types/game";
+import { Color } from "@src/types/piece";
 
-import { moveSelf } from './move-self';
-import { moveOpponent } from './move-opponent';
-import { moveCheck } from './check';
-import { capture } from './capture';
-import { gameStart } from './game-start';
-import { promote } from './promote';
-import { castle } from './castle';
+import { moveSelf } from "@src/components/chess-board/state-checks/move-self";
+import {
+  moveOpponent
+} from "@src/components/chess-board/state-checks/move-opponent";
+import { moveCheck } from "@src/components/chess-board/state-checks/check";
+import { capture } from "@src/components/chess-board/state-checks/capture";
+import { gameStart } from "@src/components/chess-board/state-checks/game-start";
+import { promote } from "@src/components/chess-board/state-checks/promote";
+import { castle } from "@src/components/chess-board/state-checks/castle";
 
 interface StateCheck {
   didStateChange: (

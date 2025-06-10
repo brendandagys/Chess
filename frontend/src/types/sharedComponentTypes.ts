@@ -1,4 +1,4 @@
-import { ApiMessageType } from "./api";
+import { ApiMessageType } from "@src/types/api";
 
 export enum FormToShow {
   Create = "create",

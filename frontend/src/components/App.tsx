@@ -1,24 +1,24 @@
 import { useState, useCallback, useEffect } from "react";
 
-import { useNav } from "../context/useNav";
-import { useLocalStorage } from "../hooks/useLocalStorage";
-import { useMessageDisplay } from "../hooks/useMessageDisplay";
-import { useScroll } from "../hooks/useScroll";
-import { useWebSocket } from "../hooks/useWebSocket";
+import { useNav } from "@src/context/useNav";
+import { useLocalStorage } from "@src/hooks/useLocalStorage";
+import { useMessageDisplay } from "@src/hooks/useMessageDisplay";
+import { useScroll } from "@src/hooks/useScroll";
+import { useWebSocket } from "@src/hooks/useWebSocket";
 
-import { Alert } from "./Alert";
-import { CopyLinkButton } from "./CopyLinkButton";
-import { HeaderSection } from "./HeaderSection";
-import { GameForm } from "./GameForm";
-import { Game } from "./Game";
+import { Alert } from "@src/components/Alert";
+import { CopyLinkButton } from "@src/components/CopyLinkButton";
+import { HeaderSection } from "@src/components/HeaderSection";
+import { GameForm } from "@src/components/GameForm";
+import { Game } from "@src/components/Game";
 
-import { ApiMessageType, ApiResponse } from "../types/api";
-import { GameRecord, PlayerActionName } from "../types/game";
-import { FormToShow } from "../types/sharedComponentTypes";
-import { API_ROUTE, WEBSOCKET_ENDPOINT } from "../constants";
+import { ApiMessageType, ApiResponse } from "@src/types/api";
+import { GameRecord, PlayerActionName } from "@src/types/game";
+import { FormToShow } from "@src/types/sharedComponentTypes";
+import { API_ROUTE, WEBSOCKET_ENDPOINT } from "@src/constants";
 
-import "../css/App.css";
-import { playIllegalSound } from "../sounds";
+import { playIllegalSound } from "@src/sounds";
+import "@src/css/App.css";
 
 export const App: React.FC = () => {
   const {
