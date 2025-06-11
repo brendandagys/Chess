@@ -5,8 +5,8 @@ use lambda_runtime::Error;
 
 use chess::{
     helpers::game::{
-        get_game, get_player_details_from_connection_id, notify_other_player_about_game_update,
-        save_game, PlayerDetails,
+        get_game, get_player_details_from_connection_id, handle_if_game_is_finished,
+        notify_other_player_about_game_update, save_game, PlayerDetails,
     },
     types::{
         game::{GameEnding, State},
@@ -14,8 +14,6 @@ use chess::{
     },
     utils::api::build_response,
 };
-
-use crate::player_action_handlers::move_piece::handle_if_game_is_finished;
 
 pub async fn lose_via_out_of_time(
     sdk_config: &aws_config::SdkConfig,

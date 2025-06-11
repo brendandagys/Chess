@@ -4,53 +4,14 @@ use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
 
 use chess::{
-    helpers::{
-        game::{
-            can_player_make_a_move, get_game, get_player_details_from_connection_id, make_move,
-            notify_other_player_about_game_update, save_game, validate_move, PlayerDetails,
-        },
-        user::{get_user_game, save_user_record},
+    helpers::game::{
+        can_player_make_a_move, get_game, get_player_details_from_connection_id,
+        handle_if_game_is_finished, make_move, notify_other_player_about_game_update, save_game,
+        validate_move, PlayerDetails,
     },
-    types::game::{GameEnding, GameState, PlayerMove, State},
+    types::game::PlayerMove,
     utils::api::build_response,
 };
-
-/// Update the user-game records for both players if the game has finished
-///
-/// Note: This function could be called no `opponent_username` if time expires before one joins
-pub async fn handle_if_game_is_finished(
-    dynamo_db_client: &Client,
-    user_table: &str,
-    username: &str,
-    opponent_username: Option<String>,
-    game_state: &GameState,
-) -> Result<(), Error> {
-    match game_state.current_state().state {
-        State::Finished(GameEnding::Checkmate(losing_color))
-        | State::Finished(GameEnding::OutOfTime(losing_color)) => {
-            let winner = Some(losing_color.opponent_color().to_string());
-
-            for username in [Some(username), opponent_username.as_deref()]
-                .into_iter()
-                .flatten()
-            {
-                let mut user_game =
-                    get_user_game(dynamo_db_client, user_table, username, &game_state.game_id)
-                        .await?
-                        .expect(&format!(
-                            "User game should exist for user {username} and game ID {}",
-                            game_state.game_id
-                        ));
-
-                user_game.winner = winner.clone();
-                save_user_record(dynamo_db_client, user_table, &user_game).await?;
-            }
-        }
-        _ => {}
-    }
-
-    Ok(())
-}
 
 pub async fn move_piece(
     sdk_config: &aws_config::SdkConfig,

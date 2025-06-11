@@ -1,3 +1,4 @@
+use crate::helpers::user::{get_user_game, save_user_record};
 use crate::types::api::{ApiMessage, ApiResponse};
 use crate::types::board::{Board, BoardSetup, Position};
 use crate::types::dynamo_db::GameRecord;
@@ -536,6 +537,43 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
     };
 
     game_state.history.push(next_state);
+
+    Ok(())
+}
+
+/// Update the user-game records for both players if the game has finished
+///
+/// Note: This function could be called no `opponent_username` if time expires before one joins
+pub async fn handle_if_game_is_finished(
+    dynamo_db_client: &Client,
+    user_table: &str,
+    username: &str,
+    opponent_username: Option<String>,
+    game_state: &GameState,
+) -> Result<(), Error> {
+    match game_state.current_state().state {
+        State::Finished(GameEnding::Checkmate(losing_color))
+        | State::Finished(GameEnding::OutOfTime(losing_color)) => {
+            let winner = Some(losing_color.opponent_color().to_string());
+
+            for username in [Some(username), opponent_username.as_deref()]
+                .into_iter()
+                .flatten()
+            {
+                let mut user_game =
+                    get_user_game(dynamo_db_client, user_table, username, &game_state.game_id)
+                        .await?
+                        .expect(&format!(
+                            "User game should exist for user {username} and game ID {}",
+                            game_state.game_id
+                        ));
+
+                user_game.winner = winner.clone();
+                save_user_record(dynamo_db_client, user_table, &user_game).await?;
+            }
+        }
+        _ => {}
+    }
 
     Ok(())
 }
