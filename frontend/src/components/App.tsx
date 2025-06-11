@@ -69,9 +69,15 @@ export const App: React.FC = () => {
           const newGames = [...old];
           newGames[index] = gameRecord;
 
-          document.querySelectorAll(".dragging").forEach((el) => {
-            el.classList.remove("dragging");
-          });
+          const moveMade =
+            gameRecord.game_state.history.length !==
+            old[index].game_state.history.length;
+
+          if (!moveMade) {
+            document.querySelectorAll(".dragging").forEach((el) => {
+              el.classList.remove("dragging");
+            });
+          }
 
           return newGames;
         });
