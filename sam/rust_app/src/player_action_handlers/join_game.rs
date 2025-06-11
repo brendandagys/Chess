@@ -16,12 +16,12 @@ fn check_if_both_players_just_joined(game_record: &mut GameRecord) {
         if game_record
             .white_connection_id
             .as_deref()
-            .unwrap_or("<disconnected>".into())
+            .unwrap_or("<disconnected>")
             != "<disconnected>"
             && game_record
                 .black_connection_id
                 .as_deref()
-                .unwrap_or("<disconnected>".into())
+                .unwrap_or("<disconnected>")
                 != "<disconnected>"
         {
             game_time.both_players_last_connected_at = Some(chrono::Utc::now().to_rfc3339());
@@ -48,7 +48,7 @@ pub async fn join_game(
         );
     }
 
-    let game = match get_game(&dynamo_db_client, game_table, game_id).await? {
+    let game = match get_game(dynamo_db_client, game_table, game_id).await? {
         Some(mut existing_game) => {
             tracing::info!(
                 "Found existing game (ID: {}) for user ({username}) to try to join",
@@ -79,7 +79,7 @@ pub async fn join_game(
                 }
             );
 
-            save_game(&dynamo_db_client, game_table, &existing_game).await?;
+            save_game(dynamo_db_client, game_table, &existing_game).await?;
 
             existing_game
         }
@@ -97,7 +97,7 @@ pub async fn join_game(
     };
 
     // Retrieve or create a new user-game record and assign user's connection ID to it
-    match get_user_game(&dynamo_db_client, user_table, username, &game.game_id).await? {
+    match get_user_game(dynamo_db_client, user_table, username, &game.game_id).await? {
         Some(mut found_user_game) => {
             found_user_game.connection_id = Some(connection_id.to_string());
 

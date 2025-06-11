@@ -34,7 +34,7 @@ async fn function_handler(
         dynamo_db_client,
         &user_table,
         &user_table_gsi,
-        &connection_id,
+        connection_id,
     )
     .await?;
 
@@ -50,7 +50,7 @@ async fn function_handler(
 
         // Disassociate this connection from the user-game record
         user_game.connection_id = Some("<disconnected>".to_string());
-        save_user_record(dynamo_db_client, &user_table, &user_game).await?;
+        save_user_record(dynamo_db_client, &user_table, user_game).await?;
 
         // Fetch the game record with the user-game's game ID in the sort key
         let Some(mut game) = get_game(dynamo_db_client, &game_table, game_id).await? else {

@@ -29,7 +29,7 @@ pub async fn get_game(
 ) -> Result<Option<GameRecord>, Error> {
     let mut key = HashMap::new();
     key.insert("game_id".into(), AttributeValue::S(game_id.into()));
-    Ok(get_item(client, table, key).await?)
+    get_item(client, table, key).await
 }
 
 /// RETURNS a tuple containing:
@@ -185,14 +185,14 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
     match game.white_username == Some(username.to_string()) {
         true => {
             game.white_connection_id = Some("<disconnected>".to_string());
-            save_game(dynamo_db_client, &game_table, &game).await?;
+            save_game(dynamo_db_client, game_table, game).await?;
 
             if let Some(black_connection_id) = &game.black_connection_id {
-                if black_connection_id != "<disconnected>" {
-                    if let Some(_) = post_to_connection(
+                if black_connection_id != "<disconnected>"
+                    && (post_to_connection(
                         sdk_config,
-                        &request_context,
-                        &black_connection_id,
+                        request_context,
+                        black_connection_id,
                         &ApiResponse {
                             status_code: 200,
                             connection_id: Some(black_connection_id.clone()),
@@ -202,26 +202,26 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                             data: Some(&game),
                         },
                     )
-                    .await?
-                    {
-                        tracing::info!(
-                            "Notified black player of disconnection for game (ID: {})",
-                            game.game_id
-                        );
-                    }
+                    .await?)
+                        .is_some()
+                {
+                    tracing::info!(
+                        "Notified black player of disconnection for game (ID: {})",
+                        game.game_id
+                    );
                 }
             }
         }
         false => {
             game.black_connection_id = Some("<disconnected>".to_string());
-            save_game(dynamo_db_client, &game_table, &game).await?;
+            save_game(dynamo_db_client, game_table, game).await?;
 
             if let Some(white_connection_id) = &game.white_connection_id {
-                if white_connection_id != "<disconnected>" {
-                    if let Some(_) = post_to_connection(
+                if white_connection_id != "<disconnected>"
+                    && (post_to_connection(
                         sdk_config,
-                        &request_context,
-                        &white_connection_id,
+                        request_context,
+                        white_connection_id,
                         &ApiResponse {
                             status_code: 200,
                             connection_id: Some(white_connection_id.clone()),
@@ -231,13 +231,13 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                             data: Some(&game),
                         },
                     )
-                    .await?
-                    {
-                        tracing::info!(
-                            "Notified white player of disconnection for game (ID: {})",
-                            game.game_id
-                        );
-                    }
+                    .await?)
+                        .is_some()
+                {
+                    tracing::info!(
+                        "Notified white player of disconnection for game (ID: {})",
+                        game.game_id
+                    );
                 }
             }
         }
@@ -257,8 +257,7 @@ pub async fn notify_other_player_about_game_update(
     if let Some(white_connection_id) = &game.white_connection_id {
         if white_connection_id != current_user_connection_id
             && white_connection_id != "<disconnected>"
-        {
-            if let Some(_) = post_to_connection(
+            && (post_to_connection(
                 sdk_config,
                 request_context,
                 white_connection_id,
@@ -269,18 +268,17 @@ pub async fn notify_other_player_about_game_update(
                     data: Some(game),
                 },
             )
-            .await?
-            {
-                tracing::info!("Sent game (ID: {}) update to white player", game.game_id);
-            }
+            .await?)
+                .is_some()
+        {
+            tracing::info!("Sent game (ID: {}) update to white player", game.game_id);
         }
     }
 
     if let Some(black_connection_id) = &game.black_connection_id {
         if black_connection_id != current_user_connection_id
             && black_connection_id != "<disconnected>"
-        {
-            if let Some(_) = post_to_connection(
+            && (post_to_connection(
                 sdk_config,
                 request_context,
                 black_connection_id,
@@ -291,10 +289,10 @@ pub async fn notify_other_player_about_game_update(
                     data: Some(game),
                 },
             )
-            .await?
-            {
-                tracing::info!("Sent game (ID: {}) update to black player", game.game_id);
-            }
+            .await?)
+                .is_some()
+        {
+            tracing::info!("Sent game (ID: {}) update to black player", game.game_id);
         }
     }
 
@@ -302,10 +300,7 @@ pub async fn notify_other_player_about_game_update(
 }
 
 pub fn is_game_over(game: &GameRecord) -> bool {
-    match game.game_state.current_state().state {
-        State::Finished(_) => true,
-        _ => false,
-    }
+    matches!(game.game_state.current_state().state, State::Finished(_))
 }
 
 fn are_both_players_present(game: &GameRecord) -> bool {
@@ -563,10 +558,12 @@ pub async fn handle_if_game_is_finished(
                 let mut user_game =
                     get_user_game(dynamo_db_client, user_table, username, &game_state.game_id)
                         .await?
-                        .expect(&format!(
-                            "User game should exist for user {username} and game ID {}",
-                            game_state.game_id
-                        ));
+                        .unwrap_or_else(|| {
+                            panic!(
+                                "User game should exist for user {username} and game ID {}",
+                                game_state.game_id
+                            )
+                        });
 
                 user_game.winner = winner.clone();
                 save_user_record(dynamo_db_client, user_table, &user_game).await?;

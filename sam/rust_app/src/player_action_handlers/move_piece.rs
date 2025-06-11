@@ -40,7 +40,7 @@ pub async fn move_piece(
                 return build_response(
                     StatusCode::BAD_REQUEST,
                     Some(connection_id.to_string()),
-                    Some(vec![format!("You are not a player in this game").into()]),
+                    Some(vec!["You are not a player in this game".into()]),
                     None::<()>,
                 );
             };
@@ -76,7 +76,7 @@ pub async fn move_piece(
                 );
             }
 
-            save_game(&dynamo_db_client, game_table, &game).await?;
+            save_game(dynamo_db_client, game_table, &game).await?;
 
             handle_if_game_is_finished(
                 dynamo_db_client,
@@ -88,7 +88,7 @@ pub async fn move_piece(
             .await?;
 
             notify_other_player_about_game_update(
-                &sdk_config,
+                sdk_config,
                 request_context,
                 connection_id,
                 &game,

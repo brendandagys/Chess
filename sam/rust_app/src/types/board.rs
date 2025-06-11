@@ -107,11 +107,11 @@ impl BoardSetup {
                 let outer_row = generate_row(&available_pieces);
                 let king_file = dimensions.files / 2;
 
-                for i in 0..dimensions.files {
+                for (i, piece) in outer_row.iter().enumerate() {
                     let piece_type = if i == king_file {
                         PieceType::King
                     } else {
-                        outer_row[i]
+                        *piece
                     };
 
                     squares[0][i] = Some(Piece::new(piece_type, Color::Black));
@@ -130,7 +130,7 @@ impl BoardSetup {
                 let mut squares = vec![vec![None; dimensions.files]; dimensions.ranks];
                 let mut rng = rand::rng();
 
-                let available_pieces = vec![
+                let available_pieces = [
                     PieceType::Rook,
                     PieceType::Knight,
                     PieceType::Bishop,
@@ -138,7 +138,7 @@ impl BoardSetup {
                     PieceType::Pawn,
                 ];
 
-                let other_piece = available_pieces.choose(&mut rng).unwrap().clone();
+                let other_piece = *available_pieces.choose(&mut rng).unwrap();
                 let king_file = dimensions.files / 2;
 
                 for i in 0..dimensions.files {
@@ -190,7 +190,7 @@ impl Board {
                     .filter_map(move |(file_index, square)| {
                         square.as_ref().and_then(|piece| {
                             let piece_and_position = Some((
-                                piece.clone(),
+                                *piece,
                                 Position {
                                     rank: Rank(num_ranks - rank_index),
                                     file: File(file_index + 1),
@@ -305,9 +305,7 @@ impl Board {
         let (_king, king_position) = pieces_and_positions_for_color
             .iter()
             .find(|(piece, _position)| piece.piece_type == PieceType::King)
-            .expect(&format!(
-                "Did not find {color} king when checking for check"
-            ));
+            .unwrap_or_else(|| panic!("Did not find {color} king when checking for check"));
 
         let opponent_pieces = self.get_all_pieces(Some(&color.opponent_color()));
 
@@ -324,13 +322,7 @@ impl Board {
 
     fn check_for_pawn_promotion(&self, piece: &mut Piece, player_move: &PlayerMove) {
         if piece.piece_type == PieceType::Pawn
-            && piece.color == Color::Black
-            && player_move.to.rank.0 - 1 == 0
-        {
-            piece.piece_type = PieceType::Queen;
-        } else if piece.piece_type == PieceType::Pawn
-            && piece.color == Color::White
-            && player_move.to.rank.0 == self.squares.len()
+            && (player_move.to.rank.0 - 1 == 0 || player_move.to.rank.0 == self.squares.len())
         {
             piece.piece_type = PieceType::Queen;
         }
@@ -368,7 +360,7 @@ impl Board {
 
         match captured_piece_at_destination {
             Some(captured_piece) => Some(captured_piece),
-            None => self.check_for_en_passant_pawn_capture(&player_piece, player_move),
+            None => self.check_for_en_passant_pawn_capture(player_piece, player_move),
         }
     }
 
@@ -410,10 +402,12 @@ impl Board {
         let rook = self
             .get_piece_at_position(&old_rook_position)
             .cloned()
-            .expect(&format!(
-                "Did not find rook at position when castling: {:?}",
-                old_rook_position
-            ));
+            .unwrap_or_else(|| {
+                panic!(
+                    "Did not find rook at position when castling: {:?}",
+                    old_rook_position
+                )
+            });
 
         self.set_piece_at_position(&new_rook_position, Some(rook));
         self.set_piece_at_position(&old_rook_position, None);
@@ -421,15 +415,17 @@ impl Board {
         let king = self
             .get_piece_at_position(&player_move.from)
             .cloned()
-            .expect(&format!(
-                "Did not find king at position when castling: {:?}",
-                player_move.from
-            ));
+            .unwrap_or_else(|| {
+                panic!(
+                    "Did not find king at position when castling: {:?}",
+                    player_move.from
+                )
+            });
 
         self.set_piece_at_position(&new_king_position, Some(king));
         self.set_piece_at_position(&player_move.from, None);
 
-        return true;
+        true
     }
 
     /// This function assumes the move has been validated
@@ -437,10 +433,12 @@ impl Board {
         let mut player_piece = self
             .get_piece_at_position(&player_move.from)
             .cloned()
-            .expect(&format!(
-                "Did not find any piece to move from {:?} to {:?}",
-                player_move.from, player_move.to
-            ));
+            .unwrap_or_else(|| {
+                panic!(
+                    "Did not find any piece to move from {:?} to {:?}",
+                    player_move.from, player_move.to
+                )
+            });
 
         self.move_count += 1;
         player_piece.last_game_move = Some(self.move_count);

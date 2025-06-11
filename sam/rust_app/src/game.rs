@@ -68,7 +68,7 @@ async fn function_handler(
                 dynamo_db_client,
                 &game_table,
                 &user_table,
-                &connection_id,
+                connection_id,
                 &username,
                 game_id.as_deref(),
                 board_setup,
@@ -84,7 +84,7 @@ async fn function_handler(
                 dynamo_db_client,
                 &game_table,
                 &user_table,
-                &connection_id,
+                connection_id,
                 &username,
                 &game_id,
             )
@@ -103,7 +103,7 @@ async fn function_handler(
                 dynamo_db_client,
                 &game_table,
                 &user_table,
-                &connection_id,
+                connection_id,
                 &game_id,
                 player_move,
             )

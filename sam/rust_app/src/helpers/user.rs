@@ -25,7 +25,7 @@ async fn get_user_record(
     let mut key = HashMap::new();
     key.insert("username".into(), AttributeValue::S(username.into()));
     key.insert("sk".into(), AttributeValue::S(sort_key.into()));
-    Ok(get_item(client, table, key).await?)
+    get_item(client, table, key).await
 }
 
 pub async fn get_user_info(
@@ -91,7 +91,7 @@ pub async fn get_user_games_from_connection_id(
         AttributeValue::S(connection_id.to_string()),
     );
 
-    Ok(query_items(
+    query_items(
         client,
         table,
         Some(key_condition_expression),
@@ -99,7 +99,7 @@ pub async fn get_user_games_from_connection_id(
         Some(expression_attribute_values),
         Some(index.to_string()),
     )
-    .await?)
+    .await
 }
 
 pub fn create_user_game(game_id: &str, username: &str, connection_id: &str) -> UserRecord {

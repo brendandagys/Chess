@@ -35,7 +35,7 @@ pub async fn lose_via_out_of_time(
                 return build_response(
                     StatusCode::BAD_REQUEST,
                     Some(connection_id.to_string()),
-                    Some(vec![format!("You are not a player in this game").into()]),
+                    Some(vec!["You are not a player in this game".into()]),
                     None::<()>,
                 );
             };
@@ -43,15 +43,15 @@ pub async fn lose_via_out_of_time(
             game.game_state.current_state_mut().state =
                 State::Finished(GameEnding::OutOfTime(loser_color));
 
-            game.game_state.game_time.as_mut().map(|game_time| {
+            if let Some(game_time) = game.game_state.game_time.as_mut() {
                 if loser_color == Color::White {
                     game_time.white_seconds_left = 0;
                 } else {
                     game_time.black_seconds_left = 0;
                 }
-            });
+            }
 
-            save_game(&dynamo_db_client, game_table, &game).await?;
+            save_game(dynamo_db_client, game_table, &game).await?;
 
             handle_if_game_is_finished(
                 dynamo_db_client,
@@ -63,7 +63,7 @@ pub async fn lose_via_out_of_time(
             .await?;
 
             notify_other_player_about_game_update(
-                &sdk_config,
+                sdk_config,
                 request_context,
                 connection_id,
                 &game,

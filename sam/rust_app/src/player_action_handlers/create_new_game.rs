@@ -31,7 +31,7 @@ pub async fn create_new_game(
 
     let new_game = match game_id {
         Some(game_id) => {
-            if let Some(_) = get_game(&dynamo_db_client, game_table, game_id).await? {
+            if (get_game(dynamo_db_client, game_table, game_id).await?).is_some() {
                 return build_response(
                     StatusCode::BAD_REQUEST,
                     Some(connection_id.to_string()),
@@ -62,7 +62,7 @@ pub async fn create_new_game(
         ),
     };
 
-    save_game(&dynamo_db_client, game_table, &new_game).await?;
+    save_game(dynamo_db_client, game_table, &new_game).await?;
 
     tracing::info!(
         "Created new game (ID: {}) for user ({username})",
