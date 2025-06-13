@@ -5,7 +5,7 @@ import { useDrag } from "@src/hooks/useDrag";
 import { GameRequest } from "@src/types/api";
 import { GameState, PlayerActionName } from "@src/types/game";
 import { Position } from "@src/types/board";
-import { Color, Piece, PieceType } from "@src/types/piece";
+import { Color, Piece } from "@src/types/piece";
 import { API_ROUTE } from "@src/constants";
 import { stateChecks } from "@src/components/chess-board/state-checks";
 
@@ -256,9 +256,12 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                   ) : (
                     <img
                       className="hidden-piece"
-                      src={imageMap[PieceType.Pawn][Color.White]}
+                      width="150" // Same size as the piece PNGs
+                      height="150"
                       data-rank={rank}
                       data-file={file}
+                      // eslint-disable-next-line max-len
+                      src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'></svg>"
                     />
                   )}
                 </div>

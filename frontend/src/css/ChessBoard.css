@@ -59,11 +59,6 @@
   touch-action: none;
 }
 
-.hidden-piece {
-  visibility: hidden;
-  opacity: 0;
-}
-
 .piece.dragging {
   visibility: hidden;
 }
