@@ -90,7 +90,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
     setSelectedSquare((old) => {
       if (!old) {
-        return pieceOnSquare ? position : null;
+        return pieceOnSquare?.color === playerColor ? position : null;
       }
 
       if (old.rank !== position.rank || old.file !== position.file) {
