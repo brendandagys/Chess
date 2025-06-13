@@ -112,7 +112,7 @@ export const Game: React.FC<GameProps> = ({
   );
 
   useEffect(() => {
-    if (!gameIsTimed || !bothPlayersReady) {
+    if (!gameIsTimed || !bothPlayersReady || gameIsFinished) {
       return;
     }
 
