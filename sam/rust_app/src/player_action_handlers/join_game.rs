@@ -2,6 +2,7 @@ use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxy
 use aws_sdk_dynamodb::Client;
 use chess::types::api::ApiMessage;
 use chess::types::dynamo_db::GameRecord;
+use chess::types::game::State;
 use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
 
@@ -12,20 +13,26 @@ use chess::helpers::user::{create_user_game, get_user_game, save_user_record};
 use chess::utils::api::build_response;
 
 fn check_if_both_players_just_joined(game_record: &mut GameRecord) {
-    if let Some(game_time) = &mut game_record.game_state.game_time {
-        if game_record
-            .white_connection_id
+    if game_record
+        .white_connection_id
+        .as_deref()
+        .unwrap_or("<disconnected>")
+        != "<disconnected>"
+        && game_record
+            .black_connection_id
             .as_deref()
             .unwrap_or("<disconnected>")
             != "<disconnected>"
-            && game_record
-                .black_connection_id
-                .as_deref()
-                .unwrap_or("<disconnected>")
-                != "<disconnected>"
-        {
+    {
+        if let Some(game_time) = &mut game_record.game_state.game_time {
             game_time.both_players_last_connected_at = Some(chrono::Utc::now().to_rfc3339());
         }
+    }
+
+    let current_state = game_record.game_state.current_state_mut();
+
+    if current_state.state == State::NotStarted {
+        current_state.state = State::InProgress;
     }
 }
 

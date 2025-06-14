@@ -500,12 +500,7 @@ fn check_for_mates(game_state: &mut GameStateAtPointInTime) {
 }
 
 pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result<(), &'static str> {
-    let current_state = game_state.current_state().state.clone();
     let mut next_state = game_state.current_state().clone();
-
-    if current_state == State::NotStarted {
-        next_state.state = State::InProgress;
-    }
 
     if let Some(game_time) = &mut game_state.game_time {
         update_game_time(game_time, &mut next_state);

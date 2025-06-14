@@ -5,7 +5,7 @@ use super::{
     piece::{Color, Piece},
 };
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum GameEnding {
     Checkmate(Color),
@@ -18,7 +18,7 @@ pub enum GameEnding {
     DrawByMutualAgreement,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum State {
     NotStarted,
