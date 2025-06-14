@@ -150,6 +150,7 @@ export const Game: React.FC<GameProps> = ({
   }, [
     bothPlayersReady,
     gameId,
+    gameIsFinished,
     gameIsInProgress,
     gameIsTimed,
     isTurn,
