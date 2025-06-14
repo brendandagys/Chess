@@ -66,6 +66,8 @@ export const Game: React.FC<GameProps> = ({
   const playerColor =
     connectionId === gameRecord.white_connection_id ? Color.White : Color.Black;
 
+  const opponentColor = getOppositePlayerColor(playerColor);
+
   const isTurn = playerColor === currentGameState.currentTurn;
 
   const viewedGameState = gameState.history[historyIndex];
@@ -86,8 +88,7 @@ export const Game: React.FC<GameProps> = ({
       : viewedGameState.capturedPieces.whitePoints -
         viewedGameState.capturedPieces.blackPoints;
 
-  const opponentCapturedPieces =
-    viewedGameState.capturedPieces[getOppositePlayerColor(playerColor)];
+  const opponentCapturedPieces = viewedGameState.capturedPieces[opponentColor];
 
   const gameIsTimed = gameState.gameTime !== null;
 
@@ -159,6 +160,8 @@ export const Game: React.FC<GameProps> = ({
     sendWebSocketMessage,
   ]);
 
+  const [playerOutOfTime, setPlayerOutOfTime] = useState<Color | null>(null);
+
   const stateOfGame = useMemo(() => {
     if (gameIsInProgress) {
       return currentGameState.inCheck
@@ -194,6 +197,7 @@ export const Game: React.FC<GameProps> = ({
       if (gameEndingType === GameEndingType.OutOfTime) {
         const losingColor = (gameEnding as GameEndingOutOfTime)[gameEndingType];
         const winningColor = getOppositePlayerColor(losingColor);
+        setPlayerOutOfTime(losingColor);
 
         return playerColor === winningColor
           ? [
@@ -276,7 +280,13 @@ export const Game: React.FC<GameProps> = ({
             pointsLead={opponentPointsLead}
           />
 
-          {gameIsTimed && <PlayerTime secondsLeft={opponentSecondsLeft ?? 0} />}
+          {gameIsTimed && (
+            <PlayerTime
+              secondsLeft={
+                playerOutOfTime === opponentColor ? 0 : opponentSecondsLeft ?? 0
+              }
+            />
+          )}
         </div>
 
         <div
