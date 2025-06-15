@@ -163,12 +163,13 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     12: "L",
   };
 
-  /**
-   * Get position label for a square from its rank, file, and player color.
-   * Labels show only for the bottom-left-most square from the player's POV.
-   * Also returns whether the current square is the bottom-left-most square.
-   */
-  const getPositionLabel = (rank: number, file: number): [string, boolean] => {
+  interface PositionLabel {
+    rankLabel: string;
+    fileLabel: string;
+  }
+
+  /** Get rank and file labels for a square. */
+  const getPositionLabel = (rank: number, file: number): PositionLabel => {
     const isLeftMostFile =
       (playerColor === Color.Black && file === numFiles) ||
       (playerColor === Color.White && file === 1);
@@ -177,19 +178,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       (playerColor === Color.Black && rank === numRanks) ||
       (playerColor === Color.White && rank === 1);
 
-    if (isLeftMostFile && isBottomRank) {
-      return [`${rankNumberToLetterMap[file]}${rank}`, true];
-    }
-
-    if (isLeftMostFile) {
-      return [`${rank}`, false];
-    }
-
-    if (isBottomRank) {
-      return [rankNumberToLetterMap[file], false];
-    }
-
-    return ["", false];
+    return {
+      rankLabel: isLeftMostFile ? rankNumberToLetterMap[rank] : "",
+      fileLabel: isBottomRank ? `${file}` : "",
+    };
   };
 
   return (
@@ -203,10 +195,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
               const file =
                 1 + (shouldRotate ? numFiles - colIndex - 1 : colIndex);
 
-              const [positionLabel, isBottomLeftMost] = getPositionLabel(
-                rank,
-                file
-              );
+              const { rankLabel, fileLabel } = getPositionLabel(rank, file);
 
               return (
                 <div
@@ -231,13 +220,15 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                   }}
                 >
                   {
-                    <span
-                      className={`rank-file-label${
-                        isBottomLeftMost ? " rank-file-label--corner" : ""
-                      }`}
-                    >
-                      {positionLabel}
-                    </span>
+                    <>
+                      <span className="position-label rank-label">
+                        {rankLabel}
+                      </span>
+
+                      <span className="position-label file-label">
+                        {fileLabel}
+                      </span>
+                    </>
                   }
                   {piece ? (
                     <img

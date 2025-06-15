@@ -23,36 +23,54 @@
   height: 100%;
 }
 
-.board .square .rank-file-label {
+.board .square .position-label {
   position: absolute;
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   font-weight: 500;
+}
+
+.board .square .rank-label {
   left: 2px;
+  top: 1px;
+}
+
+.board .square .file-label {
+  right: 3px;
   bottom: 1px;
 }
 
-@media (max-width: 450px) {
-  .board .square .rank-file-label {
+@media (max-width: 700px) {
+  .board .square .position-label {
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .board .square .position-label {
+    font-size: 0.55rem;
+  }
+}
+
+@media (max-width: 500px) {
+  .board .square .position-label {
     font-size: 0.5rem;
+  }
+
+  .board .square .file-label {
+    right: 2px;
   }
 }
 
 @media (max-width: 400px) {
-  .board .square .rank-file-label {
+  .board .square .position-label {
     font-size: 0.45rem;
-    left: 1px;
   }
 }
 
 @media (max-width: 375px) {
-  .board .square .rank-file-label {
+  .board .square .position-label {
     font-size: 0.4rem;
   }
-}
-
-.board .square .rank-file-label--corner {
-  left: 1px;
-  bottom: 0;
 }
 
 .piece {
