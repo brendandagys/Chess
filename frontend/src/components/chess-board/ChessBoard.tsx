@@ -247,10 +247,14 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                       data-rank={rank}
                       data-file={file}
                       onDragStart={(e) => {
-                        handleDragStart(e, piece);
+                        if (piece.color === playerColor) {
+                          handleDragStart(e, piece);
+                        }
                       }}
                       onTouchMove={(e) => {
-                        handleDragStart(e, piece);
+                        if (piece.color === playerColor) {
+                          handleDragStart(e, piece);
+                        }
                       }}
                     />
                   ) : (
