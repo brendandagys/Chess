@@ -35,6 +35,14 @@ pub struct CapturedPieces {
     pub black_points: u16,
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ColorPreference {
+    White,
+    Black,
+    Random,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameTime {
@@ -122,7 +130,7 @@ pub enum PlayerAction {
         username: String,
         game_id: Option<String>,
         board_setup: Option<BoardSetup>,
-        color_preference: Option<Color>,
+        color_preference: ColorPreference,
         seconds_per_player: Option<usize>,
     },
     #[serde(rename_all = "camelCase")]

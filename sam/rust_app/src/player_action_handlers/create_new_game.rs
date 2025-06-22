@@ -1,12 +1,12 @@
 use aws_lambda_events::apigw::ApiGatewayProxyResponse;
 use aws_sdk_dynamodb::Client;
 use chess::types::board::BoardSetup;
+use chess::types::game::ColorPreference;
 use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
 
 use chess::helpers::game::{create_game, get_game, save_game};
 use chess::helpers::user::{create_user_game, save_user_record};
-use chess::types::piece::Color;
 use chess::utils::api::build_response;
 
 pub async fn create_new_game(
@@ -17,7 +17,7 @@ pub async fn create_new_game(
     username: &str,
     game_id: Option<&str>,
     board_setup: Option<BoardSetup>,
-    color_preference: Option<Color>,
+    color_preference: ColorPreference,
     seconds_per_player: Option<usize>,
 ) -> Result<ApiGatewayProxyResponse, Error> {
     if username.trim().is_empty() {

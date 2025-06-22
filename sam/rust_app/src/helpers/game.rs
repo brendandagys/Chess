@@ -3,7 +3,7 @@ use crate::types::api::{ApiMessage, ApiResponse};
 use crate::types::board::{Board, BoardSetup, Position};
 use crate::types::dynamo_db::GameRecord;
 use crate::types::game::{
-    GameEnding, GameState, GameStateAtPointInTime, GameTime, PlayerMove, State,
+    ColorPreference, GameEnding, GameState, GameStateAtPointInTime, GameTime, PlayerMove, State,
 };
 use crate::types::piece::{Color, Piece};
 use crate::utils::api_gateway::post_to_connection;
@@ -40,7 +40,7 @@ pub async fn get_game(
 ///
 /// This tuple will be applied to a `GameRecord` struct
 pub fn determine_player_color(
-    color_preference: Option<Color>,
+    color_preference: ColorPreference,
     username: &str,
     connection_id: &str,
 ) -> (
@@ -50,18 +50,41 @@ pub fn determine_player_color(
     Option<String>,
 ) {
     match color_preference {
-        Some(Color::Black) => (
+        ColorPreference::Black => (
             None,
             None,
             Some(connection_id.to_string()),
             Some(username.to_string()),
         ),
-        _ => (
+        ColorPreference::White => (
             Some(connection_id.to_string()),
             Some(username.to_string()),
             None,
             None,
         ),
+        ColorPreference::Random => {
+            let random_value = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .subsec_nanos()
+                % 2;
+
+            if random_value == 0 {
+                (
+                    Some(connection_id.to_string()),
+                    Some(username.to_string()),
+                    None,
+                    None,
+                )
+            } else {
+                (
+                    None,
+                    None,
+                    Some(connection_id.to_string()),
+                    Some(username.to_string()),
+                )
+            }
+        }
     }
 }
 
@@ -148,7 +171,7 @@ pub fn create_game(
     game_id: Option<&str>,
     username: &str,
     board_setup: Option<BoardSetup>,
-    color_preference: Option<Color>,
+    color_preference: ColorPreference,
     seconds_per_player: Option<usize>,
     connection_id: &str,
 ) -> GameRecord {

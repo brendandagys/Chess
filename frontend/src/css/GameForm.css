@@ -93,7 +93,8 @@
   transform: translateX(29px);
 }
 
-.board-setup-select {
+.board-setup-select,
+.color-preference-select {
   padding: 0 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;

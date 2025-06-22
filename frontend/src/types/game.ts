@@ -57,6 +57,12 @@ export interface CapturedPieces {
   blackPoints: number;
 }
 
+export enum ColorPreference {
+  White = 'white',
+  Black = 'black',
+  Random = 'random',
+}
+
 export enum TimeOption {
   OneMinute = 60,
   ThreeMinutes = 180,
@@ -110,7 +116,7 @@ interface PlayerActionCreateGame {
     username: string;
     gameId: string | null;
     boardSetup: BoardSetup | null;
-    colorPreference: Color | null;
+    colorPreference: ColorPreference;
   };
 }
 

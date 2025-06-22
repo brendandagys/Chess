@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { API_ROUTE } from "../constants";
-import { PlayerActionName, TimeOption } from "../types/game";
+import { ColorPreference, PlayerActionName, TimeOption } from "../types/game";
 import { GameRequest } from "../types/api";
 import { FormToShow } from "../types/sharedComponentTypes";
 import { BoardSetup, BoardSetupName } from "../types/board";
-import { Color } from "../types/piece";
 
 import "../css/GameForm.css";
 
@@ -45,7 +44,9 @@ export const GameForm: React.FC<GameFormProps> = ({
     files: "8",
   });
 
-  const [colorPreference, setColorPreference] = useState<Color>(Color.White);
+  const [colorPreference, setColorPreference] = useState<ColorPreference>(
+    ColorPreference.Random
+  );
 
   const getBoardSetup = (name: BoardSetupName): BoardSetup => {
     switch (name) {
@@ -114,20 +115,19 @@ export const GameForm: React.FC<GameFormProps> = ({
       {mode === FormToShow.Create && (
         <div className="game-preferences-container">
           <div className="game-preferences-form-component">
-            <span className="label">Play as {colorPreference}</span>
+            <span className="label">Color</span>
 
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={colorPreference === Color.White}
-                onChange={() => {
-                  setColorPreference((old) =>
-                    old === Color.White ? Color.Black : Color.White
-                  );
-                }}
-              />
-              <span className="slider"></span>
-            </label>
+            <select
+              className="color-preference-select"
+              value={colorPreference}
+              onChange={(e) => {
+                setColorPreference(e.target.value as ColorPreference);
+              }}
+            >
+              <option value={ColorPreference.Random}>Random</option>
+              <option value={ColorPreference.White}>White</option>
+              <option value={ColorPreference.Black}>Black</option>
+            </select>
           </div>
 
           <div className="game-preferences-form-component">
