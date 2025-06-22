@@ -43,7 +43,6 @@ export const decodePiece = (code: number): Piece | null => {
   return {
     pieceType,
     color,
-    lastGameMove: null, // Last game move will be set later
   };
 };
 
@@ -52,7 +51,7 @@ export const decodePiece = (code: number): Piece | null => {
 // The back-end must also provide dimensions and move history for each piece.
 export const getBoardFromBase64 = (
   compactBoard: CompactBoard): ExpandedBoard["squares"] => {
-  const { squares: base64, dimensions, lastGameMoves } = compactBoard;
+  const { squares: base64, dimensions } = compactBoard;
 
   const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 
@@ -64,13 +63,7 @@ export const getBoardFromBase64 = (
 
     for (let file = 0; file < dimensions.files; file++) {
       const index = rank * dimensions.files + file;
-
       const piece = decodePiece(bytes[index]);
-
-      if (piece) {
-        piece.lastGameMove = lastGameMoves[index];
-      }
-
       row.push(piece);
     }
 
