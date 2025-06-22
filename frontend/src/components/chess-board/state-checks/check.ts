@@ -1,9 +1,9 @@
+import { ExpandedGameStateAtPointInTime } from "@src/types/board";
 import { playMoveCheckSound } from "../../../sounds";
-import { GameStateAtPointInTime } from "../../../types/game";
 
 const didStateChange = (
-  one: GameStateAtPointInTime,
-  two: GameStateAtPointInTime,
+  one: ExpandedGameStateAtPointInTime,
+  two: ExpandedGameStateAtPointInTime,
 ) => {
   return !one.inCheck && !!two.inCheck;
 };

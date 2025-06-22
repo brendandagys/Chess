@@ -1,10 +1,10 @@
+import { ExpandedGameStateAtPointInTime } from "@src/types/board";
 import { playMoveOpponentSound } from "../../../sounds";
-import { GameStateAtPointInTime } from "../../../types/game";
 import { Color } from "../../../types/piece";
 
 const didStateChange = (
-  one: GameStateAtPointInTime,
-  two: GameStateAtPointInTime,
+  one: ExpandedGameStateAtPointInTime,
+  two: ExpandedGameStateAtPointInTime,
   playerColor: Color,
 ) => {
   return (

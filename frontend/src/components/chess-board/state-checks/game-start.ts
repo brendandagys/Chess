@@ -1,9 +1,10 @@
+import { ExpandedGameStateAtPointInTime } from "@src/types/board";
 import { playGameStartSound } from "../../../sounds";
-import { GameStateAtPointInTime, GameStateType } from "../../../types/game";
+import { GameStateType } from "../../../types/game";
 
 const didStateChange = (
-  one: GameStateAtPointInTime,
-  two: GameStateAtPointInTime,
+  one: ExpandedGameStateAtPointInTime,
+  two: ExpandedGameStateAtPointInTime,
 ) => {
   return (
     one.state === GameStateType.NotStarted

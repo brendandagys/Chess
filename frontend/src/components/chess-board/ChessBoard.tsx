@@ -3,8 +3,8 @@ import { imageMap } from "@src/images";
 import { rotateMatrix180Degrees } from "@src/utils";
 import { useDrag } from "@src/hooks/useDrag";
 import { GameRequest } from "@src/types/api";
-import { GameState, PlayerActionName } from "@src/types/game";
-import { Position } from "@src/types/board";
+import { PlayerActionName } from "@src/types/game";
+import { ExpandedGameStateAtPointInTime, Position } from "@src/types/board";
 import { Color, Piece } from "@src/types/piece";
 import { API_ROUTE } from "@src/constants";
 import { stateChecks } from "@src/components/chess-board/state-checks";
@@ -12,7 +12,7 @@ import { stateChecks } from "@src/components/chess-board/state-checks";
 import "@src/css/ChessBoard.css";
 
 interface ChessBoardProps {
-  gameState: GameState;
+  expandedHistory: ExpandedGameStateAtPointInTime[];
   playerColor: Color;
   gameId: string;
   sendWebSocketMessage: (action: GameRequest) => void;
@@ -20,7 +20,7 @@ interface ChessBoardProps {
 }
 
 export const ChessBoard: React.FC<ChessBoardProps> = ({
-  gameState,
+  expandedHistory,
   playerColor,
   gameId,
   sendWebSocketMessage,
@@ -28,7 +28,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 }) => {
   const shouldRotate = playerColor === Color.Black;
 
-  const viewedBoardState = gameState.history[historyIndex].board;
+  const viewedBoardState = expandedHistory[historyIndex].board;
   const viewedBoardStateSquares = viewedBoardState.squares;
 
   const boardForRendering = shouldRotate
@@ -40,7 +40,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   const [selectedSquare, setSelectedSquare] = useState<Position | null>(null);
 
-  const isViewingLatestBoard = historyIndex === gameState.history.length - 1;
+  const isViewingLatestBoard = historyIndex === expandedHistory.length - 1;
 
   const prevHistoryIndex = useRef<number | null>(null);
 
@@ -49,8 +49,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       prevHistoryIndex.current !== null &&
       prevHistoryIndex.current !== historyIndex
     ) {
-      const one = gameState.history[prevHistoryIndex.current];
-      const two = gameState.history[historyIndex];
+      const one = expandedHistory[prevHistoryIndex.current];
+      const two = expandedHistory[historyIndex];
 
       for (const { didStateChange, action } of stateChecks) {
         if (didStateChange(one, two, playerColor)) {
@@ -61,7 +61,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     }
 
     prevHistoryIndex.current = historyIndex;
-  }, [historyIndex, gameState.history, playerColor]);
+  }, [historyIndex, expandedHistory, playerColor]);
 
   const [draggingPiece, handleDragStart] = useDrag(
     gameId,
@@ -122,7 +122,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     const squares: Position[] = [];
 
     if (historyIndex > 0) {
-      const one = gameState.history[historyIndex - 1].board.squares;
+      const one = expandedHistory[historyIndex - 1].board.squares;
       const two = viewedBoardStateSquares;
 
       two.forEach((row, rowIndex) => {
@@ -146,7 +146,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     }
 
     return squares;
-  }, [historyIndex, gameState.history, viewedBoardStateSquares, numRanks]);
+  }, [historyIndex, expandedHistory, viewedBoardStateSquares, numRanks]);
 
   const rankNumberToLetterMap: Record<number, string> = {
     1: "A",
@@ -183,6 +183,25 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       fileLabel: isBottomRank ? `${file}` : "",
     };
   };
+
+  useEffect(() => {
+    if (selectedSquare) {
+      const pieceOnSelectedSquare =
+        viewedBoardStateSquares[numRanks - selectedSquare.rank][
+          selectedSquare.file - 1
+        ];
+
+      if (pieceOnSelectedSquare?.color !== playerColor) {
+        setSelectedSquare(null);
+      }
+    }
+  }, [
+    historyIndex,
+    numRanks,
+    playerColor,
+    selectedSquare,
+    viewedBoardStateSquares,
+  ]);
 
   return (
     <div className={`board rank-count-${numRanks % 2 ? "odd" : "even"}`}>

@@ -1,5 +1,5 @@
 use rand::seq::IndexedRandom;
-use serde::{Deserialize, Serialize};
+use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
 use super::{
     game::PlayerMove,
@@ -32,8 +32,8 @@ pub struct Position {
     pub file: File,
 }
 
-#[derive(Deserialize)]
-pub struct BoardSetupDimensions {
+#[derive(Serialize, Deserialize)]
+pub struct BoardDimensions {
     pub ranks: usize,
     pub files: usize,
 }
@@ -42,8 +42,8 @@ pub struct BoardSetupDimensions {
 #[serde(rename_all = "kebab-case")]
 pub enum BoardSetup {
     Standard,
-    Random(BoardSetupDimensions),
-    KingAndOneOtherPiece(BoardSetupDimensions),
+    Random(BoardDimensions),
+    KingAndOneOtherPiece(BoardDimensions),
 }
 
 impl BoardSetup {
@@ -165,11 +165,150 @@ impl BoardSetup {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct Board {
-    // Indexes follow the chess board labels, minus one
     pub squares: Vec<Vec<Option<Piece>>>,
     pub move_count: usize,
+}
+
+/// Matches the `CompactBoard` type on the front-end.
+impl Serialize for Board {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let rank_count = self.squares.len();
+        let file_count = self.squares.first().map_or(0, |r| r.len());
+
+        let bitboards = crate::helpers::board::Bitboards::from_board(self.squares.clone());
+        let base64 = bitboards.to_base64();
+
+        let last_game_moves: Vec<Option<usize>> = self
+            .squares
+            .iter()
+            .rev()
+            .flat_map(|row| {
+                row.iter()
+                    .map(|square| square.as_ref().and_then(|p| p.last_game_move))
+            })
+            .collect();
+
+        let mut state = serializer.serialize_struct("Board", 4)?;
+
+        state.serialize_field("squares", &base64)?;
+        state.serialize_field("moveCount", &self.move_count)?;
+        state.serialize_field(
+            "dimensions",
+            &BoardDimensions {
+                ranks: rank_count,
+                files: file_count,
+            },
+        )?;
+        state.serialize_field("lastGameMoves", &last_game_moves)?;
+
+        state.end()
+    }
+}
+
+use serde::de::{self, Deserializer, MapAccess, Visitor};
+use std::fmt;
+
+impl<'de> Deserialize<'de> for Board {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[allow(dead_code)]
+        #[derive(Deserialize)]
+        struct BoardHelper {
+            squares: String,
+            move_count: Option<usize>,
+            dimensions: BoardDimensions,
+            last_game_moves: Option<Vec<Vec<Option<usize>>>>,
+        }
+
+        struct BoardVisitor;
+        impl<'de> Visitor<'de> for BoardVisitor {
+            type Value = Board;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str(
+                    "struct Board with base64 squares, move_count, dimensions, and last_game_moves",
+                )
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<Board, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut squares = None;
+                let mut move_count = None;
+                let mut dimensions = None;
+                let mut last_game_moves: Option<Vec<Option<usize>>> = None;
+
+                while let Some(key) = map.next_key::<String>()? {
+                    match key.as_str() {
+                        "squares" => {
+                            squares = Some(map.next_value()?);
+                        }
+                        "moveCount" => {
+                            move_count = Some(map.next_value()?);
+                        }
+                        "dimensions" => {
+                            dimensions = Some(map.next_value()?);
+                        }
+                        "lastGameMoves" => {
+                            last_game_moves = Some(map.next_value()?);
+                        }
+                        _ => {
+                            let _: de::IgnoredAny = map.next_value()?;
+                        }
+                    }
+                }
+
+                let squares: String = squares.ok_or_else(|| de::Error::missing_field("squares"))?;
+
+                let dimensions: BoardDimensions =
+                    dimensions.ok_or_else(|| de::Error::missing_field("dimensions"))?;
+
+                let move_count = move_count.unwrap_or(0);
+
+                let ranks = dimensions.ranks;
+                let files = dimensions.files;
+
+                let bitboards =
+                    crate::helpers::board::Bitboards::from_base64(&squares, ranks, files);
+
+                let mut squares = bitboards.to_board();
+
+                if let Some(last_game_moves) = last_game_moves {
+                    let mut index = 0;
+
+                    for rank in (0..ranks).rev() {
+                        for file in 0..files {
+                            if let Some(piece) = squares[rank][file].as_mut() {
+                                piece.last_game_move =
+                                    last_game_moves.get(index).copied().flatten();
+                            }
+
+                            index += 1;
+                        }
+                    }
+                }
+
+                Ok(Board {
+                    squares,
+                    move_count,
+                })
+            }
+        }
+
+        deserializer.deserialize_struct(
+            "Board",
+            &["squares", "move_count", "dimensions", "last_game_moves"],
+            BoardVisitor,
+        )
+    }
 }
 
 impl Board {

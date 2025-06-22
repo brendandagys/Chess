@@ -18,5 +18,5 @@ export enum PieceType {
 export interface Piece {
   pieceType: PieceType;
   color: Color;
-  moveCount: number;
+  lastGameMove: number | null;
 }

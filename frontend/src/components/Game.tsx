@@ -9,6 +9,8 @@ import { Color, getOppositePlayerColor } from "@src/types/piece";
 import { ChessBoard } from "@src/components/chess-board/ChessBoard";
 import { PlayerTime } from "@src/components/PlayerTime";
 
+import { getBoardFromBase64 } from "@src/utils";
+import { ExpandedGameStateAtPointInTime } from "@src/types/board";
 import { GameRequest } from "@src/types/api";
 import {
   GameEndingCheckmate,
@@ -44,9 +46,19 @@ export const Game: React.FC<GameProps> = ({
   const gameId = gameRecord.game_id;
 
   const gameState = gameRecord.game_state;
-  const currentGameState = getLast(gameState.history);
+
+  const history: ExpandedGameStateAtPointInTime[] = gameState.history.map(
+    (state) => ({
+      ...state,
+      board: { squares: getBoardFromBase64(state.board) },
+    })
+  );
+
+  const gameTime = gameState.gameTime;
+
+  const currentGameState = getLast(history);
   const gameStateType = currentGameState.state;
-  const numStates = gameState.history.length;
+  const numStates = history.length;
 
   const [historyIndex, setHistoryIndex] = useState(numStates - 1);
 
@@ -70,7 +82,7 @@ export const Game: React.FC<GameProps> = ({
 
   const isTurn = playerColor === currentGameState.currentTurn;
 
-  const viewedGameState = gameState.history[historyIndex];
+  const viewedGameState = history[historyIndex];
 
   const playerCapturedPieces = viewedGameState.capturedPieces[playerColor];
 
@@ -90,25 +102,21 @@ export const Game: React.FC<GameProps> = ({
 
   const opponentCapturedPieces = viewedGameState.capturedPieces[opponentColor];
 
-  const gameIsTimed = gameState.gameTime !== null;
+  const gameIsTimed = gameTime !== null;
 
   const [playerSecondsLeft, setPlayerSecondsLeft] = useState(
     gameIsTimed
       ? playerColor === Color.White
-        ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          gameState.gameTime!.whiteSecondsLeft
-        : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          gameState.gameTime!.blackSecondsLeft
+        ? gameTime.whiteSecondsLeft
+        : gameTime.blackSecondsLeft
       : null
   );
 
   const [opponentSecondsLeft, setOpponentSecondsLeft] = useState(
     gameIsTimed
       ? playerColor === Color.White
-        ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          gameState.gameTime!.blackSecondsLeft
-        : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          gameState.gameTime!.whiteSecondsLeft
+        ? gameTime.blackSecondsLeft
+        : gameTime.whiteSecondsLeft
       : null
   );
 
@@ -293,7 +301,7 @@ export const Game: React.FC<GameProps> = ({
           className={`chess-board-container ${isTurn ? "is-player-turn" : ""}`}
         >
           <ChessBoard
-            gameState={gameState}
+            expandedHistory={history}
             playerColor={playerColor}
             gameId={gameId}
             sendWebSocketMessage={sendWebSocketMessage}

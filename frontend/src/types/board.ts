@@ -1,6 +1,7 @@
 import { Piece } from "@src/types/piece";
+import { GameStateAtPointInTime } from "./game";
 
-// 0-indexed
+// 1-indexed on front-end!
 type Rank = number;
 type File = number;
 
@@ -9,7 +10,7 @@ export interface Position {
   file: File;
 }
 
-interface BoardSetupDimensions {
+interface BoardDimensions {
   ranks: number;
   files: number;
 }
@@ -23,11 +24,11 @@ export enum BoardSetupName {
 export type BoardSetupStandard = 'standard';
 
 interface BoardSetupRandom {
-  [BoardSetupName.Random]: BoardSetupDimensions;
+  [BoardSetupName.Random]: BoardDimensions;
 }
 
 interface BoardSetupKingAndOneOtherPiece {
-  [BoardSetupName.KingAndOneOtherPiece]: BoardSetupDimensions;
+  [BoardSetupName.KingAndOneOtherPiece]: BoardDimensions;
 }
 
 export type BoardSetup =
@@ -35,6 +36,21 @@ export type BoardSetup =
   | BoardSetupRandom
   | BoardSetupKingAndOneOtherPiece;
 
-export interface Board {
-  squares: (Piece | null)[][];
+export interface CompactBoard {
+  squares: string; // Base64-encoded string of pieces
+  moveCount: number;
+  dimensions: BoardDimensions;
+  lastGameMoves: (number | null)[];
 }
+
+type Squares = (Piece | null)[][];
+
+export interface ExpandedBoard {
+  squares: Squares;
+  // moveCount: number;
+}
+
+export type ExpandedGameStateAtPointInTime = Omit<
+  GameStateAtPointInTime, "board"> & {
+    board: ExpandedBoard;
+  };

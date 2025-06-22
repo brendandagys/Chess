@@ -49,9 +49,11 @@ export const App: React.FC = () => {
   const scrollTo = useScroll();
 
   const onWebSocketMessage = useCallback(
-    (response: ApiResponse<unknown>) => {
-      const isGameRecord = Object.keys(response.data ?? {}).includes("game_id");
-      const gameRecord = isGameRecord ? (response.data as GameRecord) : null;
+    (response: ApiResponse<GameRecord | null>) => {
+      const isGameRecord =
+        response.data && Object.keys(response.data).includes("game_id");
+
+      const gameRecord = isGameRecord ? response.data : null;
 
       if (gameRecord) {
         setGameRecords((old) => {

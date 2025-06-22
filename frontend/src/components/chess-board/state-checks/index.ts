@@ -1,4 +1,4 @@
-import { GameStateAtPointInTime } from "@src/types/game";
+import { ExpandedGameStateAtPointInTime } from "@src/types/board";
 import { Color } from "@src/types/piece";
 
 import { moveSelf } from "@src/components/chess-board/state-checks/move-self";
@@ -13,8 +13,8 @@ import { castle } from "@src/components/chess-board/state-checks/castle";
 
 interface StateCheck {
   didStateChange: (
-    old: GameStateAtPointInTime,
-    cur: GameStateAtPointInTime,
+    old: ExpandedGameStateAtPointInTime,
+    cur: ExpandedGameStateAtPointInTime,
     playerColor: Color,
   ) => boolean;
   action: () => void;

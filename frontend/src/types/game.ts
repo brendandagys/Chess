@@ -1,4 +1,4 @@
-import { Board, BoardSetup, Position } from "@src/types/board";
+import { BoardSetup, CompactBoard, Position } from "@src/types/board";
 import { Color, Piece } from "@src/types/piece";
 
 export enum GameEndingType {
@@ -79,7 +79,7 @@ export interface GameStateAtPointInTime {
   state: State;
   currentTurn: Color;
   inCheck: Color | null;
-  board: Board;
+  board: CompactBoard;
   capturedPieces: CapturedPieces;
 }
 

@@ -1,12 +1,12 @@
+import { ExpandedGameStateAtPointInTime } from "@src/types/board";
 import { playPromoteSound } from "../../../sounds";
-import { GameStateAtPointInTime } from "../../../types/game";
 import { PieceType } from "../../../types/piece";
 
 const didStateChange = (
-  one: GameStateAtPointInTime,
-  two: GameStateAtPointInTime,
+  one: ExpandedGameStateAtPointInTime,
+  two: ExpandedGameStateAtPointInTime,
 ) => {
-  const getQueenCount = (gameState: GameStateAtPointInTime) => (
+  const getQueenCount = (gameState: ExpandedGameStateAtPointInTime) => (
     gameState.board.squares.reduce((acc, row) => {
       return (
         acc

@@ -44,12 +44,12 @@ impl std::str::FromStr for Color {
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum PieceType {
-    King,
-    Queen,
-    Rook,
-    Bishop,
-    Knight,
     Pawn,
+    Knight,
+    Bishop,
+    Rook,
+    Queen,
+    King,
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]

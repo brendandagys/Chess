@@ -21,5 +21,5 @@ export interface ApiResponse<T> {
   statusCode: number;
   connectionId: string | null;
   messages: ApiMessage[];
-  data: T | null;
+  data: T;
 }

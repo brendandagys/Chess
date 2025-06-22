@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ApiResponse, GameRequest } from "@src/types/api";
-import { PlayerActionName } from "@src/types/game";
+import { GameRecord, PlayerActionName } from "@src/types/game";
 import { API_ROUTE } from "@src/constants";
 
 export const useWebSocket = (
   url: string,
-  onMessage: (response: ApiResponse<unknown>) => void
+  onMessage: (response: ApiResponse<GameRecord | null>) => void
 ) => {
   const websocket = useRef<WebSocket | null>(null);
   const [isWebsocketOpen, setIsWebsocketOpen] = useState(false);
@@ -21,7 +21,9 @@ export const useWebSocket = (
     };
 
     websocket.current.onmessage = (event: MessageEvent) => {
-      const response = JSON.parse(event.data as string) as ApiResponse<unknown>;
+      const response = JSON.parse(
+        event.data as string
+      ) as ApiResponse<GameRecord | null>;
       console.info("Received message:", response);
       setConnectionId(response.connectionId);
       onMessage(response);

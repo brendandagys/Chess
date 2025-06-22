@@ -1,11 +1,11 @@
 /* eslint-disable max-len */
+import { ExpandedGameStateAtPointInTime } from "@src/types/board";
 import { playCastleSound } from "../../../sounds";
-import { GameStateAtPointInTime } from "../../../types/game";
 import { PieceType } from "../../../types/piece";
 
 const didStateChange = (
-  one: GameStateAtPointInTime,
-  two: GameStateAtPointInTime,
+  one: ExpandedGameStateAtPointInTime,
+  two: ExpandedGameStateAtPointInTime,
 ) => {
   const numRows = two.board.squares.length;
   const numCols = two.board.squares[0].length;
