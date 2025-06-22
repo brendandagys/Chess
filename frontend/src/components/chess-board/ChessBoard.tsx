@@ -17,6 +17,8 @@ interface ChessBoardProps {
   gameId: string;
   sendWebSocketMessage: (action: GameRequest) => void;
   historyIndex: number;
+  isViewingLatestBoard: boolean;
+  gameOverMessage: string | null;
 }
 
 export const ChessBoard: React.FC<ChessBoardProps> = ({
@@ -25,6 +27,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   gameId,
   sendWebSocketMessage,
   historyIndex,
+  isViewingLatestBoard,
+  gameOverMessage,
 }) => {
   const shouldRotate = playerColor === Color.Black;
 
@@ -39,8 +43,6 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const numFiles = viewedBoardStateSquares[0].length;
 
   const [selectedSquare, setSelectedSquare] = useState<Position | null>(null);
-
-  const isViewingLatestBoard = historyIndex === expandedHistory.length - 1;
 
   const prevHistoryIndex = useRef<number | null>(null);
 
@@ -316,6 +318,13 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
             opacity: 1,
           }}
         />
+      )}
+
+      {/* Game Over Overlay */}
+      {gameOverMessage !== null && isViewingLatestBoard && (
+        <div className="game-over-overlay">
+          <div className="game-over-message">{gameOverMessage}</div>
+        </div>
       )}
     </div>
   );

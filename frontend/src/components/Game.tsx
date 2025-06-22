@@ -232,6 +232,11 @@ export const Game: React.FC<GameProps> = ({
       ? gameRecord.black_username
       : gameRecord.white_username;
 
+  const isViewingLatestBoard = historyIndex === numStates - 1;
+
+  const gameOverMessage =
+    gameIsFinished && isViewingLatestBoard ? stateOfGame[0] : null;
+
   return (
     <div id={`game-${gameId}`} className="game-container">
       <div className="game-id-container">
@@ -306,6 +311,8 @@ export const Game: React.FC<GameProps> = ({
             gameId={gameId}
             sendWebSocketMessage={sendWebSocketMessage}
             historyIndex={historyIndex}
+            isViewingLatestBoard={isViewingLatestBoard}
+            gameOverMessage={gameOverMessage}
           />
         </div>
 
