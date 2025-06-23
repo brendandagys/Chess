@@ -65,10 +65,12 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     prevHistoryIndex.current = historyIndex;
   }, [historyIndex, expandedHistory, playerColor]);
 
+  const disableDragging = !isViewingLatestBoard || gameOverMessage !== null;
+
   const [draggingPiece, handleDragStart] = useDrag(
     gameId,
     sendWebSocketMessage,
-    !isViewingLatestBoard
+    disableDragging
   );
 
   const pieceDiameterClass =
@@ -80,11 +82,21 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       ? "--piece-diameter-small"
       : "--piece-diameter";
 
+  useEffect(() => {
+    if (gameOverMessage) {
+      setSelectedSquare(null);
+    }
+  }, [gameOverMessage]);
+
   const onClickSquare = (
     _event: React.MouseEvent<HTMLDivElement>,
     pieceOnSquare: Piece | null,
     position: Position
   ) => {
+    if (gameOverMessage) {
+      return;
+    }
+
     if (!isViewingLatestBoard) {
       setSelectedSquare(null);
       return;
@@ -206,7 +218,11 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   ]);
 
   return (
-    <div className={`board rank-count-${numRanks % 2 ? "odd" : "even"}`}>
+    <div
+      className={`board rank-count-${numRanks % 2 ? "odd" : "even"}${
+        gameOverMessage ? " game-over" : ""
+      }`}
+    >
       {boardForRendering.map((row, rowIndex) => {
         const rank = 1 + (shouldRotate ? rowIndex : numRanks - rowIndex - 1);
 
@@ -321,7 +337,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       )}
 
       {/* Game Over Overlay */}
-      {gameOverMessage !== null && isViewingLatestBoard && (
+      {gameOverMessage && (
         <div className="game-over-overlay">
           <div className="game-over-message">{gameOverMessage}</div>
         </div>

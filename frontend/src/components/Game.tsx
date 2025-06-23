@@ -307,7 +307,7 @@ export const Game: React.FC<GameProps> = ({
         </div>
 
         <div
-          className={`chess-board-container ${isTurn ? "is-player-turn" : ""}`}
+          className={`chess-board-container${isTurn ? " is-player-turn" : ""}`}
         >
           <ChessBoard
             expandedHistory={history}

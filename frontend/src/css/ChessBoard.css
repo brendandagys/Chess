@@ -1,8 +1,11 @@
 .board {
-  position: relative;
   display: inline-block;
   max-width: 900px;
   border: 2px solid #634832;
+}
+
+.board.game-over {
+  position: relative;
 }
 
 .board-row {
