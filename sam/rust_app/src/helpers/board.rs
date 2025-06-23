@@ -1,18 +1,20 @@
-use crate::types::piece::{Color, Piece, PieceType};
-use base64::{engine::general_purpose, Engine as _};
+use crate::{
+    helpers::generic::{base64_to_bytes, bytes_to_base64},
+    types::piece::{Color, Piece, PieceType},
+};
 
 const NUM_PIECE_TYPES: usize = 12; // 6 piece types * 2 colors
 const EMPTY_PIECE: u8 = 255; // Represents an empty square in compact encoding
 
 /// Get a byte representation of a piece type for bitboard encoding.
 /// We use the piece type + color value to index into the correct bitboard.
-fn encode_piece(piece: &Piece) -> u8 {
+pub fn encode_piece(piece: &Piece) -> u8 {
     let base = piece.piece_type as u8;
     base + if piece.color == Color::Black { 6 } else { 0 }
 }
 
 /// Decode a piece type from its byte representation/bitboard index.
-fn decode_piece(piece_type_byte: usize) -> Option<Piece> {
+pub fn decode_piece(piece_type_byte: usize) -> Option<Piece> {
     if piece_type_byte >= NUM_PIECE_TYPES {
         return None;
     }
@@ -166,15 +168,12 @@ impl Bitboards {
 
     /// Serialize the bitboard into a base64 string
     pub fn to_base64(&self) -> String {
-        general_purpose::STANDARD.encode(self.to_compact_bytes())
+        bytes_to_base64(&self.to_compact_bytes())
     }
 
     /// Deserialize into a bitboard from a base64 string
     pub fn from_base64(s: &str, rank_count: usize, file_count: usize) -> Self {
-        let bytes = general_purpose::STANDARD
-            .decode(s)
-            .expect("Invalid base64 board");
-
+        let bytes = base64_to_bytes(s).expect("Invalid base64 board");
         Self::from_compact_bytes(&bytes, rank_count, file_count)
     }
 }

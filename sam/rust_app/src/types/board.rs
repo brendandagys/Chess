@@ -1,6 +1,8 @@
 use rand::seq::IndexedRandom;
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
+use crate::helpers::board::Bitboards;
+
 use super::{
     game::PlayerMove,
     piece::{Color, Piece, PieceType},
@@ -180,8 +182,7 @@ impl Serialize for Board {
         let rank_count = self.squares.len();
         let file_count = self.squares.first().map_or(0, |r| r.len());
 
-        let bitboards = crate::helpers::board::Bitboards::from_board(self.squares.clone());
-        let base64 = bitboards.to_base64();
+        let bitboards = Bitboards::from_board(self.squares.clone());
 
         let last_game_moves: Vec<Option<usize>> = self
             .squares
@@ -195,7 +196,7 @@ impl Serialize for Board {
 
         let mut state = serializer.serialize_struct("Board", 4)?;
 
-        state.serialize_field("squares", &base64)?;
+        state.serialize_field("squares", &bitboards.to_base64())?;
         state.serialize_field("moveCount", &self.move_count)?;
         state.serialize_field(
             "dimensions",
@@ -276,8 +277,7 @@ impl<'de> Deserialize<'de> for Board {
                 let ranks = dimensions.ranks;
                 let files = dimensions.files;
 
-                let bitboards =
-                    crate::helpers::board::Bitboards::from_base64(&squares, ranks, files);
+                let bitboards = Bitboards::from_base64(&squares, ranks, files);
 
                 let mut squares = bitboards.to_board();
 

@@ -47,7 +47,6 @@ type Squares = (Piece | null)[][];
 
 export interface ExpandedBoard {
   squares: Squares;
-  // moveCount: number;
 }
 
 export type ExpandedGameStateAtPointInTime = Omit<

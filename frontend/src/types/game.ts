@@ -50,7 +50,14 @@ type State =
   | StateInProgress
   | StateFinished;
 
-export interface CapturedPieces {
+export interface CompactCapturedPieces {
+  [Color.White]: string;
+  [Color.Black]: string;
+  whitePoints: number;
+  blackPoints: number;
+}
+
+export interface ExpandedCapturedPieces {
   [Color.White]: Piece[];
   [Color.Black]: Piece[];
   whitePoints: number;
@@ -86,7 +93,7 @@ export interface GameStateAtPointInTime {
   currentTurn: Color;
   inCheck: Color | null;
   board: CompactBoard;
-  capturedPieces: CapturedPieces;
+  capturedPieces: CompactCapturedPieces;
 }
 
 export interface GameState {

@@ -1,6 +1,10 @@
 import { useMemo, useState, useEffect } from "react";
 
-import { capitalizeFirstLetter, getLast } from "@src/utils";
+import {
+  capitalizeFirstLetter,
+  getCapturedPiecesFromBase64,
+  getLast,
+} from "@src/utils";
 
 import { Alert } from "@src/components/Alert";
 import { BoardHistoryControls } from "@src/components/BoardHistoryControls";
@@ -9,7 +13,7 @@ import { Color, getOppositePlayerColor } from "@src/types/piece";
 import { ChessBoard } from "@src/components/chess-board/ChessBoard";
 import { PlayerTime } from "@src/components/PlayerTime";
 
-import { getBoardFromBase64 } from "@src/utils";
+import { getSquaresFromCompactBoard } from "@src/utils";
 import { ExpandedGameStateAtPointInTime } from "@src/types/board";
 import { GameRequest } from "@src/types/api";
 import {
@@ -50,7 +54,7 @@ export const Game: React.FC<GameProps> = ({
   const history: ExpandedGameStateAtPointInTime[] = gameState.history.map(
     (state) => ({
       ...state,
-      board: { squares: getBoardFromBase64(state.board) },
+      board: { squares: getSquaresFromCompactBoard(state.board) },
     })
   );
 
@@ -84,23 +88,23 @@ export const Game: React.FC<GameProps> = ({
 
   const viewedGameState = history[historyIndex];
 
-  const playerCapturedPieces = viewedGameState.capturedPieces[playerColor];
+  const expandedCapturedPieces = getCapturedPiecesFromBase64(
+    viewedGameState.capturedPieces
+  );
+
+  const playerCapturedPieces = expandedCapturedPieces[playerColor];
 
   const playerPointsLead =
     playerColor === Color.White
-      ? viewedGameState.capturedPieces.whitePoints -
-        viewedGameState.capturedPieces.blackPoints
-      : viewedGameState.capturedPieces.blackPoints -
-        viewedGameState.capturedPieces.whitePoints;
+      ? expandedCapturedPieces.whitePoints - expandedCapturedPieces.blackPoints
+      : expandedCapturedPieces.blackPoints - expandedCapturedPieces.whitePoints;
 
   const opponentPointsLead =
     playerColor === Color.White
-      ? viewedGameState.capturedPieces.blackPoints -
-        viewedGameState.capturedPieces.whitePoints
-      : viewedGameState.capturedPieces.whitePoints -
-        viewedGameState.capturedPieces.blackPoints;
+      ? expandedCapturedPieces.blackPoints - expandedCapturedPieces.whitePoints
+      : expandedCapturedPieces.whitePoints - expandedCapturedPieces.blackPoints;
 
-  const opponentCapturedPieces = viewedGameState.capturedPieces[opponentColor];
+  const opponentCapturedPieces = expandedCapturedPieces[opponentColor];
 
   const gameIsTimed = gameTime !== null;
 

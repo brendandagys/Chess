@@ -1,5 +1,6 @@
 import { Piece, PieceType, Color } from "@src/types/piece";
 import { CompactBoard, ExpandedBoard } from "@src/types/board";
+import { CompactCapturedPieces, ExpandedCapturedPieces } from "./types/game";
 
 // Returns a new matrix, equivalent to rotating the original matrix 180 degrees
 export const rotateMatrix180Degrees = <T>(matrix: T[][]): T[][] => (
@@ -49,7 +50,7 @@ export const decodePiece = (code: number): Piece | null => {
 // Decode base64-encoded board into a 2D array of Piece | null.
 // The encoding is: 1 byte per square, 0-11 for pieces, 255 for empty.
 // The back-end must also provide dimensions and move history for each piece.
-export const getBoardFromBase64 = (
+export const getSquaresFromCompactBoard = (
   compactBoard: CompactBoard): ExpandedBoard["squares"] => {
   const { squares: base64, dimensions } = compactBoard;
 
@@ -71,4 +72,33 @@ export const getBoardFromBase64 = (
   }
 
   return board;
+};
+
+
+export const getCapturedPiecesFromBase64 = (
+  compactCapturedPieces: CompactCapturedPieces): ExpandedCapturedPieces => {
+  const {
+    [Color.White]: whiteBase64,
+    [Color.Black]: blackBase64,
+    whitePoints,
+    blackPoints
+  } = compactCapturedPieces;
+
+  const whiteBytes = Uint8Array.from(atob(whiteBase64), (c) => c.charCodeAt(0));
+  const blackBytes = Uint8Array.from(atob(blackBase64), (c) => c.charCodeAt(0));
+
+  const whitePieces: Piece[] = Array.from(whiteBytes)
+    .map((byte) => decodePiece(byte))
+    .filter((p) => p !== null);
+
+  const blackPieces: Piece[] = Array.from(blackBytes)
+    .map((byte) => decodePiece(byte))
+    .filter((p) => p !== null);
+
+  return {
+    [Color.White]: whitePieces,
+    [Color.Black]: blackPieces,
+    whitePoints,
+    blackPoints,
+  };
 };
