@@ -51,11 +51,13 @@ export const Game: React.FC<GameProps> = ({
 
   const gameState = gameRecord.game_state;
 
-  const history: ExpandedGameStateAtPointInTime[] = gameState.history.map(
-    (state) => ({
-      ...state,
-      board: { squares: getSquaresFromCompactBoard(state.board) },
-    })
+  const history: ExpandedGameStateAtPointInTime[] = useMemo(
+    () =>
+      gameState.history.map((state) => ({
+        ...state,
+        board: { squares: getSquaresFromCompactBoard(state.board) },
+      })),
+    [gameState.history]
   );
 
   const gameTime = gameState.gameTime;
@@ -88,8 +90,9 @@ export const Game: React.FC<GameProps> = ({
 
   const viewedGameState = history[historyIndex];
 
-  const expandedCapturedPieces = getCapturedPiecesFromBase64(
-    viewedGameState.capturedPieces
+  const expandedCapturedPieces = useMemo(
+    () => getCapturedPiecesFromBase64(viewedGameState.capturedPieces),
+    [viewedGameState.capturedPieces]
   );
 
   const playerCapturedPieces = expandedCapturedPieces[playerColor];
