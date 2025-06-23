@@ -7,7 +7,8 @@ use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
 
 use chess::helpers::game::{
-    assign_player_to_remaining_slot, get_game, notify_other_player_about_game_update, save_game,
+    assign_player_to_existing_or_remaining_slot, get_game, notify_other_player_about_game_update,
+    save_game,
 };
 use chess::helpers::user::{create_user_game, get_user_game, save_user_record};
 use chess::utils::api::build_response;
@@ -62,9 +63,11 @@ pub async fn join_game(
                 existing_game.game_id
             );
 
-            if let Err(err) =
-                assign_player_to_remaining_slot(&mut existing_game, username, connection_id)
-            {
+            if let Err(err) = assign_player_to_existing_or_remaining_slot(
+                &mut existing_game,
+                username,
+                connection_id,
+            ) {
                 return build_response(
                     StatusCode::BAD_REQUEST,
                     Some(connection_id.to_string()),
@@ -78,8 +81,11 @@ pub async fn join_game(
             tracing::info!(
                 "User ({username}) joined game (ID: {}) as {}",
                 existing_game.game_id,
-                if username == existing_game.white_username.as_ref().unwrap() {
-                    // There should always be 2 players here
+                if existing_game
+                    .white_username
+                    .as_ref()
+                    .map_or(false, |u| u == username)
+                {
                     "white"
                 } else {
                     "black"

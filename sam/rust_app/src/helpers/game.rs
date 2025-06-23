@@ -88,7 +88,8 @@ pub fn determine_player_color(
     }
 }
 
-pub fn assign_player_to_remaining_slot(
+/// We know that the game has at least one player assigned.
+pub fn assign_player_to_existing_or_remaining_slot(
     game: &mut GameRecord,
     username: &str,
     connection_id: &str,
@@ -150,17 +151,17 @@ pub fn assign_player_to_remaining_slot(
             game.black_connection_id = Some(connection_id.to_string());
         }
         None => {
-            if let Some(black_username) = &game.black_username {
-                if black_username == username {
-                    return Err(Error::from(format!(
-                        "{} has already joined this game (ID: {}) as black",
-                        username, game.game_id
-                    )));
-                }
-            }
+            let black_username = game
+                .black_username
+                .as_deref()
+                .expect("Black username should be set if white is not");
 
-            game.white_username = Some(username.to_string());
-            game.white_connection_id = Some(connection_id.to_string());
+            if black_username == username {
+                game.black_connection_id = Some(connection_id.to_string());
+            } else {
+                game.white_username = Some(username.to_string());
+                game.white_connection_id = Some(connection_id.to_string());
+            }
         }
     }
 
