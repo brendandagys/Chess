@@ -44,8 +44,8 @@ impl Serialize for CapturedPieces {
     where
         S: serde::Serializer,
     {
-        let white_bytes: Vec<u8> = self.white.iter().map(|piece| encode_piece(piece)).collect();
-        let black_bytes: Vec<u8> = self.black.iter().map(|piece| encode_piece(piece)).collect();
+        let white_bytes: Vec<u8> = self.white.iter().map(encode_piece).collect();
+        let black_bytes: Vec<u8> = self.black.iter().map(encode_piece).collect();
 
         let mut state = serializer.serialize_struct("CapturedPieces", 4)?;
 

@@ -84,7 +84,7 @@ pub async fn join_game(
                 if existing_game
                     .white_username
                     .as_ref()
-                    .map_or(false, |u| u == username)
+                    .is_some_and(|u| u == username)
                 {
                     "white"
                 } else {
