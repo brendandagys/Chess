@@ -28,12 +28,12 @@ fn check_if_both_players_just_joined(game_record: &mut GameRecord) {
         if let Some(game_time) = &mut game_record.game_state.game_time {
             game_time.both_players_last_connected_at = Some(chrono::Utc::now().to_rfc3339());
         }
-    }
 
-    let current_state = game_record.game_state.current_state_mut();
+        let current_state = game_record.game_state.current_state_mut();
 
-    if current_state.state == State::NotStarted {
-        current_state.state = State::InProgress;
+        if current_state.state == State::NotStarted {
+            current_state.state = State::InProgress;
+        }
     }
 }
 
