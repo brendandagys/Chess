@@ -4,7 +4,6 @@ use crate::{
 };
 
 const NUM_PIECE_TYPES: usize = 12; // 6 piece types * 2 colors
-const EMPTY_PIECE: u8 = 255; // Represents an empty square in compact encoding
 
 /// Get a byte representation of a piece type for bitboard encoding.
 /// We use the piece type + color value to index into the correct bitboard.
@@ -13,7 +12,7 @@ pub fn encode_piece(piece: &Piece) -> u8 {
     base + if piece.color == Color::Black { 6 } else { 0 }
 }
 
-/// Decode a piece type from its byte representation/bitboard index.
+/// Decode a piece type from its byte representation/bitboard index
 pub fn decode_piece(piece_type_byte: usize) -> Option<Piece> {
     if piece_type_byte >= NUM_PIECE_TYPES {
         return None;
@@ -25,15 +24,7 @@ pub fn decode_piece(piece_type_byte: usize) -> Option<Piece> {
         Color::White
     };
 
-    let piece_type = match piece_type_byte % 6 {
-        0 => PieceType::Pawn,
-        1 => PieceType::Knight,
-        2 => PieceType::Bishop,
-        3 => PieceType::Rook,
-        4 => PieceType::Queen,
-        5 => PieceType::King,
-        _ => unreachable!(),
-    };
+    let piece_type = PieceType::from(piece_type_byte % 6);
 
     Some(Piece {
         piece_type,
@@ -63,12 +54,12 @@ impl Bitboards {
         }
     }
 
-    /// Convert 0-based rank and file to a single index for the bitboard.
+    /// Convert 0-based rank and file to a single index for the bitboard
     fn square_index(&self, rank: usize, file: usize) -> usize {
         rank * self.file_count + file
     }
 
-    /// Set a piece on the bitboard.
+    /// Set a piece on the bitboard
     pub fn set_piece(&mut self, rank: usize, file: usize, piece: &Piece) {
         let index = self.square_index(rank, file);
         let (chunk, bit) = (index / 64, index % 64);
@@ -76,7 +67,7 @@ impl Bitboards {
         self.piece_bitboards[piece_type_index as usize][chunk] |= 1 << bit;
     }
 
-    /// Clear a square on the bitboard.
+    /// Clear a square on the bitboard
     pub fn clear_square(&mut self, rank: usize, file: usize) {
         let index = self.square_index(rank, file);
         let (chunk, bit) = (index / 64, index % 64);
@@ -86,7 +77,7 @@ impl Bitboards {
         }
     }
 
-    /// Get the piece at a specific rank and file.
+    /// Get the piece at a specific rank and file
     pub fn get_piece(&self, rank: usize, file: usize) -> Option<Piece> {
         let index = self.square_index(rank, file);
         let (chunk, bit) = (index / 64, index % 64);
@@ -100,7 +91,7 @@ impl Bitboards {
         None
     }
 
-    /// Create a new bitboard from a decoded board representation.
+    /// Create a new bitboard from a decoded board representation
     pub fn from_board(board: Vec<Vec<Option<Piece>>>) -> Self {
         let rank_count = board.len();
         let file_count = board.first().map_or(0, |r| r.len());
@@ -118,7 +109,7 @@ impl Bitboards {
         bitboards
     }
 
-    /// Convert the bitboard to a decoded board representation.
+    /// Convert the bitboard to a decoded board representation
     pub fn to_board(&self) -> Vec<Vec<Option<Piece>>> {
         let mut board = vec![vec![None; self.file_count]; self.rank_count];
 
@@ -131,33 +122,38 @@ impl Bitboards {
         board
     }
 
-    /// Serialize the board into a compact Vec<u8> (1 byte per square, 0-11 for pieces, 255 for empty)
+    /// Serialize the board into a compact Vec<u8> using 4 bits per square (2 squares per byte).
+    /// Each piece is encoded as 0-11, 0xF (15) for empty.
     pub fn to_compact_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(self.rank_count * self.file_count);
+        let num_squares = self.rank_count * self.file_count;
 
-        for rank in 0..self.rank_count {
-            for file in 0..self.file_count {
-                if let Some(piece) = self.get_piece(rank, file) {
-                    bytes.push(encode_piece(&piece));
-                } else {
-                    bytes.push(EMPTY_PIECE);
-                }
-            }
-        }
+        let get_nibble = |idx| {
+            let rank = idx / self.file_count;
+            let file = idx % self.file_count;
+            self.get_piece(rank, file)
+                .map_or(0xF, |p| encode_piece(&p) & 0xF)
+        };
 
-        bytes
+        (0..num_squares)
+            .step_by(2)
+            .map(|i| (get_nibble(i) << 4) | get_nibble(i + 1))
+            .collect()
     }
 
-    /// Deserialize from compact bytes (1 byte per square, 0-11 for pieces, 255 for empty)
+    /// Deserialize from compact bytes (bitpacked: 4 bits per square, 2 squares per byte)
     pub fn from_compact_bytes(bytes: &[u8], rank_count: usize, file_count: usize) -> Self {
+        let num_squares = rank_count * file_count;
+
         let mut board = vec![vec![None; file_count]; rank_count];
 
-        for (i, &b) in bytes.iter().enumerate() {
-            let rank = i / file_count;
-            let file = i % file_count;
+        for idx in 0..num_squares {
+            let byte = bytes[idx / 2];
+            let nibble = (if idx % 2 == 0 { byte >> 4 } else { byte }) & 0xF;
 
-            if b != EMPTY_PIECE {
-                if let Some(piece) = decode_piece(b as usize) {
+            if nibble != 0xF {
+                if let Some(piece) = decode_piece(nibble as usize) {
+                    let rank = idx / file_count;
+                    let file = idx % file_count;
                     board[rank_count - 1 - rank][file] = Some(piece);
                 }
             }

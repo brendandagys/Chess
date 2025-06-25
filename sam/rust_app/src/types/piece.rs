@@ -52,6 +52,20 @@ pub enum PieceType {
     King,
 }
 
+impl From<usize> for PieceType {
+    fn from(value: usize) -> Self {
+        match value {
+            0 => PieceType::Pawn,
+            1 => PieceType::Knight,
+            2 => PieceType::Bishop,
+            3 => PieceType::Rook,
+            4 => PieceType::Queen,
+            5 => PieceType::King,
+            _ => panic!("Invalid value for PieceType: {}", value),
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Piece {

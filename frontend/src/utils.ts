@@ -55,20 +55,18 @@ export const getSquaresFromCompactBoard = (
   const { squares: base64, dimensions } = compactBoard;
 
   const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  const numSquares = dimensions.ranks * dimensions.files;
 
   const board: (Piece | null)[][] =
     Array.from({ length: dimensions.ranks }, () => []);
 
-  for (let rank = 0; rank < dimensions.ranks; rank++) {
-    const row: (Piece | null)[] = [];
-
-    for (let file = 0; file < dimensions.files; file++) {
-      const index = rank * dimensions.files + file;
-      const piece = decodePiece(bytes[index]);
-      row.push(piece);
-    }
-
-    board[dimensions.ranks - 1 - rank] = row;
+  for (let index = 0; index < numSquares; index++) {
+    const byte = bytes[Math.floor(index / 2)];
+    const nibble = (index % 2 === 0) ? (byte >> 4) & 0xF : byte & 0xF;
+    const piece = nibble === 0xF ? null : decodePiece(nibble);
+    const rank = Math.floor(index / dimensions.files);
+    const file = index % dimensions.files;
+    board[dimensions.ranks - 1 - rank][file] = piece;
   }
 
   return board;
