@@ -19,7 +19,7 @@ async fn function_handler(
     dynamo_db_client: &Client,
 ) -> Result<ApiGatewayProxyResponse, Error> {
     let game_table = std::env::var("GAME_TABLE").unwrap();
-    let user_table = std::env::var("USER_TABLE").unwrap(); // TODO: Update winner after game
+    let user_table = std::env::var("USER_TABLE").unwrap();
 
     let request_context = event.payload.request_context;
 

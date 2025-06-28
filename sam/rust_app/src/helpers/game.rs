@@ -556,13 +556,11 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
 }
 
 /// Update the user-game records for both players if the game has finished
-///
-/// Note: This function could be called no `opponent_username` if time expires before one joins
 pub async fn handle_if_game_is_finished(
     dynamo_db_client: &Client,
     user_table: &str,
     username: &str,
-    opponent_username: Option<String>,
+    opponent_username: &str,
     game_state: &GameState,
 ) -> Result<(), Error> {
     match game_state.current_state().state {
@@ -570,10 +568,7 @@ pub async fn handle_if_game_is_finished(
         | State::Finished(GameEnding::OutOfTime(losing_color)) => {
             let winner = Some(losing_color.opponent_color().to_string());
 
-            for username in [Some(username), opponent_username.as_deref()]
-                .into_iter()
-                .flatten()
-            {
+            for username in [username, opponent_username] {
                 let mut user_game =
                     get_user_game(dynamo_db_client, user_table, username, &game_state.game_id)
                         .await?

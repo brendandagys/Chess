@@ -57,7 +57,9 @@ pub async fn lose_via_out_of_time(
                 dynamo_db_client,
                 user_table,
                 &username,
-                opponent_username,
+                opponent_username.as_deref().unwrap_or_else(|| {
+                    panic!("Opponent username should be set for game ID: {game_id}")
+                }),
                 &game.game_state,
             )
             .await?;
