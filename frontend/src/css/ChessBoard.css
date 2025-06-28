@@ -81,6 +81,14 @@
   touch-action: none;
 }
 
+body.dragging-piece {
+  cursor: none;
+}
+
+body:not(.dragging-piece) .piece--movable {
+  cursor: pointer;
+}
+
 .piece.dragging {
   visibility: hidden;
 }

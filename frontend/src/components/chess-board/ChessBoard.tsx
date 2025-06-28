@@ -269,7 +269,11 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                   }
                   {piece ? (
                     <img
-                      className="piece"
+                      className={`piece${
+                        piece.color === playerColor &&
+                        !disableDragging &&
+                        " piece--movable"
+                      }`}
                       src={imageMap[piece.pieceType][piece.color]}
                       alt={`${piece.color} ${piece.pieceType}`}
                       data-rank={rank}

@@ -157,14 +157,17 @@ export const useDrag = (
 
   useEffect(() => {
     if (draggingPiece && !disabled) {
+      document.body.classList.add("dragging-piece");
       window.addEventListener("pointermove", handlePointerMove);
       window.addEventListener("pointerup", handlePointerUp);
     } else {
+      document.body.classList.remove("dragging-piece");
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     }
 
     return () => {
+      document.body.classList.remove("dragging-piece");
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     };
