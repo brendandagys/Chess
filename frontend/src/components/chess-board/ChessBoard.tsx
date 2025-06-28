@@ -268,27 +268,31 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                     </>
                   }
                   {piece ? (
-                    <img
-                      className={`piece${
+                    <div
+                      className={`${
                         piece.color === playerColor &&
                         !disableDragging &&
-                        " piece--movable"
+                        " piece--moveable"
                       }`}
-                      src={imageMap[piece.pieceType][piece.color]}
-                      alt={`${piece.color} ${piece.pieceType}`}
-                      data-rank={rank}
-                      data-file={file}
-                      onDragStart={(e) => {
-                        if (piece.color === playerColor) {
-                          handleDragStart(e, piece);
-                        }
-                      }}
-                      onTouchMove={(e) => {
-                        if (piece.color === playerColor) {
-                          handleDragStart(e, piece);
-                        }
-                      }}
-                    />
+                    >
+                      <img
+                        className="piece"
+                        src={imageMap[piece.pieceType][piece.color]}
+                        alt={`${piece.color} ${piece.pieceType}`}
+                        data-rank={rank}
+                        data-file={file}
+                        onDragStart={(e) => {
+                          if (piece.color === playerColor) {
+                            handleDragStart(e, piece);
+                          }
+                        }}
+                        onTouchMove={(e) => {
+                          if (piece.color === playerColor) {
+                            handleDragStart(e, piece);
+                          }
+                        }}
+                      />
+                    </div>
                   ) : (
                     <img
                       className="hidden-piece"

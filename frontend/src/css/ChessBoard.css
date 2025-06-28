@@ -85,7 +85,7 @@ body.dragging-piece {
   cursor: none;
 }
 
-body:not(.dragging-piece) .piece--movable {
+body:not(.dragging-piece) .piece--moveable {
   cursor: pointer;
 }
 
