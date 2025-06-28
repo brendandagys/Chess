@@ -69,8 +69,8 @@ async fn function_handler(
                 &game_table,
                 &user_table,
                 connection_id,
-                &username,
-                game_id.as_deref(),
+                username.trim(),
+                game_id.as_deref().map(|s| s.trim()),
                 board_setup,
                 color_preference,
                 seconds_per_player,
@@ -85,13 +85,13 @@ async fn function_handler(
                 &game_table,
                 &user_table,
                 connection_id,
-                &username,
-                &game_id,
+                username.trim(),
+                game_id.trim(),
             )
             .await
         }
         PlayerAction::GetGameState { game_id } => {
-            get_game_state(dynamo_db_client, connection_id, &game_table, &game_id).await
+            get_game_state(dynamo_db_client, connection_id, &game_table, game_id.trim()).await
         }
         PlayerAction::MovePiece {
             game_id,
