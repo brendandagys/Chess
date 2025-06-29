@@ -505,7 +505,6 @@ impl Board {
 
     fn check_for_castling(&mut self, player_piece: &Piece, player_move: &PlayerMove) -> bool {
         let is_castling = player_piece.piece_type == PieceType::King
-            && (player_move.to.file.0 == 1 || player_move.to.file.0 == self.squares[0].len())
             && (player_move.from.file.0 as isize - player_move.to.file.0 as isize).abs() > 1;
 
         if !is_castling {
@@ -567,7 +566,8 @@ impl Board {
         true
     }
 
-    /// This function assumes the move has been validated
+    /// This function assumes that the move has been validated.
+    /// It optionally returns a captured piece.
     pub fn apply_move(&mut self, player_move: &PlayerMove) -> Option<Piece> {
         let mut player_piece = self
             .get_piece_at_position(&player_move.from)

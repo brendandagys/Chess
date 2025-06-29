@@ -104,11 +104,15 @@ impl Piece {
         }
     }
 
-    fn get_allowed_castling_positions_lower_ranks(
+    fn get_allowed_castling_positions_lower_files(
         &self,
         board: &Board,
         king_position: &Position,
-    ) -> Option<Position> {
+    ) -> Vec<Position> {
+        if board.is_king_in_check(&self.color) {
+            return vec![];
+        }
+
         let no_pieces_between_king_and_rook_and_not_moving_through_check =
             (2..king_position.file.0).all(|file| {
                 let position_to_check = Position {
@@ -156,20 +160,29 @@ impl Piece {
                     });
 
                     if !hypothetical_board.is_king_in_check(&self.color) {
-                        return Some(rook_position);
+                        return std::iter::once(rook_position)
+                            .chain((2..king_position.file.0 - 1).map(|file| Position {
+                                rank: king_position.rank.clone(),
+                                file: File(file),
+                            }))
+                            .collect();
                     }
                 }
             }
         }
 
-        None
+        vec![]
     }
 
-    fn get_allowed_castling_positions_upper_ranks(
+    fn get_allowed_castling_positions_upper_files(
         &self,
         board: &Board,
         king_position: &Position,
-    ) -> Option<Position> {
+    ) -> Vec<Position> {
+        if board.is_king_in_check(&self.color) {
+            return vec![];
+        }
+
         let no_pieces_between_king_and_rook_and_not_moving_through_check =
             (king_position.file.0 + 1..board.squares[0].len()).all(|file| {
                 let position_to_check = Position {
@@ -217,13 +230,22 @@ impl Piece {
                     });
 
                     if !hypothetical_board.is_king_in_check(&self.color) {
-                        return Some(rook_position);
+                        return std::iter::once(rook_position)
+                            .chain(
+                                (king_position.file.0 + 2..board.squares[0].len()).map(|file| {
+                                    Position {
+                                        rank: king_position.rank.clone(),
+                                        file: File(file),
+                                    }
+                                }),
+                            )
+                            .collect();
                     }
                 }
             }
         }
 
-        None
+        vec![]
     }
 
     fn get_allowed_castling_positions(
@@ -236,8 +258,8 @@ impl Piece {
         }
 
         [
-            self.get_allowed_castling_positions_lower_ranks(board, king_position),
-            self.get_allowed_castling_positions_upper_ranks(board, king_position),
+            self.get_allowed_castling_positions_lower_files(board, king_position),
+            self.get_allowed_castling_positions_upper_files(board, king_position),
         ]
         .into_iter()
         .flatten()
