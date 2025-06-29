@@ -415,7 +415,7 @@ fn does_move_create_self_check(
 ) -> bool {
     let mut hypothetical_board = board.clone();
 
-    hypothetical_board.apply_move(player_move);
+    hypothetical_board.apply_move(player_move, false);
     hypothetical_board.is_king_in_check(player_color)
 }
 
@@ -433,7 +433,7 @@ pub fn validate_move(
     }
 
     if !piece
-        .possible_moves(board, &player_move.from)
+        .possible_moves(board, &player_move.from, false)
         .contains(&player_move.to)
     {
         return Err("Invalid move");
@@ -496,17 +496,19 @@ fn check_for_mates(game_state: &mut GameStateAtPointInTime) {
     if board.is_king_in_check(&opponent_color) {
         game_state.in_check = Some(opponent_color);
 
-        let possible_moves_by_opponent_to_remove_check =
-            board.get_all_pieces(Some(&opponent_color));
+        let opponent_pieces_and_positions = board.get_all_pieces(Some(&opponent_color));
 
-        for (opponent_piece, from_position) in possible_moves_by_opponent_to_remove_check {
-            for to_position in opponent_piece.possible_moves(board, &from_position) {
+        for (opponent_piece, from_position) in opponent_pieces_and_positions {
+            for to_position in opponent_piece.possible_moves(board, &from_position, true) {
                 let mut hypothetical_board = board.clone();
-
-                hypothetical_board.apply_move(&PlayerMove {
-                    from: from_position.clone(),
-                    to: to_position.clone(),
-                });
+                hypothetical_board.apply_move(
+                    &PlayerMove {
+                        from: from_position.clone(),
+                        to: to_position.clone(),
+                    },
+                    // Value should not matter as .possible_moves() won't return castling moves due to check
+                    true,
+                );
 
                 if !hypothetical_board.is_king_in_check(&opponent_color) {
                     game_state.current_turn = opponent_color;
@@ -533,7 +535,7 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
     match next_state.state {
         State::Finished(GameEnding::OutOfTime(_)) => {}
         _ => {
-            if let Some(captured_piece) = next_state.board.apply_move(player_move) {
+            if let Some(captured_piece) = next_state.board.apply_move(player_move, false) {
                 match next_state.current_turn {
                     Color::White => {
                         next_state.captured_pieces.white.push(captured_piece);

@@ -449,7 +449,7 @@ impl Board {
         let opponent_pieces = self.get_all_pieces(Some(&color.opponent_color()));
 
         for (piece, position) in opponent_pieces {
-            for move_position in piece.possible_moves(self, &position) {
+            for move_position in piece.possible_moves(self, &position, true) {
                 if move_position == *king_position {
                     return true;
                 }
@@ -503,6 +503,10 @@ impl Board {
         }
     }
 
+    /// Checks if the player is trying to castle.
+    /// If so, it moves the rook and king to their correct positions and returns `true`.
+    ///
+    /// We know that any castling move is valid.
     fn check_for_castling(&mut self, player_piece: &Piece, player_move: &PlayerMove) -> bool {
         let is_castling = player_piece.piece_type == PieceType::King
             && (player_move.from.file.0 as isize - player_move.to.file.0 as isize).abs() > 1;
@@ -568,7 +572,11 @@ impl Board {
 
     /// This function assumes that the move has been validated.
     /// It optionally returns a captured piece.
-    pub fn apply_move(&mut self, player_move: &PlayerMove) -> Option<Piece> {
+    pub fn apply_move(
+        &mut self,
+        player_move: &PlayerMove,
+        skip_check_for_and_apply_castling: bool,
+    ) -> Option<Piece> {
         let mut player_piece = self
             .get_piece_at_position(&player_move.from)
             .cloned()
@@ -584,17 +592,17 @@ impl Board {
 
         self.check_for_pawn_promotion(&mut player_piece, player_move);
 
-        match self.check_for_castling(&player_piece, player_move) {
-            true => None,
-            false => {
-                let captured_piece = self.check_for_captured_piece(&player_piece, player_move);
-
-                self.set_piece_at_position(&player_move.to, Some(player_piece));
-                self.set_piece_at_position(&player_move.from, None);
-
-                captured_piece
-            }
+        if !skip_check_for_and_apply_castling && self.check_for_castling(&player_piece, player_move)
+        {
+            return None;
         }
+
+        let captured_piece = self.check_for_captured_piece(&player_piece, player_move);
+
+        self.set_piece_at_position(&player_move.to, Some(player_piece));
+        self.set_piece_at_position(&player_move.from, None);
+
+        captured_piece
     }
 
     // TODO: pub fn unapply_move()
