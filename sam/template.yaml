@@ -178,6 +178,7 @@ Resources:
           GAME_TABLE: !Ref GameTableName
           USER_TABLE: !Ref UserTableName
           USER_TABLE_GSI: !Ref UserTableGsi
+          RUST_BACKTRACE: 1
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref GameTableName
@@ -229,6 +230,7 @@ Resources:
         Variables:
           GAME_TABLE: !Ref GameTableName
           USER_TABLE: !Ref UserTableName
+          RUST_BACKTRACE: 1
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref GameTableName
