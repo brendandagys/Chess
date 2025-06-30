@@ -65,12 +65,12 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     prevHistoryIndex.current = historyIndex;
   }, [historyIndex, expandedHistory, playerColor]);
 
-  const disableDragging = !isViewingLatestBoard || gameOverMessage !== null;
+  const disableMoving = !isViewingLatestBoard || gameOverMessage !== null;
 
   const [draggingPiece, handleDragStart] = useDrag(
     gameId,
     sendWebSocketMessage,
-    disableDragging
+    disableMoving
   );
 
   const pieceDiameterClass =
@@ -93,12 +93,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     pieceOnSquare: Piece | null,
     position: Position
   ) => {
-    if (gameOverMessage) {
-      return;
-    }
-
-    if (!isViewingLatestBoard) {
-      setSelectedSquare(null);
+    if (disableMoving) {
       return;
     }
 
@@ -252,7 +247,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                         : " square--previous-move-light-square"
                       : ""
                   }${
-                    piece?.color === playerColor && !disableDragging
+                    piece?.color === playerColor && !disableMoving
                       ? " square--moveable"
                       : ""
                   }`}
