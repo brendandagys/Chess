@@ -251,6 +251,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                         ? " square--previous-move-dark-square"
                         : " square--previous-move-light-square"
                       : ""
+                  }${
+                    piece?.color === playerColor && !disableDragging
+                      ? " square--moveable"
+                      : ""
                   }`}
                   onClick={(e) => {
                     onClickSquare(e, piece, { rank, file });
@@ -268,31 +272,23 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                     </>
                   }
                   {piece ? (
-                    <div
-                      className={`${
-                        piece.color === playerColor &&
-                        !disableDragging &&
-                        " piece--moveable"
-                      }`}
-                    >
-                      <img
-                        className="piece"
-                        src={imageMap[piece.pieceType][piece.color]}
-                        alt={`${piece.color} ${piece.pieceType}`}
-                        data-rank={rank}
-                        data-file={file}
-                        onDragStart={(e) => {
-                          if (piece.color === playerColor) {
-                            handleDragStart(e, piece);
-                          }
-                        }}
-                        onTouchMove={(e) => {
-                          if (piece.color === playerColor) {
-                            handleDragStart(e, piece);
-                          }
-                        }}
-                      />
-                    </div>
+                    <img
+                      className="piece"
+                      src={imageMap[piece.pieceType][piece.color]}
+                      alt={`${piece.color} ${piece.pieceType}`}
+                      data-rank={rank}
+                      data-file={file}
+                      onDragStart={(e) => {
+                        if (piece.color === playerColor) {
+                          handleDragStart(e, piece);
+                        }
+                      }}
+                      onTouchMove={(e) => {
+                        if (piece.color === playerColor) {
+                          handleDragStart(e, piece);
+                        }
+                      }}
+                    />
                   ) : (
                     <img
                       className="hidden-piece"
