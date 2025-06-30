@@ -25,6 +25,12 @@ pub async fn lose_via_out_of_time(
     game_id: &str,
 ) -> Result<ApiGatewayProxyResponse, Error> {
     match get_game(dynamo_db_client, game_table, game_id).await? {
+        None => build_response(
+            StatusCode::NOT_FOUND,
+            Some(connection_id.to_string()),
+            Some(vec![format!("Game with ID `{game_id}` not found").into()]),
+            None::<()>,
+        ),
         Some(mut game) => {
             let Some(PlayerDetails {
                 color: loser_color,
@@ -82,11 +88,5 @@ pub async fn lose_via_out_of_time(
                 Some(game),
             )
         }
-        None => build_response(
-            StatusCode::NOT_FOUND,
-            Some(connection_id.to_string()),
-            Some(vec![format!("Game with ID `{game_id}` not found").into()]),
-            None::<()>,
-        ),
     }
 }

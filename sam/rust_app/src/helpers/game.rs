@@ -567,7 +567,8 @@ pub async fn handle_if_game_is_finished(
 ) -> Result<(), Error> {
     match game_state.current_state().state {
         State::Finished(GameEnding::Checkmate(losing_color))
-        | State::Finished(GameEnding::OutOfTime(losing_color)) => {
+        | State::Finished(GameEnding::OutOfTime(losing_color))
+        | State::Finished(GameEnding::Resignation(losing_color)) => {
             let winner = Some(losing_color.opponent_color().to_string());
 
             for username in [username, opponent_username] {

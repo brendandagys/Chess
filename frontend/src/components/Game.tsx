@@ -19,6 +19,7 @@ import { GameRequest } from "@src/types/api";
 import {
   GameEndingCheckmate,
   GameEndingOutOfTime,
+  GameEndingResignation,
   GameEndingType,
   GameRecord,
   GameStateType,
@@ -48,6 +49,7 @@ export const Game: React.FC<GameProps> = ({
   dismissMessage,
 }) => {
   const gameId = gameRecord.game_id;
+  const [showResignConfirm, setShowResignConfirm] = useState(false);
 
   const gameState = gameRecord.game_state;
 
@@ -198,6 +200,17 @@ export const Game: React.FC<GameProps> = ({
     if (typeof gameEnding === "object") {
       const gameEndingType = Object.keys(gameEnding)[0] as GameEndingType;
 
+      if (gameEndingType === GameEndingType.Resignation) {
+        const losingColor = (gameEnding as GameEndingResignation)[
+          gameEndingType
+        ];
+
+        return [
+          `${capitalizeFirstLetter(losingColor)} resigned!`,
+          playerColor === losingColor ? "red" : "green",
+        ];
+      }
+
       if (gameEndingType === GameEndingType.Checkmate) {
         const winningColor = getOppositePlayerColor(
           (gameEnding as GameEndingCheckmate)[gameEndingType]
@@ -244,20 +257,66 @@ export const Game: React.FC<GameProps> = ({
   const gameOverMessage =
     gameIsFinished && isViewingLatestBoard ? stateOfGame[0] : null;
 
+  const handleResign = () => {
+    sendWebSocketMessage({
+      route: API_ROUTE,
+      data: {
+        [PlayerActionName.Resign]: {
+          gameId,
+        },
+      },
+    });
+
+    setShowResignConfirm(false);
+  };
+
   return (
     <div id={`game-${gameId}`} className="game-container">
       <div className="game-id-container">
         <h2 className="game-id">Game: {gameId}</h2>
 
-        <button
-          className="leave-game-button"
-          onClick={() => {
-            onHideGame(gameId);
-          }}
-        >
-          Leave game
-        </button>
+        <div className="game-buttons">
+          {gameIsInProgress && bothPlayersReady && !gameIsFinished && (
+            <button
+              className="resign-button"
+              onClick={() => {
+                setShowResignConfirm(true);
+              }}
+            >
+              Resign
+            </button>
+          )}
+          <button
+            className="leave-game-button"
+            onClick={() => {
+              onHideGame(gameId);
+            }}
+          >
+            Leave game
+          </button>
+        </div>
       </div>
+
+      {showResignConfirm && (
+        <div className="resign-confirm">
+          <div className="resign-confirm-inner">
+            <p>Are you sure you want to resign?</p>
+            <div className="resign-confirm-buttons">
+              <button className="resign-confirm-yes" onClick={handleResign}>
+                Yes, resign
+              </button>
+              <button
+                className="resign-confirm-no"
+                onClick={() => {
+                  setShowResignConfirm(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="status-container">
         {messages.length ? (

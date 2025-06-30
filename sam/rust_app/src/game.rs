@@ -10,7 +10,7 @@ mod player_action_handlers;
 use chess::types::game::PlayerAction;
 use player_action_handlers::{
     create_new_game::create_new_game, get_game_state::get_game_state, join_game::join_game,
-    move_piece::move_piece, offer_draw::offer_draw, resign::resign,
+    move_piece::move_piece, offer_draw::offer_draw,
 };
 
 async fn function_handler(
@@ -127,7 +127,18 @@ async fn function_handler(
             )
             .await
         }
-        PlayerAction::Resign { game_id } => resign(&game_id),
+        PlayerAction::Resign { game_id } => {
+            player_action_handlers::resign::resign(
+                sdk_config,
+                &request_context,
+                dynamo_db_client,
+                connection_id,
+                &game_table,
+                &user_table,
+                &game_id,
+            )
+            .await
+        }
         PlayerAction::OfferDraw { game_id } => offer_draw(&game_id),
     }
 }

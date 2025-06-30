@@ -13,7 +13,7 @@ export enum GameEndingType {
 }
 
 export interface GameEndingCheckmate { [GameEndingType.Checkmate]: Color; }
-interface GameEndingResignation { [GameEndingType.Resignation]: Color; }
+export interface GameEndingResignation { [GameEndingType.Resignation]: Color; }
 export interface GameEndingOutOfTime { [GameEndingType.OutOfTime]: Color; }
 type GameEndingStalemate = GameEndingType.Stalemate;
 type GameEndingDrawByThreefoldRepetition =
