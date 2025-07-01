@@ -14,7 +14,6 @@ interface GameFormProps {
   setShowForm: React.Dispatch<React.SetStateAction<boolean>>;
   setUsername: (username: string) => void;
   gameIds: string[];
-  hiddenGameIds: string[];
 }
 
 export const GameForm: React.FC<GameFormProps> = ({
@@ -23,7 +22,6 @@ export const GameForm: React.FC<GameFormProps> = ({
   setShowForm,
   setUsername,
   gameIds,
-  hiddenGameIds,
 }) => {
   const [username, setUsernameInLocalStorage] = useLocalStorage("username", "");
 
@@ -74,19 +72,6 @@ export const GameForm: React.FC<GameFormProps> = ({
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const joinPayload = hiddenGameIds.includes(gameId)
-      ? {
-          [PlayerActionName.GetGameState]: {
-            gameId,
-          },
-        }
-      : {
-          [PlayerActionName.JoinGame]: {
-            username,
-            gameId,
-          },
-        };
-
     const data =
       mode === FormToShow.Create
         ? {
@@ -99,7 +84,12 @@ export const GameForm: React.FC<GameFormProps> = ({
                 timeOption === TimeOption.Unlimited ? null : timeOption,
             },
           }
-        : joinPayload;
+        : {
+            [PlayerActionName.JoinGame]: {
+              username,
+              gameId,
+            },
+          };
 
     sendWebSocketMessage({
       route: API_ROUTE,

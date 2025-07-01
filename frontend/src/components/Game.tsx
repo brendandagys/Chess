@@ -33,7 +33,7 @@ import "@src/css/Game.css";
 
 interface GameProps {
   gameRecord: GameRecord;
-  onHideGame: (gameId: string) => void;
+  onLeaveGame: (gameId: string) => void;
   connectionId: string;
   messages: GameMessage[];
   sendWebSocketMessage: (action: GameRequest) => void;
@@ -42,7 +42,7 @@ interface GameProps {
 
 export const Game: React.FC<GameProps> = ({
   gameRecord,
-  onHideGame,
+  onLeaveGame,
   connectionId,
   messages,
   sendWebSocketMessage,
@@ -289,7 +289,7 @@ export const Game: React.FC<GameProps> = ({
           <button
             className="leave-game-button"
             onClick={() => {
-              onHideGame(gameId);
+              onLeaveGame(gameId);
             }}
           >
             Leave game

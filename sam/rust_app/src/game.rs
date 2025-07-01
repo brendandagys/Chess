@@ -90,6 +90,18 @@ async fn function_handler(
             )
             .await
         }
+        PlayerAction::LeaveGame { game_id } => {
+            player_action_handlers::leave_game::leave_game(
+                sdk_config,
+                &request_context,
+                dynamo_db_client,
+                connection_id,
+                &game_table,
+                &user_table,
+                &game_id,
+            )
+            .await
+        }
         PlayerAction::GetGameState { game_id } => {
             get_game_state(dynamo_db_client, connection_id, &game_table, game_id.trim()).await
         }

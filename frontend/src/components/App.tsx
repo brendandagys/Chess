@@ -168,12 +168,18 @@ export const App: React.FC = () => {
     // when visiting 'join game' link without a username in local storage
   ]);
 
-  const [hiddenGameIds, setHiddenGameIds] = useState<string[]>([]);
-
-  const onHideGame = (gameId: string) => {
+  const onLeaveGame = (gameId: string) => {
     setGameRecords((old) => old.filter((g) => g.game_id !== gameId));
-    setHiddenGameIds((old) => [...old, gameId]);
     removeGameId(gameId);
+
+    sendWebSocketMessage({
+      route: API_ROUTE,
+      data: {
+        [PlayerActionName.LeaveGame]: {
+          gameId,
+        },
+      },
+    });
   };
 
   return (
@@ -213,7 +219,6 @@ export const App: React.FC = () => {
               setShowForm={setShowForm}
               setUsername={setUsername}
               gameIds={gameIds}
-              hiddenGameIds={hiddenGameIds}
             />
           </div>
         </>
@@ -225,7 +230,7 @@ export const App: React.FC = () => {
             <Game
               key={gameRecord.game_id}
               gameRecord={gameRecord}
-              onHideGame={onHideGame}
+              onLeaveGame={onLeaveGame}
               connectionId={connectionId}
               messages={gameMessages.filter((message) =>
                 message.id.includes(gameRecord.game_id)

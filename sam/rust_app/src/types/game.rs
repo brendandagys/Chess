@@ -257,6 +257,10 @@ pub enum PlayerAction {
         game_id: String,
     },
     #[serde(rename_all = "camelCase")]
+    LeaveGame {
+        game_id: String,
+    },
+    #[serde(rename_all = "camelCase")]
     GetGameState {
         game_id: String,
     },

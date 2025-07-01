@@ -110,6 +110,7 @@ export interface PlayerMove {
 export enum PlayerActionName {
   CreateGame = 'create-game',
   JoinGame = 'join-game',
+  LeaveGame = 'leave-game',
   GetGameState = 'get-game-state',
   MovePiece = 'move-piece',
   Heartbeat = 'heartbeat',
@@ -131,6 +132,12 @@ interface PlayerActionCreateGame {
 interface PlayerActionJoinGame {
   [PlayerActionName.JoinGame]: {
     username: string;
+    gameId: string;
+  };
+}
+
+interface PlayerActionLeaveGame {
+  [PlayerActionName.LeaveGame]: {
     gameId: string;
   };
 }
@@ -161,21 +168,22 @@ interface PlayerActionResign {
   };
 }
 
-interface PlayerActionOfferDraw {
-  [PlayerActionName.OfferDraw]: {
-    gameId: string;
-  };
-}
+// interface PlayerActionOfferDraw {
+//   [PlayerActionName.OfferDraw]: {
+//     gameId: string;
+//   };
+// }
 
 export type PlayerAction =
   | PlayerActionCreateGame
   | PlayerActionJoinGame
+  | PlayerActionLeaveGame
   | PlayerActionGetGameState
   | PlayerActionMovePiece
   | PlayerActionHeartbeat
   | PlayerActionLoseViaOutOfTime
-  | PlayerActionResign
-  | PlayerActionOfferDraw;
+  | PlayerActionResign;
+// | PlayerActionOfferDraw;
 
 export interface GameRecord {
   game_id: string;
