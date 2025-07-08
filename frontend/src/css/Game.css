@@ -96,9 +96,7 @@
 }
 
 .game-container .resign-confirm-no {
-  background-color: #4caf50;
-  color: white;
-  border: none;
+  border: 1px solid slategray;
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
