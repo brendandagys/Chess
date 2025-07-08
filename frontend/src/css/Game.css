@@ -30,21 +30,8 @@
   gap: 0.5rem;
 }
 
+.game-container .leave-game-button,
 .game-container .resign-button {
-  color: white;
-  background-color: #f44336;
-  border: none;
-  border-radius: 5px;
-  padding: 2px 9px;
-  padding-bottom: 3px;
-  cursor: pointer;
-}
-
-.game-container .resign-button:hover {
-  background-color: #d32f2f;
-}
-
-.game-container .leave-game-button {
   color: white;
   background-color: red;
   border: none;
@@ -54,7 +41,8 @@
   cursor: pointer;
 }
 
-.game-container .leave-game-button:hover {
+.game-container .leave-game-button:hover,
+.game-container .resign-button:hover {
   background-color: rgb(216, 1, 1);
 }
 
