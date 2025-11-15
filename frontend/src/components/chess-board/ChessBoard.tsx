@@ -157,7 +157,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     return squares;
   }, [historyIndex, expandedHistory, viewedBoardStateSquares, numRanks]);
 
-  const rankNumberToLetterMap: Record<number, string> = {
+  const fileNumberToLetterMap: Record<number, string> = {
     1: "A",
     2: "B",
     3: "C",
@@ -179,17 +179,17 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   /** Get rank and file labels for a square. */
   const getPositionLabel = (rank: number, file: number): PositionLabel => {
-    const isLeftMostFile =
+    const isLeftMostColumn =
       (playerColor === Color.Black && file === numFiles) ||
       (playerColor === Color.White && file === 1);
 
-    const isBottomRank =
+    const isBottomRow =
       (playerColor === Color.Black && rank === numRanks) ||
       (playerColor === Color.White && rank === 1);
 
     return {
-      rankLabel: isLeftMostFile ? rankNumberToLetterMap[rank] : "",
-      fileLabel: isBottomRank ? `${file}` : "",
+      rankLabel: isLeftMostColumn ? `${rank}` : "",
+      fileLabel: isBottomRow ? fileNumberToLetterMap[file] : "",
     };
   };
 
