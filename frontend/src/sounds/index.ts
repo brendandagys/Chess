@@ -44,7 +44,13 @@ addPreloadListener();
 
 const playSound = (key: keyof typeof audioMap) => {
   try {
-    void audioMap[key].play();
+    const audio = audioMap[key];
+
+    if (!audio.paused) {
+      audio.currentTime = 0;
+    }
+
+    void audio.play();
   } catch (error) {
     console.error("Error playing sound:", error);
   }

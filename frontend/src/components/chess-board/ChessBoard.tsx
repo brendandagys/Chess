@@ -51,8 +51,13 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       prevHistoryIndex.current !== null &&
       prevHistoryIndex.current !== historyIndex
     ) {
-      const one = expandedHistory[prevHistoryIndex.current];
-      const two = expandedHistory[historyIndex];
+      let one = expandedHistory[prevHistoryIndex.current];
+      let two = expandedHistory[historyIndex];
+
+      if (prevHistoryIndex.current > historyIndex && historyIndex > 0) {
+        one = expandedHistory[historyIndex - 1];
+        two = expandedHistory[historyIndex];
+      }
 
       for (const { didStateChange, action } of stateChecks) {
         if (didStateChange(one, two, playerColor)) {

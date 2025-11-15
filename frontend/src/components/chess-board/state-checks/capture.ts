@@ -1,13 +1,17 @@
 import { ExpandedGameStateAtPointInTime } from "@src/types/board";
 import { playCaptureSound } from "../../../sounds";
+import { getCapturedPiecesFromBase64 } from "@src/utils";
 
 const didStateChange = (
   one: ExpandedGameStateAtPointInTime,
   two: ExpandedGameStateAtPointInTime,
 ) => {
+  const beforeCapturedPieces = getCapturedPiecesFromBase64(one.capturedPieces);
+  const afterCapturedPieces = getCapturedPiecesFromBase64(two.capturedPieces);
+
   return (
-    one.capturedPieces.white.length != two.capturedPieces.white.length
-    || one.capturedPieces.black.length != two.capturedPieces.black.length
+    beforeCapturedPieces.white.length !== afterCapturedPieces.white.length
+    || beforeCapturedPieces.black.length !== afterCapturedPieces.black.length
   );
 };
 
