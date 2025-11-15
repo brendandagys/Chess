@@ -237,6 +237,7 @@ export const App: React.FC = () => {
               )}
               sendWebSocketMessage={sendWebSocketMessage}
               dismissMessage={dismissGameMessage}
+              totalActiveGames={gameRecords.length}
             />
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 
 import {
   capitalizeFirstLetter,
@@ -12,6 +12,9 @@ import { CapturedPieces } from "@src/components/CapturedPieces";
 import { Color, getOppositePlayerColor } from "@src/types/piece";
 import { ChessBoard } from "@src/components/chess-board/ChessBoard";
 import { PlayerTime } from "@src/components/PlayerTime";
+
+import { useNotifications } from "@src/hooks/useNotifications";
+import { useTitleAnimation } from "@src/hooks/useTitleAnimation";
 
 import { getSquaresFromCompactBoard } from "@src/utils";
 import { ExpandedGameStateAtPointInTime } from "@src/types/board";
@@ -38,6 +41,7 @@ interface GameProps {
   messages: GameMessage[];
   sendWebSocketMessage: (action: GameRequest) => void;
   dismissMessage: (id: string) => void;
+  totalActiveGames: number;
 }
 
 export const Game: React.FC<GameProps> = ({
@@ -47,9 +51,12 @@ export const Game: React.FC<GameProps> = ({
   messages,
   sendWebSocketMessage,
   dismissMessage,
+  totalActiveGames,
 }) => {
   const gameId = gameRecord.game_id;
   const [showResignConfirm, setShowResignConfirm] = useState(false);
+  const { requestPermission, showNotification } = useNotifications();
+  const previousIsTurnRef = useRef<boolean | null>(null);
 
   const gameState = gameRecord.game_state;
 
@@ -89,6 +96,9 @@ export const Game: React.FC<GameProps> = ({
   const opponentColor = getOppositePlayerColor(playerColor);
 
   const isTurn = playerColor === currentGameState.currentTurn;
+  const isActivePlayerTurn = isTurn && gameIsInProgress && bothPlayersReady;
+
+  useTitleAnimation(isActivePlayerTurn, "♟️ Your turn!");
 
   const viewedGameState = history[historyIndex];
 
@@ -96,6 +106,43 @@ export const Game: React.FC<GameProps> = ({
     () => getCapturedPiecesFromBase64(viewedGameState.capturedPieces),
     [viewedGameState.capturedPieces]
   );
+
+  useEffect(() => {
+    const justBecameMyTurn =
+      previousIsTurnRef.current === false && isActivePlayerTurn;
+
+    if (justBecameMyTurn && totalActiveGames <= 3) {
+      void requestPermission().then((granted) => {
+        if (granted) {
+          const notification = showNotification("Your turn!", {
+            body: `It's your turn in game ${gameId}`,
+            tag: `turn-${gameId}`,
+            requireInteraction: false,
+          });
+
+          if (notification) {
+            setTimeout(() => {
+              notification.close();
+            }, 5000);
+
+            notification.onclick = () => {
+              window.focus();
+              notification.close();
+            };
+          }
+        }
+      });
+    }
+
+    previousIsTurnRef.current = isTurn;
+  }, [
+    isActivePlayerTurn,
+    gameId,
+    totalActiveGames,
+    requestPermission,
+    showNotification,
+    isTurn,
+  ]);
 
   const playerCapturedPieces = expandedCapturedPieces[playerColor];
 
