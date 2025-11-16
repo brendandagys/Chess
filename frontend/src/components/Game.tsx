@@ -82,10 +82,12 @@ export const Game: React.FC<GameProps> = ({
     setHistoryIndex(numStates - 1);
   }, [numStates]);
 
-  const bothPlayersReady = ![
-    gameRecord.black_connection_id ?? "<disconnected>",
-    gameRecord.white_connection_id ?? "<disconnected>",
-  ].includes("<disconnected>");
+  const bothPlayersReady =
+    gameRecord.engine_difficulty !== null ||
+    ![
+      gameRecord.black_connection_id ?? "<disconnected>",
+      gameRecord.white_connection_id ?? "<disconnected>",
+    ].includes("<disconnected>");
 
   const gameIsInProgress = gameStateType === GameStateType.InProgress;
   const gameIsFinished = typeof gameStateType === "object";
@@ -226,6 +228,19 @@ export const Game: React.FC<GameProps> = ({
 
   const [playerOutOfTime, setPlayerOutOfTime] = useState<Color | null>(null);
 
+  useEffect(() => {
+    if (typeof gameStateType === "object") {
+      const gameEnding = gameStateType[GameStateType.Finished];
+
+      if (typeof gameEnding === "object") {
+        const gameEndingType = Object.keys(gameEnding)[0] as GameEndingType;
+        if (gameEndingType === GameEndingType.Resignation) {
+          setHistoryIndex(numStates - 1);
+        }
+      }
+    }
+  }, [gameStateType, numStates]);
+
   const stateOfGame = useMemo(() => {
     if (gameIsInProgress) {
       return currentGameState.inCheck
@@ -294,10 +309,11 @@ export const Game: React.FC<GameProps> = ({
       ? gameRecord.white_username
       : gameRecord.black_username;
 
-  const opponentUsername =
-    playerColor === Color.White
-      ? gameRecord.black_username
-      : gameRecord.white_username;
+  const opponentUsername = gameRecord.engine_difficulty
+    ? "Engine"
+    : playerColor === Color.White
+    ? gameRecord.black_username
+    : gameRecord.white_username;
 
   const isViewingLatestBoard = historyIndex === numStates - 1;
 
@@ -349,9 +365,6 @@ export const Game: React.FC<GameProps> = ({
           <div className="resign-confirm-inner">
             <p>Are you sure you want to resign?</p>
             <div className="resign-confirm-buttons">
-              <button className="resign-confirm-yes" onClick={handleResign}>
-                Yes, resign
-              </button>
               <button
                 className="resign-confirm-no"
                 onClick={() => {
@@ -359,6 +372,9 @@ export const Game: React.FC<GameProps> = ({
                 }}
               >
                 Cancel
+              </button>
+              <button className="resign-confirm-yes" onClick={handleResign}>
+                Yes, resign
               </button>
             </div>
           </div>
@@ -382,7 +398,7 @@ export const Game: React.FC<GameProps> = ({
 
             {!gameIsFinished && (
               <p className="pill pill--gray">
-                {bothPlayersReady
+                {bothPlayersReady || gameRecord.engine_difficulty
                   ? `${playerUsername} vs. ${opponentUsername}`
                   : `Waiting for ${opponentUsername ?? "other player"}...`}
               </p>

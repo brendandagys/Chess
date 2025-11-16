@@ -1,3 +1,4 @@
+use chess_engine::types::Difficulty;
 use serde::{ser::SerializeStruct, Deserialize, Serialize};
 
 use crate::helpers::{
@@ -161,6 +162,30 @@ pub enum ColorPreference {
     Random,
 }
 
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum EngineDifficulty {
+    Beginner,
+    Easy,
+    Medium,
+    Hard,
+    Expert,
+    Master,
+}
+
+impl From<EngineDifficulty> for Difficulty {
+    fn from(value: EngineDifficulty) -> Self {
+        match value {
+            EngineDifficulty::Beginner => Difficulty::Beginner,
+            EngineDifficulty::Easy => Difficulty::Easy,
+            EngineDifficulty::Medium => Difficulty::Medium,
+            EngineDifficulty::Hard => Difficulty::Hard,
+            EngineDifficulty::Expert => Difficulty::Expert,
+            EngineDifficulty::Master => Difficulty::Master,
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameTime {
@@ -249,6 +274,7 @@ pub enum PlayerAction {
         game_id: Option<String>,
         board_setup: Option<BoardSetup>,
         color_preference: ColorPreference,
+        engine_difficulty: Option<EngineDifficulty>,
         seconds_per_player: Option<usize>,
     },
     #[serde(rename_all = "camelCase")]

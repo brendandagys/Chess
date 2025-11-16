@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { API_ROUTE } from "../constants";
-import { ColorPreference, PlayerActionName, TimeOption } from "../types/game";
+import {
+  ColorPreference,
+  EngineDifficulty,
+  PlayerActionName,
+  TimeOption,
+} from "../types/game";
 import { GameRequest } from "../types/api";
 import { FormToShow } from "../types/sharedComponentTypes";
 import { BoardSetup, BoardSetupName } from "../types/board";
@@ -42,8 +47,15 @@ export const GameForm: React.FC<GameFormProps> = ({
     files: "8",
   });
 
+  const isStandardBoard = boardSetupName === BoardSetupName.Standard;
+
   const [colorPreference, setColorPreference] = useState<ColorPreference>(
     ColorPreference.Random
+  );
+
+  const [versusEngine, setVersusEngine] = useState(false);
+  const [engineDifficulty, setEngineDifficulty] = useState<EngineDifficulty>(
+    EngineDifficulty.Medium
   );
 
   const getBoardSetup = (name: BoardSetupName): BoardSetup => {
@@ -82,6 +94,7 @@ export const GameForm: React.FC<GameFormProps> = ({
               colorPreference,
               secondsPerPlayer:
                 timeOption === TimeOption.Unlimited ? null : timeOption,
+              engineDifficulty: versusEngine ? engineDifficulty : null,
             },
           }
         : {
@@ -148,7 +161,12 @@ export const GameForm: React.FC<GameFormProps> = ({
               className="board-setup-select"
               value={boardSetupName}
               onChange={(e) => {
-                setBoardSetupName(e.target.value as BoardSetupName);
+                const newSetup = e.target.value as BoardSetupName;
+                setBoardSetupName(newSetup);
+
+                if (newSetup !== BoardSetupName.Standard) {
+                  setVersusEngine(false);
+                }
               }}
             >
               <option value="standard">Standard</option>
@@ -200,6 +218,44 @@ export const GameForm: React.FC<GameFormProps> = ({
                   }}
                 />
               </div>
+            </div>
+          )}
+
+          <div className="game-preferences-form-component">
+            <span className="label">Play engine</span>
+            <input
+              type="checkbox"
+              checked={versusEngine}
+              disabled={!isStandardBoard}
+              onChange={(e) => {
+                setVersusEngine(e.target.checked);
+              }}
+              title={
+                !isStandardBoard
+                  ? "Engine play is only available for standard 8x8 boards"
+                  : ""
+              }
+            />
+          </div>
+
+          {versusEngine && (
+            <div className="game-preferences-form-component">
+              <span className="label">Difficulty</span>
+
+              <select
+                className="engine-difficulty-select"
+                value={engineDifficulty}
+                onChange={(e) => {
+                  setEngineDifficulty(e.target.value as EngineDifficulty);
+                }}
+              >
+                <option value={EngineDifficulty.Beginner}>Beginner</option>
+                <option value={EngineDifficulty.Easy}>Easy</option>
+                <option value={EngineDifficulty.Medium}>Medium</option>
+                <option value={EngineDifficulty.Hard}>Hard</option>
+                <option value={EngineDifficulty.Expert}>Expert</option>
+                <option value={EngineDifficulty.Master}>Master</option>
+              </select>
             </div>
           )}
         </div>

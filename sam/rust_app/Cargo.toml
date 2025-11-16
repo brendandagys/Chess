@@ -6,21 +6,22 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aws-config = "1.6.0"
-aws_lambda_events = { version = "0.16.0", default-features = false, features = [
+aws-config = "1.8"
+aws_lambda_events = { version = "1.0", default-features = false, features = [
   "apigw",
 ] }
-aws-sdk-dynamodb = "1.69.0"
-aws-sdk-apigatewaymanagement = "1.62.0"
-base64 = "0.21"
-chrono = "0.4.40"
-lambda_http = "0.14.0"
-lambda_runtime = "0.13.0"
-rand = "0.9.0"
-serde = "1.0.219"
-serde_dynamo = { version = "4.2.14", features = ["aws-sdk-dynamodb+1"] }
-serde_json = "1.0.140"
-tokio = { version = "1", features = ["macros"] }
+aws-sdk-dynamodb = "1.98"
+aws-sdk-apigatewaymanagement = "1.89"
+base64 = "0.22"
+bitboard_chess_engine = "0.1"
+chrono = "0.4"
+lambda_http = "1.0"
+lambda_runtime = "1.0"
+rand = "0.9"
+serde = "1.0"
+serde_dynamo = { version = "4.3", features = ["aws-sdk-dynamodb+1"] }
+serde_json = "1.0"
+tokio = { version = "1.48", features = ["macros"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = [
   "fmt",

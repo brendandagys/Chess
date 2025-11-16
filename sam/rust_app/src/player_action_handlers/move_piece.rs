@@ -5,9 +5,9 @@ use lambda_runtime::Error;
 
 use chess::{
     helpers::game::{
-        can_player_make_a_move, get_game, get_player_details_from_connection_id,
-        handle_if_game_is_finished, make_move, notify_other_player_about_game_update, save_game,
-        validate_move, PlayerDetails,
+        can_player_make_a_move, get_engine_move_if_turn, get_game,
+        get_player_details_from_connection_id, handle_if_game_is_finished, make_move,
+        notify_player_about_game_update, save_game, validate_move, PlayerDetails,
     },
     types::game::PlayerMove,
     utils::api::build_response,
@@ -76,31 +76,44 @@ pub async fn move_piece(
                 );
             }
 
+            if game.engine_difficulty.is_some() {
+                if let Some(engine_move) =
+                    get_engine_move_if_turn(sdk_config, request_context, &mut game, connection_id)
+                        .await?
+                {
+                    if let Err(e) = make_move(&mut game.game_state, &engine_move) {
+                        return build_response(
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Some(connection_id.to_string()),
+                            Some(vec![e.into()]),
+                            Some(game),
+                        );
+                    }
+                }
+            }
+
             save_game(dynamo_db_client, game_table, &game).await?;
 
             handle_if_game_is_finished(
                 dynamo_db_client,
                 user_table,
                 &username,
-                opponent_username.as_deref().unwrap_or_else(|| {
-                    panic!("Opponent username should be set for game ID: {game_id}")
-                }),
+                opponent_username.as_deref(),
                 &game.game_state,
             )
             .await?;
 
-            notify_other_player_about_game_update(
+            notify_player_about_game_update(
                 sdk_config,
                 request_context,
                 connection_id,
                 &game,
                 None,
+                false,
             )
             .await?;
 
-            tracing::info!(
-        "PLAYER {username} MADE A MOVE (GAME ID: {game_id}): {player_move:?}. Game state: {game:?}"
-    );
+            tracing::info!("PLAYER {username} MADE A MOVE (GAME ID: {game_id}): {player_move:?}. Game state: {game:?}");
 
             build_response(
                 StatusCode::OK,

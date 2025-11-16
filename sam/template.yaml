@@ -7,11 +7,12 @@ Description: |
 Globals:
   Function:
     Timeout: 10
-    MemorySize: 128
+    MemorySize: 1024 # Engine seems to use ~500 MB
 
 Conditions:
   CreateDeployBucketAndPolicy:
     !Equals [!Ref CreateDeployBucketAndPolicy, "true"]
+
   CreateDnsRecordWww: !Equals [!Ref DnsRecordWwwFlag, "true"]
 
 Parameters:

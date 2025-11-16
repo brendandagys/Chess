@@ -1,9 +1,11 @@
+use crate::helpers::board::game_state_to_fen;
 use crate::helpers::user::{get_user_game, save_user_record};
 use crate::types::api::{ApiMessage, ApiResponse};
-use crate::types::board::{Board, BoardSetup, Position};
+use crate::types::board::{Board, BoardSetup, File, Position, Rank};
 use crate::types::dynamo_db::GameRecord;
 use crate::types::game::{
-    ColorPreference, GameEnding, GameState, GameStateAtPointInTime, GameTime, PlayerMove, State,
+    ColorPreference, EngineDifficulty, GameEnding, GameState, GameStateAtPointInTime, GameTime,
+    PlayerMove, State,
 };
 use crate::types::piece::{Color, Piece};
 use crate::utils::api_gateway::post_to_connection;
@@ -12,6 +14,7 @@ use crate::utils::dynamo_db::{get_item, put_item};
 use aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequestContext;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Client;
+use chess_engine::engine::{Engine, SearchResult};
 use chrono::{TimeZone, Utc};
 use lambda_runtime::Error;
 use std::collections::HashMap;
@@ -32,7 +35,7 @@ pub async fn get_game(
     get_item(client, table, key).await
 }
 
-/// RETURNS a tuple containing:
+/// Returns a tuple containing:
 /// 1) The connection ID for the white player, if applicable.
 /// 2) The username for the white player, if applicable.
 /// 3) The connection ID for the black player, if applicable.
@@ -173,6 +176,7 @@ pub fn create_game(
     username: &str,
     board_setup: Option<BoardSetup>,
     color_preference: ColorPreference,
+    engine_difficulty: Option<EngineDifficulty>,
     seconds_per_player: Option<usize>,
     connection_id: &str,
 ) -> GameRecord {
@@ -193,6 +197,7 @@ pub fn create_game(
         white_username,
         black_connection_id,
         black_username,
+        engine_difficulty,
         game_state,
         created: chrono::Utc::now().to_rfc3339(),
     }
@@ -270,16 +275,29 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
     Ok(())
 }
 
-/// Notify other player, if they are connected
-pub async fn notify_other_player_about_game_update(
+/// Notify a player, if they are connected
+///
+/// Originally used *only* to notify a human opponent (single WebSocket HTTP response would go to current player).
+/// With the engine, we now need to notify the current player before the Lambda returns (i.e. between their move and the engine move).
+pub async fn notify_player_about_game_update(
     sdk_config: &aws_config::SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     current_user_connection_id: &str,
     game: &GameRecord,
     messages: Option<Vec<ApiMessage>>,
+    current_player: bool, // Notify current player? Otherwise notify opponent.
 ) -> Result<(), Error> {
+    if !current_player && game.engine_difficulty.is_some() {
+        return Ok(());
+    }
+
+    let player_check = |s: &str| match current_player {
+        true => s == current_user_connection_id,
+        false => s != current_user_connection_id,
+    };
+
     if let Some(white_connection_id) = &game.white_connection_id {
-        if white_connection_id != current_user_connection_id
+        if player_check(white_connection_id)
             && white_connection_id != "<disconnected>"
             && (post_to_connection(
                 sdk_config,
@@ -300,7 +318,7 @@ pub async fn notify_other_player_about_game_update(
     }
 
     if let Some(black_connection_id) = &game.black_connection_id {
-        if black_connection_id != current_user_connection_id
+        if player_check(black_connection_id)
             && black_connection_id != "<disconnected>"
             && (post_to_connection(
                 sdk_config,
@@ -328,6 +346,10 @@ pub fn is_game_over(game: &GameRecord) -> bool {
 }
 
 fn are_both_players_present(game: &GameRecord) -> bool {
+    if game.engine_difficulty.is_some() {
+        return true;
+    }
+
     match (&game.white_connection_id, &game.black_connection_id) {
         (Some(white), Some(black)) => white != "<disconnected>" && black != "<disconnected>",
         _ => false,
@@ -446,6 +468,32 @@ pub fn validate_move(
     Ok(())
 }
 
+/// Update the game time and ensure the game is started if both players have just joined
+pub fn check_if_both_players_just_joined(game_record: &mut GameRecord) {
+    if game_record.engine_difficulty.is_some()
+        || game_record
+            .white_connection_id
+            .as_deref()
+            .unwrap_or("<disconnected>")
+            != "<disconnected>"
+            && game_record
+                .black_connection_id
+                .as_deref()
+                .unwrap_or("<disconnected>")
+                != "<disconnected>"
+    {
+        if let Some(game_time) = &mut game_record.game_state.game_time {
+            game_time.both_players_last_connected_at = Some(chrono::Utc::now().to_rfc3339());
+        }
+
+        let current_state = game_record.game_state.current_state_mut();
+
+        if current_state.state == State::NotStarted {
+            current_state.state = State::InProgress;
+        }
+    }
+}
+
 /// Update the game time remaining for both players after a move is made
 fn update_game_time(game_time: &mut GameTime, game_state: &mut GameStateAtPointInTime) {
     let current_turn = game_state.current_turn;
@@ -548,7 +596,7 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
                 }
             }
 
-            check_for_mates(&mut next_state);
+            check_for_mates(&mut next_state); // Toggles turn
         }
     };
 
@@ -557,12 +605,82 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
     Ok(())
 }
 
+pub fn get_next_move_from_engine(game_record: &GameRecord) -> PlayerMove {
+    let fen = game_state_to_fen(game_record.game_state.history.last().unwrap());
+
+    let mut engine = Engine::new(
+        None,
+        None,
+        None,
+        None,
+        Some(5000),
+        None,
+        None,
+        None,
+        game_record.engine_difficulty.map(|d| d.into()),
+    );
+
+    engine.position = chess_engine::position::Position::from_fen(&fen)
+        .unwrap_or_else(|_| panic!("Failed to load FEN: {fen}"));
+
+    let SearchResult {
+        best_move_from,
+        best_move_to,
+        ..
+    } = engine.think::<fn(u16, i32, &mut chess_engine::position::Position)>(None);
+
+    let from_square = best_move_from.expect("Engine should return a move");
+    let to_square = best_move_to.expect("Engine should return a move");
+
+    PlayerMove {
+        from: Position {
+            file: File((from_square.file() + 1) as usize),
+            rank: Rank((from_square.rank() + 1) as usize),
+        },
+        to: Position {
+            file: File((to_square.file() + 1) as usize),
+            rank: Rank((to_square.rank() + 1) as usize),
+        },
+    }
+}
+
+pub async fn get_engine_move_if_turn(
+    sdk_config: &aws_config::SdkConfig,
+    request_context: &ApiGatewayWebsocketProxyRequestContext,
+    game: &mut GameRecord,
+    connection_id: &str,
+) -> Result<Option<PlayerMove>, Error> {
+    let current_turn = game.game_state.current_state().current_turn;
+
+    let engine_color = match (&game.white_username, &game.black_username) {
+        (None, Some(_)) => Color::White,
+        (Some(_), None) => Color::Black,
+        _ => unreachable!("Engine games should have exactly one player"),
+    };
+
+    if engine_color == current_turn {
+        notify_player_about_game_update(
+            sdk_config,
+            request_context,
+            connection_id,
+            game,
+            None,
+            true,
+        )
+        .await?;
+
+        return Ok(Some(get_next_move_from_engine(game)));
+    }
+
+    Ok(None)
+}
+
 /// Update the user-game records for both players if the game has finished
 pub async fn handle_if_game_is_finished(
     dynamo_db_client: &Client,
     user_table: &str,
     username: &str,
-    opponent_username: &str,
+    opponent_username: Option<&str>,
     game_state: &GameState,
 ) -> Result<(), Error> {
     match game_state.current_state().state {
@@ -571,7 +689,12 @@ pub async fn handle_if_game_is_finished(
         | State::Finished(GameEnding::Resignation(losing_color)) => {
             let winner = Some(losing_color.opponent_color().to_string());
 
-            for username in [username, opponent_username] {
+            let usernames = match opponent_username {
+                Some(opponent) => vec![username, opponent],
+                None => vec![username],
+            };
+
+            for username in usernames {
                 let mut user_game =
                     get_user_game(dynamo_db_client, user_table, username, &game_state.game_id)
                         .await?

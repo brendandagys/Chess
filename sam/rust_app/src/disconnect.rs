@@ -73,10 +73,7 @@ async fn function_handler(
         tracing::info!("PLAYER {username} DISCONNECTED FROM GAME (ID: {game_id})");
     }
 
-    Ok(ApiGatewayProxyResponse {
-        status_code: 200,
-        ..Default::default()
-    })
+    build_response(StatusCode::OK, None, None, None::<()>)
 }
 
 #[tokio::main]

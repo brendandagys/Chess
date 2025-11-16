@@ -70,6 +70,15 @@ export enum ColorPreference {
   Random = 'random',
 }
 
+export enum EngineDifficulty {
+  Beginner = 'beginner',
+  Easy = 'easy',
+  Medium = 'medium',
+  Hard = 'hard',
+  Expert = 'expert',
+  Master = 'master',
+}
+
 export enum TimeOption {
   OneMinute = 60,
   ThreeMinutes = 180,
@@ -125,6 +134,8 @@ interface PlayerActionCreateGame {
     gameId: string | null;
     boardSetup: BoardSetup | null;
     colorPreference: ColorPreference;
+    secondsPerPlayer: TimeOption | null;
+    engineDifficulty: EngineDifficulty | null;
   };
 }
 
@@ -191,6 +202,7 @@ export interface GameRecord {
   white_username: string | null;
   black_connection_id: string | null;
   black_username: string | null;
+  engine_difficulty: EngineDifficulty | null;
   game_state: GameState;
   created: string;
 }

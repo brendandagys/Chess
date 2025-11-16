@@ -604,6 +604,4 @@ impl Board {
 
         captured_piece
     }
-
-    // TODO: pub fn unapply_move()
 }

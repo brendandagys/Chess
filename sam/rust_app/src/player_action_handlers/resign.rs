@@ -6,7 +6,7 @@ use lambda_runtime::Error;
 use chess::{
     helpers::game::{
         get_game, get_player_details_from_connection_id, handle_if_game_is_finished,
-        notify_other_player_about_game_update, save_game, PlayerDetails,
+        notify_player_about_game_update, save_game, PlayerDetails,
     },
     types::game::{GameEnding, State},
     utils::api::build_response,
@@ -52,19 +52,18 @@ pub async fn resign(
                 dynamo_db_client,
                 user_table,
                 &username,
-                opponent_username.as_deref().unwrap_or_else(|| {
-                    panic!("Opponent username should be set for game ID: {game_id}")
-                }),
+                opponent_username.as_deref(),
                 &game.game_state,
             )
             .await?;
 
-            notify_other_player_about_game_update(
+            notify_player_about_game_update(
                 sdk_config,
                 request_context,
                 connection_id,
                 &game,
                 None,
+                false,
             )
             .await?;
 

@@ -62,9 +62,12 @@ async fn function_handler(
             game_id,
             board_setup,
             color_preference,
+            engine_difficulty,
             seconds_per_player,
         } => {
             create_new_game(
+                sdk_config,
+                &request_context,
                 dynamo_db_client,
                 &game_table,
                 &user_table,
@@ -73,6 +76,7 @@ async fn function_handler(
                 game_id.as_deref().map(|s| s.trim()),
                 board_setup,
                 color_preference,
+                engine_difficulty,
                 seconds_per_player,
             )
             .await

@@ -3,9 +3,8 @@ use lambda_http::Body;
 use lambda_runtime::Error;
 
 pub fn offer_draw(_game_id: &str) -> Result<ApiGatewayProxyResponse, Error> {
-    Ok(ApiGatewayProxyResponse {
-        status_code: 200, // Doesn't seem to be used by API Gateway
-        body: Some(Body::from(serde_json::to_string("`offer_draw()`")?)),
-        ..Default::default()
-    })
+    let mut response = ApiGatewayProxyResponse::default();
+    response.status_code = 200; // Doesn't seem to be used by API Gateway
+    response.body = Some(Body::from(serde_json::to_string("`offer_draw()`")?));
+    Ok(response)
 }

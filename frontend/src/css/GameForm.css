@@ -42,7 +42,8 @@
 }
 
 .board-setup-select,
-.color-preference-select {
+.color-preference-select,
+.engine-difficulty-select {
   padding: 0 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -60,4 +61,11 @@
   text-align: center;
   font-size: 0.9rem;
   height: 30px;
+}
+
+.game-form .game-preferences-form-component input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 5px 0;
+  cursor: pointer;
 }
