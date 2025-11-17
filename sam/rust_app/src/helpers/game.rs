@@ -616,7 +616,7 @@ pub fn get_next_move_from_engine(game_record: &GameRecord) -> PlayerMove {
         Some(5000),
         None,
         None,
-        None,
+        Some("src/lpb-allbook.bin"),
         game_record.engine_difficulty.map(|d| d.into()),
     );
 
