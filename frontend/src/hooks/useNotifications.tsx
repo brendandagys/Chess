@@ -39,6 +39,10 @@ export const useNotifications = () => {
       return null;
     }
 
+    if (!document.hidden) {
+      return null;
+    }
+
     try {
       return new Notification(title, {
         icon: "/chess-logo.svg",
