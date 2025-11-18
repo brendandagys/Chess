@@ -77,11 +77,6 @@ export const Game: React.FC<GameProps> = ({
 
   const [historyIndex, setHistoryIndex] = useState(numStates - 1);
 
-  // Reset to latest board when game state updates
-  useEffect(() => {
-    setHistoryIndex(numStates - 1);
-  }, [numStates]);
-
   const bothPlayersReady =
     gameRecord.engine_difficulty !== null ||
     ![
@@ -177,6 +172,32 @@ export const Game: React.FC<GameProps> = ({
         : gameTime.whiteSecondsLeft
       : null
   );
+
+  // Reset to latest board when game state updates
+  useEffect(() => {
+    setHistoryIndex(numStates - 1);
+
+    if (
+      gameIsTimed &&
+      gameRecord.engine_difficulty !== null &&
+      currentGameState.engineResult
+    ) {
+      const searchTimeMs = currentGameState.engineResult.timeMs;
+
+      setOpponentSecondsLeft((prev) => {
+        if (prev === null) {
+          return prev;
+        }
+
+        return prev - Math.max(1, Math.floor(searchTimeMs / 1000));
+      });
+    }
+  }, [
+    currentGameState.engineResult,
+    gameIsTimed,
+    gameRecord.engine_difficulty,
+    numStates,
+  ]);
 
   useEffect(() => {
     if (!gameIsTimed || !bothPlayersReady || gameIsFinished) {
@@ -409,6 +430,26 @@ export const Game: React.FC<GameProps> = ({
                 {isTurn
                   ? "YOUR TURN"
                   : `${playerColor === Color.White ? "Black" : "White"}'s turn`}
+              </p>
+            )}
+
+            {currentGameState.engineResult && gameRecord.engine_difficulty && (
+              <p className="pill pill--blue">
+                {currentGameState.engineResult.fromBook ? (
+                  "Book move"
+                ) : (
+                  <>
+                    D{currentGameState.engineResult.depth} ·{" "}
+                    {(
+                      (currentGameState.engineResult.nodes -
+                        currentGameState.engineResult.qnodes) /
+                      1000
+                    ).toFixed(1)}
+                    k N ·{" "}
+                    {(currentGameState.engineResult.qnodes / 1000).toFixed(1)}k
+                    QN · {currentGameState.engineResult.timeMs}ms
+                  </>
+                )}
               </p>
             )}
           </>

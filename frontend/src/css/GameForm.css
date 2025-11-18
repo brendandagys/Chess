@@ -64,8 +64,8 @@
 }
 
 .game-form .game-preferences-form-component input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  margin: 5px 0;
+  width: 24px;
+  height: 24px;
+  margin: 3px 0;
   cursor: pointer;
 }

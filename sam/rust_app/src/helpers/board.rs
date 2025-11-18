@@ -405,6 +405,7 @@ mod tests {
                 white_points: 0,
                 black_points: 0,
             },
+            engine_result: None,
         };
 
         let fen = game_state_to_fen(&game_state);

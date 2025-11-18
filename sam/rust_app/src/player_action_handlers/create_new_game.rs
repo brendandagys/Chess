@@ -1,13 +1,14 @@
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
 use chess::types::board::BoardSetup;
-use chess::types::game::{ColorPreference, EngineDifficulty};
+use chess::types::game::{ColorPreference, EngineDifficulty, SearchStatistics};
 use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
 
 use chess::helpers::game::{
-    check_if_both_players_just_joined, create_game, get_engine_move_if_turn, get_game, make_move,
-    save_game,
+    check_if_both_players_just_joined, create_game, get_engine_result_if_turn, get_game,
+    get_next_move_from_engine_search_result, make_move, save_game,
+    update_game_time_after_engine_move,
 };
 use chess::helpers::user::{create_user_game, save_user_record};
 use chess::utils::api::build_response;
@@ -85,10 +86,14 @@ pub async fn create_new_game(
     if new_game.engine_difficulty.is_some() {
         check_if_both_players_just_joined(&mut new_game);
 
-        if let Some(engine_move) =
-            get_engine_move_if_turn(sdk_config, request_context, &mut new_game, connection_id)
+        if let Some(search_result) =
+            get_engine_result_if_turn(sdk_config, request_context, &mut new_game, connection_id)
                 .await?
         {
+            let engine_move = get_next_move_from_engine_search_result(&search_result);
+
+            update_game_time_after_engine_move(&mut new_game.game_state, search_result.time_ms);
+
             if let Err(e) = make_move(&mut new_game.game_state, &engine_move) {
                 return build_response(
                     StatusCode::INTERNAL_SERVER_ERROR,
@@ -97,6 +102,14 @@ pub async fn create_new_game(
                     Some(new_game),
                 );
             }
+
+            new_game.game_state.current_state_mut().engine_result = Some(SearchStatistics {
+                depth: search_result.depth,
+                nodes: search_result.nodes,
+                qnodes: search_result.qnodes,
+                time_ms: search_result.time_ms,
+                from_book: search_result.from_book,
+            });
         }
     }
 

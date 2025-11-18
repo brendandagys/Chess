@@ -5,11 +5,12 @@ use lambda_runtime::Error;
 
 use chess::{
     helpers::game::{
-        can_player_make_a_move, get_engine_move_if_turn, get_game,
-        get_player_details_from_connection_id, handle_if_game_is_finished, make_move,
-        notify_player_about_game_update, save_game, validate_move, PlayerDetails,
+        can_player_make_a_move, get_engine_result_if_turn, get_game,
+        get_next_move_from_engine_search_result, get_player_details_from_connection_id,
+        handle_if_game_is_finished, make_move, notify_player_about_game_update, save_game,
+        update_game_time_after_engine_move, validate_move, PlayerDetails,
     },
-    types::game::PlayerMove,
+    types::game::{PlayerMove, SearchStatistics},
     utils::api::build_response,
 };
 
@@ -77,10 +78,14 @@ pub async fn move_piece(
             }
 
             if game.engine_difficulty.is_some() {
-                if let Some(engine_move) =
-                    get_engine_move_if_turn(sdk_config, request_context, &mut game, connection_id)
+                if let Some(search_result) =
+                    get_engine_result_if_turn(sdk_config, request_context, &mut game, connection_id)
                         .await?
                 {
+                    let engine_move = get_next_move_from_engine_search_result(&search_result);
+
+                    update_game_time_after_engine_move(&mut game.game_state, search_result.time_ms);
+
                     if let Err(e) = make_move(&mut game.game_state, &engine_move) {
                         return build_response(
                             StatusCode::INTERNAL_SERVER_ERROR,
@@ -89,6 +94,14 @@ pub async fn move_piece(
                             Some(game),
                         );
                     }
+
+                    game.game_state.current_state_mut().engine_result = Some(SearchStatistics {
+                        depth: search_result.depth,
+                        nodes: search_result.nodes,
+                        qnodes: search_result.qnodes,
+                        time_ms: search_result.time_ms,
+                        from_book: search_result.from_book,
+                    });
                 }
             }
 

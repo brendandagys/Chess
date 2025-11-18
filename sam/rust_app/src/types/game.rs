@@ -195,6 +195,16 @@ pub struct GameTime {
     pub black_seconds_left: usize,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchStatistics {
+    pub depth: u16,
+    pub nodes: usize,
+    pub qnodes: usize,
+    pub time_ms: u64,
+    pub from_book: bool,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameStateAtPointInTime {
@@ -203,6 +213,7 @@ pub struct GameStateAtPointInTime {
     pub in_check: Option<Color>,
     pub board: Board,
     pub captured_pieces: CapturedPieces,
+    pub engine_result: Option<SearchStatistics>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -236,6 +247,7 @@ impl GameState {
                 in_check: None,
                 board: board.clone(),
                 captured_pieces: captured_pieces.clone(),
+                engine_result: None,
             }],
             game_time: seconds_per_player.map(|seconds| GameTime {
                 both_players_last_connected_at: None,

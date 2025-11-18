@@ -494,6 +494,28 @@ pub fn check_if_both_players_just_joined(game_record: &mut GameRecord) {
     }
 }
 
+pub fn update_game_time_after_engine_move(game_state: &mut GameState, search_duration: u64) {
+    let engine_color = game_state.current_state().current_turn;
+
+    if let Some(game_time) = &mut game_state.game_time {
+        let search_seconds = ((search_duration + 999) / 1000) as usize; // Round up
+        let time_to_decrement = search_seconds.max(1);
+
+        match engine_color {
+            Color::White => {
+                game_time.white_seconds_left = game_time
+                    .white_seconds_left
+                    .saturating_sub(time_to_decrement);
+            }
+            Color::Black => {
+                game_time.black_seconds_left = game_time
+                    .black_seconds_left
+                    .saturating_sub(time_to_decrement);
+            }
+        }
+    }
+}
+
 /// Update the game time remaining for both players after a move is made
 fn update_game_time(game_time: &mut GameTime, game_state: &mut GameStateAtPointInTime) {
     let current_turn = game_state.current_turn;
@@ -575,6 +597,7 @@ fn check_for_mates(game_state: &mut GameStateAtPointInTime) {
 
 pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result<(), &'static str> {
     let mut next_state = game_state.current_state().clone();
+    next_state.engine_result = None; // Clear previous engine result
 
     if let Some(game_time) = &mut game_state.game_time {
         update_game_time(game_time, &mut next_state);
@@ -605,32 +628,13 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
     Ok(())
 }
 
-pub fn get_next_move_from_engine(game_record: &GameRecord) -> PlayerMove {
-    let fen = game_state_to_fen(game_record.game_state.history.last().unwrap());
-
-    let mut engine = Engine::new(
-        None,
-        None,
-        None,
-        None,
-        Some(5000),
-        None,
-        None,
-        Some("src/lpb-allbook.bin"),
-        game_record.engine_difficulty.map(|d| d.into()),
-    );
-
-    engine.position = chess_engine::position::Position::from_fen(&fen)
-        .unwrap_or_else(|_| panic!("Failed to load FEN: {fen}"));
-
-    let SearchResult {
-        best_move_from,
-        best_move_to,
-        ..
-    } = engine.think::<fn(u16, i32, &mut chess_engine::position::Position)>(None);
-
-    let from_square = best_move_from.expect("Engine should return a move");
-    let to_square = best_move_to.expect("Engine should return a move");
+pub fn get_next_move_from_engine_search_result(search_result: &SearchResult) -> PlayerMove {
+    let from_square = search_result
+        .best_move_from
+        .expect("Engine did not return a move");
+    let to_square = search_result
+        .best_move_to
+        .expect("Engine did not return a move");
 
     PlayerMove {
         from: Position {
@@ -644,12 +648,34 @@ pub fn get_next_move_from_engine(game_record: &GameRecord) -> PlayerMove {
     }
 }
 
-pub async fn get_engine_move_if_turn(
+pub fn get_engine_result(game_record: &GameRecord) -> SearchResult {
+    let fen = game_state_to_fen(game_record.game_state.history.last().unwrap());
+
+    let mut engine = Engine::new(
+        None,
+        None,
+        None,
+        None,
+        Some(5000),
+        None,
+        None,
+        None,
+        // Some("../lpb-allbook.bin"),
+        game_record.engine_difficulty.map(|d| d.into()),
+    );
+
+    engine.position = chess_engine::position::Position::from_fen(&fen)
+        .unwrap_or_else(|_| panic!("Failed to load FEN: {fen}"));
+
+    engine.think::<fn(u16, i32, &mut chess_engine::position::Position)>(None)
+}
+
+pub async fn get_engine_result_if_turn(
     sdk_config: &aws_config::SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     game: &mut GameRecord,
     connection_id: &str,
-) -> Result<Option<PlayerMove>, Error> {
+) -> Result<Option<SearchResult>, Error> {
     let current_turn = game.game_state.current_state().current_turn;
 
     let engine_color = match (&game.white_username, &game.black_username) {
@@ -669,7 +695,7 @@ pub async fn get_engine_move_if_turn(
         )
         .await?;
 
-        return Ok(Some(get_next_move_from_engine(game)));
+        return Ok(Some(get_engine_result(game)));
     }
 
     Ok(None)

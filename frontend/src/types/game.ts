@@ -97,12 +97,21 @@ interface GameTime {
   blackSecondsLeft: number;
 }
 
+export interface SearchStatistics {
+  depth: number;
+  nodes: number;
+  qnodes: number;
+  timeMs: number;
+  fromBook: boolean;
+}
+
 export interface GameStateAtPointInTime {
   state: State;
   currentTurn: Color;
   inCheck: Color | null;
   board: CompactBoard;
   capturedPieces: CompactCapturedPieces;
+  engineResult: SearchStatistics | null;
 }
 
 export interface GameState {
