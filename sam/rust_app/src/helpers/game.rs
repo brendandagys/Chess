@@ -1,4 +1,5 @@
 use crate::helpers::board::game_state_to_fen;
+use crate::helpers::opening_book::get_opening_book_path;
 use crate::helpers::user::{get_user_game, save_user_record};
 use crate::types::api::{ApiMessage, ApiResponse};
 use crate::types::board::{Board, BoardSetup, File, Position, Rank};
@@ -651,6 +652,8 @@ pub fn get_next_move_from_engine_search_result(search_result: &SearchResult) -> 
 pub fn get_engine_result(game_record: &GameRecord) -> SearchResult {
     let fen = game_state_to_fen(game_record.game_state.history.last().unwrap());
 
+    let opening_book_path = get_opening_book_path();
+
     let mut engine = Engine::new(
         None,
         None,
@@ -659,8 +662,7 @@ pub fn get_engine_result(game_record: &GameRecord) -> SearchResult {
         Some(5000),
         None,
         None,
-        None,
-        // Some("../lpb-allbook.bin"),
+        opening_book_path,
         game_record.engine_difficulty.map(|d| d.into()),
     );
 
