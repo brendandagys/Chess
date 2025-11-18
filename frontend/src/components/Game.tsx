@@ -433,21 +433,21 @@ export const Game: React.FC<GameProps> = ({
               </p>
             )}
 
-            {currentGameState.engineResult && gameRecord.engine_difficulty && (
+            {gameRecord.engine_difficulty && viewedGameState.engineResult && (
               <p className="pill pill--blue">
-                {currentGameState.engineResult.fromBook ? (
+                {viewedGameState.engineResult.fromBook ? (
                   "Book move"
                 ) : (
                   <>
-                    D{currentGameState.engineResult.depth} ·{" "}
+                    D{viewedGameState.engineResult.depth} ·{" "}
                     {(
-                      (currentGameState.engineResult.nodes -
-                        currentGameState.engineResult.qnodes) /
+                      (viewedGameState.engineResult.nodes -
+                        viewedGameState.engineResult.qnodes) /
                       1000
                     ).toFixed(1)}
                     k N ·{" "}
-                    {(currentGameState.engineResult.qnodes / 1000).toFixed(1)}k
-                    QN · {currentGameState.engineResult.timeMs}ms
+                    {(viewedGameState.engineResult.qnodes / 1000).toFixed(1)}k
+                    QN · {viewedGameState.engineResult.timeMs}ms
                   </>
                 )}
               </p>
