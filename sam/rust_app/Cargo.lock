@@ -516,9 +516,9 @@ dependencies = [
 
 [[package]]
 name = "bitboard_chess_engine"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4f520d94b70a0693bbcec0a506e24cfa9885eac1469afd56716ecb368989cc7"
+checksum = "86b8e190d60d180f8f7b5b19042cda11c461a01036bf8dc4ae8e0d5faea897cc"
 dependencies = [
  "rand 0.8.5",
 ]
