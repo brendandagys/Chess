@@ -18,17 +18,19 @@ fn get_engine_color(game: &mut GameRecord) -> Color {
     }
 }
 
+fn set_available_moves_for_next_turn(engine: &mut Engine, game: &mut GameRecord) {
+    game.game_state.current_state_mut().moves = engine.position.get_legal_moves();
+}
+
 pub async fn use_engine(
     game: &mut GameRecord,
     sdk_config: &aws_config::SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     connection_id: &str,
 ) -> Result<(), Error> {
-    if game.engine_difficulty.is_none() {
-        return Ok(());
-    }
-
-    if !is_engine_turn(game) {
+    if game.engine_difficulty.is_none() || !is_engine_turn(game) {
+        let mut engine = get_engine(game);
+        set_available_moves_for_next_turn(&mut engine, game);
         return Ok(());
     }
 
@@ -53,7 +55,7 @@ pub async fn use_engine(
         from_book: search_result.from_book,
     });
 
-    game.game_state.current_state_mut().moves = engine.position.get_legal_moves();
+    set_available_moves_for_next_turn(&mut engine, game);
 
     Ok(())
 }

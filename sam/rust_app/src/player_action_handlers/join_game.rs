@@ -1,6 +1,6 @@
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
-use chess::helpers::engine::get_engine;
+use chess::helpers::engine::use_engine;
 use chess::types::api::ApiMessage;
 use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
@@ -67,8 +67,13 @@ pub async fn join_game(
                 }
             );
 
-            let mut engine = get_engine(&existing_game);
-            existing_game.game_state.current_state_mut().moves = engine.position.get_legal_moves();
+            use_engine(
+                &mut existing_game,
+                sdk_config,
+                request_context,
+                connection_id,
+            )
+            .await?;
 
             save_game(dynamo_db_client, game_table, &existing_game).await?;
 
