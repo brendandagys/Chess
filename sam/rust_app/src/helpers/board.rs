@@ -33,6 +33,7 @@ pub fn decode_piece(piece_type_byte: usize) -> Option<Piece> {
         piece_type,
         color,
         last_game_move: None,
+        move_count: 0,
     })
 }
 
@@ -281,13 +282,13 @@ fn generate_castling_rights(squares: &[Vec<Option<Piece>>]) -> String {
     if let Some(white_king) = &squares[7][4] {
         if white_king.piece_type == PieceType::King
             && white_king.color == Color::White
-            && white_king.last_game_move.is_none()
+            && white_king.move_count == 0
         {
             // Check kingside rook (h1 = row 7, col 7)
             if let Some(kingside_rook) = &squares[7][7] {
                 if kingside_rook.piece_type == PieceType::Rook
                     && kingside_rook.color == Color::White
-                    && kingside_rook.last_game_move.is_none()
+                    && kingside_rook.move_count == 0
                 {
                     castling.push('K');
                 }
@@ -297,7 +298,7 @@ fn generate_castling_rights(squares: &[Vec<Option<Piece>>]) -> String {
             if let Some(queenside_rook) = &squares[7][0] {
                 if queenside_rook.piece_type == PieceType::Rook
                     && queenside_rook.color == Color::White
-                    && queenside_rook.last_game_move.is_none()
+                    && queenside_rook.move_count == 0
                 {
                     castling.push('Q');
                 }
@@ -309,13 +310,13 @@ fn generate_castling_rights(squares: &[Vec<Option<Piece>>]) -> String {
     if let Some(black_king) = &squares[0][4] {
         if black_king.piece_type == PieceType::King
             && black_king.color == Color::Black
-            && black_king.last_game_move.is_none()
+            && black_king.move_count == 0
         {
             // Check kingside rook (h8 = row 0, col 7)
             if let Some(kingside_rook) = &squares[0][7] {
                 if kingside_rook.piece_type == PieceType::Rook
                     && kingside_rook.color == Color::Black
-                    && kingside_rook.last_game_move.is_none()
+                    && kingside_rook.move_count == 0
                 {
                     castling.push('k');
                 }
@@ -325,7 +326,7 @@ fn generate_castling_rights(squares: &[Vec<Option<Piece>>]) -> String {
             if let Some(queenside_rook) = &squares[0][0] {
                 if queenside_rook.piece_type == PieceType::Rook
                     && queenside_rook.color == Color::Black
-                    && queenside_rook.last_game_move.is_none()
+                    && queenside_rook.move_count == 0
                 {
                     castling.push('q');
                 }
@@ -352,6 +353,7 @@ fn generate_en_passant_target(squares: &[Vec<Option<Piece>>], move_count: usize)
             if piece.piece_type == PieceType::Pawn
                 && piece.color == Color::White
                 && piece.last_game_move == Some(move_count)
+                && piece.move_count == 1
             {
                 // Check if the square two ranks back is empty (rank 2, row 6)
                 if squares[6][file_index].is_none() {
@@ -368,7 +370,7 @@ fn generate_en_passant_target(squares: &[Vec<Option<Piece>>], move_count: usize)
         if let Some(piece) = square {
             if piece.piece_type == PieceType::Pawn
                 && piece.color == Color::Black
-                && piece.last_game_move == Some(move_count)
+                && piece.move_count == 1
             {
                 // Check if the square two ranks back is empty (rank 7, row 1)
                 if squares[1][file_index].is_none() {

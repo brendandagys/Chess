@@ -589,6 +589,7 @@ impl Board {
 
         self.move_count += 1;
         player_piece.last_game_move = Some(self.move_count);
+        player_piece.move_count += 1;
 
         self.check_for_pawn_promotion(&mut player_piece, player_move);
 

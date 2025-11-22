@@ -72,6 +72,7 @@ pub struct Piece {
     pub piece_type: PieceType,
     pub color: Color,
     pub last_game_move: Option<usize>,
+    pub move_count: usize,
 }
 
 impl Piece {
@@ -80,6 +81,7 @@ impl Piece {
             piece_type,
             color,
             last_game_move: None,
+            move_count: 0,
         }
     }
 
@@ -120,9 +122,7 @@ impl Piece {
         };
 
         let rook_position = match board.get_piece_at_position(&tentative_rook_position) {
-            Some(piece)
-                if piece.piece_type == PieceType::Rook && piece.last_game_move.is_none() =>
-            {
+            Some(piece) if piece.piece_type == PieceType::Rook && piece.move_count == 0 => {
                 tentative_rook_position
             }
             _ => return vec![],
@@ -259,7 +259,7 @@ impl Piece {
                     .into_iter()
                     .chain(
                         if !skip_castling_moves
-                            && self.last_game_move.is_none()
+                            && self.move_count == 0
                             && !board.is_king_in_check(&self.color)
                         {
                             self.get_allowed_castling_positions(board, position)
@@ -315,7 +315,7 @@ impl Piece {
                     moves.push(tentative_single_jump_position);
 
                     // Double-square forward; single-jump must also be valid
-                    if self.last_game_move.is_none() {
+                    if self.move_count == 0 {
                         let new_double_jump_rank = position.rank.0 as isize
                             + match self.color {
                                 Color::White => 2isize,
@@ -373,6 +373,7 @@ impl Piece {
                         if piece.piece_type == PieceType::Pawn
                             && piece.color == Color::Black
                             && piece.last_game_move == Some(board.move_count)
+                            && piece.move_count == 1
                         {
                             moves.push(Position {
                                 rank: Rank(position.rank.0 + 1),
@@ -385,6 +386,7 @@ impl Piece {
                         if piece.piece_type == PieceType::Pawn
                             && piece.color == Color::Black
                             && piece.last_game_move == Some(board.move_count)
+                            && piece.move_count == 1
                         {
                             moves.push(Position {
                                 rank: Rank(position.rank.0 + 1),
@@ -409,6 +411,7 @@ impl Piece {
                         if piece.piece_type == PieceType::Pawn
                             && piece.color == Color::White
                             && piece.last_game_move == Some(board.move_count)
+                            && piece.move_count == 1
                         {
                             moves.push(Position {
                                 rank: Rank(position.rank.0 - 1),
@@ -421,6 +424,7 @@ impl Piece {
                         if piece.piece_type == PieceType::Pawn
                             && piece.color == Color::White
                             && piece.last_game_move == Some(board.move_count)
+                            && piece.move_count == 1
                         {
                             moves.push(Position {
                                 rank: Rank(position.rank.0 - 1),
