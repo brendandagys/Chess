@@ -1,12 +1,10 @@
-use crate::helpers::board::game_state_to_fen;
-use crate::helpers::opening_book::get_opening_book_path;
 use crate::helpers::user::{get_user_game, save_user_record};
 use crate::types::api::{ApiMessage, ApiResponse};
-use crate::types::board::{Board, BoardSetup, File, Position, Rank};
+use crate::types::board::{Board, BoardSetup, Position};
 use crate::types::dynamo_db::GameRecord;
 use crate::types::game::{
     ColorPreference, EngineDifficulty, GameEnding, GameState, GameStateAtPointInTime, GameTime,
-    PlayerMove, SearchStatistics, State,
+    PlayerMove, State,
 };
 use crate::types::piece::{Color, Piece};
 use crate::utils::api_gateway::post_to_connection;
@@ -15,7 +13,6 @@ use crate::utils::dynamo_db::{get_item, put_item};
 use aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequestContext;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Client;
-use chess_engine::engine::{Engine, SearchResult};
 use chrono::{TimeZone, Utc};
 use lambda_runtime::Error;
 use std::collections::HashMap;
@@ -495,28 +492,6 @@ pub fn check_if_both_players_just_joined(game_record: &mut GameRecord) {
     }
 }
 
-pub fn handle_engine_think_time(game_state: &mut GameState, search_duration: u64) {
-    let engine_color = game_state.current_state().current_turn;
-
-    if let Some(game_time) = &mut game_state.game_time {
-        let search_seconds = ((search_duration + 999) / 1000) as usize; // Round up
-        let time_to_decrement = search_seconds.max(1);
-
-        match engine_color {
-            Color::White => {
-                game_time.white_seconds_left = game_time
-                    .white_seconds_left
-                    .saturating_sub(time_to_decrement);
-            }
-            Color::Black => {
-                game_time.black_seconds_left = game_time
-                    .black_seconds_left
-                    .saturating_sub(time_to_decrement);
-            }
-        }
-    }
-}
-
 /// Update the game time remaining for both players after a move is made
 fn update_game_time(game_time: &mut GameTime, game_state: &mut GameStateAtPointInTime) {
     let current_turn = game_state.current_turn;
@@ -628,90 +603,6 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) {
     game_state.history.push(next_state);
 }
 
-pub fn get_and_apply_next_move_from_engine_search_result(
-    engine: &mut Engine,
-    search_result: &SearchResult,
-) -> Option<PlayerMove> {
-    if let Some(from_square) = search_result.best_move_from {
-        if let Some(to_square) = search_result.best_move_to {
-            engine
-                .position
-                .make_move(from_square, to_square, search_result.best_move_promote);
-
-            return Some(PlayerMove {
-                from: Position {
-                    file: File((from_square.file() + 1) as usize),
-                    rank: Rank((from_square.rank() + 1) as usize),
-                },
-                to: Position {
-                    file: File((to_square.file() + 1) as usize),
-                    rank: Rank((to_square.rank() + 1) as usize),
-                },
-            });
-        }
-    }
-
-    None
-}
-
-pub fn get_engine(game_record: &GameRecord) -> Engine {
-    let opening_book_path = get_opening_book_path();
-    let fen = game_state_to_fen(game_record.game_state.history.last().unwrap());
-
-    let mut engine = Engine::new(
-        None,
-        None,
-        None,
-        None,
-        Some(3000),
-        None,
-        None,
-        opening_book_path,
-        game_record.engine_difficulty.map(|d| d.into()),
-    );
-
-    engine.position = chess_engine::position::Position::from_fen(&fen)
-        .unwrap_or_else(|_| panic!("Failed to load FEN: {fen}"));
-
-    engine
-}
-
-pub async fn get_engine_result_if_turn(
-    sdk_config: &aws_config::SdkConfig,
-    request_context: &ApiGatewayWebsocketProxyRequestContext,
-    game: &mut GameRecord,
-    connection_id: &str,
-    engine: &mut Engine,
-) -> Result<Option<SearchResult>, Error> {
-    let current_turn = game.game_state.current_state().current_turn;
-
-    let engine_color = match (&game.white_username, &game.black_username) {
-        (None, Some(_)) => Color::White,
-        (Some(_), None) => Color::Black,
-        _ => unreachable!("Engine games should have exactly one player"),
-    };
-
-    if engine_color == current_turn {
-        notify_player_about_game_update(
-            sdk_config,
-            request_context,
-            connection_id,
-            game,
-            None,
-            true,
-        )
-        .await?;
-
-        return Ok(Some(engine.think::<fn(
-            u16,
-            i32,
-            &mut chess_engine::position::Position,
-        )>(None)));
-    }
-
-    Ok(None)
-}
-
 /// Update the user-game records for both players if the game has finished
 pub async fn handle_if_game_is_finished(
     dynamo_db_client: &Client,
@@ -747,39 +638,6 @@ pub async fn handle_if_game_is_finished(
             }
         }
         _ => {}
-    }
-
-    Ok(())
-}
-
-pub async fn handle_engine_move(
-    engine: &mut Engine,
-    game: &mut GameRecord,
-    sdk_config: &aws_config::SdkConfig,
-    request_context: &ApiGatewayWebsocketProxyRequestContext,
-    connection_id: &str,
-) -> Result<(), Error> {
-    if game.engine_difficulty.is_some() {
-        if let Some(search_result) =
-            get_engine_result_if_turn(sdk_config, request_context, game, connection_id, engine)
-                .await?
-        {
-            if let Some(engine_move) =
-                get_and_apply_next_move_from_engine_search_result(engine, &search_result)
-            {
-                make_move(&mut game.game_state, &engine_move);
-            }
-
-            handle_engine_think_time(&mut game.game_state, search_result.time_ms);
-
-            game.game_state.current_state_mut().engine_result = Some(SearchStatistics {
-                depth: search_result.depth,
-                nodes: search_result.nodes,
-                qnodes: search_result.qnodes,
-                time_ms: search_result.time_ms,
-                from_book: search_result.from_book,
-            });
-        }
     }
 
     Ok(())

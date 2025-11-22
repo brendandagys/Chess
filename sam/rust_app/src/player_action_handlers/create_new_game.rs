@@ -1,14 +1,12 @@
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
+use chess::helpers::engine::use_engine;
 use chess::types::board::BoardSetup;
 use chess::types::game::{ColorPreference, EngineDifficulty};
 use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
 
-use chess::helpers::game::{
-    check_if_both_players_just_joined, create_game, get_engine, get_game, handle_engine_move,
-    save_game,
-};
+use chess::helpers::game::{check_if_both_players_just_joined, create_game, get_game, save_game};
 use chess::helpers::user::{create_user_game, save_user_record};
 use chess::utils::api::build_response;
 
@@ -87,19 +85,7 @@ pub async fn create_new_game(
         check_if_both_players_just_joined(&mut new_game);
     }
 
-    let mut engine = get_engine(&new_game);
-
-    handle_engine_move(
-        &mut engine,
-        &mut new_game,
-        sdk_config,
-        request_context,
-        connection_id,
-    )
-    .await?;
-
-    new_game.game_state.current_state_mut().moves = engine.position.get_legal_moves();
-
+    use_engine(&mut new_game, sdk_config, request_context, connection_id).await?;
     save_game(dynamo_db_client, game_table, &new_game).await?;
 
     tracing::info!(

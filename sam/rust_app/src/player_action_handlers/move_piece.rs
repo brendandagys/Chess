@@ -4,10 +4,13 @@ use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
 
 use chess::{
-    helpers::game::{
-        can_player_make_a_move, get_engine, get_game, get_player_details_from_connection_id,
-        handle_engine_move, handle_if_game_is_finished, make_move, notify_player_about_game_update,
-        save_game, validate_move, PlayerDetails,
+    helpers::{
+        engine::use_engine,
+        game::{
+            can_player_make_a_move, get_game, get_player_details_from_connection_id,
+            handle_if_game_is_finished, make_move, notify_player_about_game_update, save_game,
+            validate_move, PlayerDetails,
+        },
     },
     types::game::PlayerMove,
     utils::api::build_response,
@@ -68,20 +71,7 @@ pub async fn move_piece(
             }
 
             make_move(&mut game.game_state, &player_move);
-
-            let mut engine = get_engine(&game);
-
-            handle_engine_move(
-                &mut engine,
-                &mut game,
-                sdk_config,
-                request_context,
-                connection_id,
-            )
-            .await?;
-
-            game.game_state.current_state_mut().moves = engine.position.get_legal_moves();
-
+            use_engine(&mut game, sdk_config, request_context, connection_id).await?;
             save_game(dynamo_db_client, game_table, &game).await?;
 
             handle_if_game_is_finished(
