@@ -19,6 +19,7 @@ interface ChessBoardProps {
   historyIndex: number;
   isViewingLatestBoard: boolean;
   gameOverMessage: string | null;
+  isTurn: boolean;
 }
 
 export const ChessBoard: React.FC<ChessBoardProps> = ({
@@ -29,6 +30,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   historyIndex,
   isViewingLatestBoard,
   gameOverMessage,
+  isTurn,
 }) => {
   const shouldRotate = playerColor === Color.Black;
 
@@ -37,6 +39,9 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   const moves = expandedHistory[historyIndex].moves;
   const [moveFrom, setMoveFrom] = useState<Position | null>(null);
+
+  const [preMoveFrom, setPreMoveFrom] = useState<Position | null>(null);
+  const [preMoveTo, setPreMoveTo] = useState<Position | null>(null);
 
   const selectedPieceDestinations = useMemo(
     () =>
@@ -91,7 +96,9 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const [draggingPiece, handleDragStart] = useDrag(
     gameId,
     sendWebSocketMessage,
-    disableMoving
+    disableMoving,
+    selectedPieceDestinations,
+    setMoveFrom
   );
 
   const pieceDiameterClass =
@@ -109,6 +116,73 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     }
   }, [gameOverMessage]);
 
+  // When it becomes the player's turn, optionally make pre-move, then clear it
+  useEffect(() => {
+    if (isTurn) {
+      if (preMoveFrom && preMoveTo) {
+        sendWebSocketMessage({
+          route: API_ROUTE,
+          data: {
+            [PlayerActionName.MovePiece]: {
+              gameId,
+              playerMove: {
+                from: {
+                  rank: preMoveFrom.rank,
+                  file: preMoveFrom.file,
+                },
+                to: {
+                  rank: preMoveTo.rank,
+                  file: preMoveTo.file,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      setPreMoveFrom(null);
+      setPreMoveTo(null);
+    }
+  }, [gameId, isTurn, preMoveFrom, preMoveTo, sendWebSocketMessage]);
+
+  const handlePreMove = (pieceOnSquare: Piece | null, position: Position) => {
+    const isOwnPiece = pieceOnSquare?.color === playerColor;
+
+    // First click
+    if (!preMoveFrom) {
+      setPreMoveFrom(isOwnPiece ? position : null);
+      return;
+    }
+
+    // Clear pre-move-to and reset pre-move-from
+    if (preMoveTo) {
+      setPreMoveTo(null);
+      setPreMoveFrom(isOwnPiece ? position : null);
+      return;
+    }
+
+    const isSamePiece =
+      preMoveFrom.rank === position.rank && preMoveFrom.file === position.file;
+
+    // Second click on own piece
+    if (isOwnPiece) {
+      setPreMoveFrom(isSamePiece ? null : position);
+      return;
+    }
+
+    // TODO: Support ponder moves
+
+    // Second click on invalid destination
+    // if (
+    //   !selectedPieceDestinations.includes(`${position.rank}${position.file}`)
+    // ) {
+    //   setPreMoveFrom(null);
+    //   return;
+    // }
+
+    setPreMoveTo(position);
+  };
+
   const onClickSquare = (
     _event: React.MouseEvent<HTMLDivElement>,
     pieceOnSquare: Piece | null,
@@ -118,47 +192,60 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       return;
     }
 
-    setSelectedSquare((old) => {
-      setMoveFrom(old ? null : position);
+    if (!isTurn) {
+      handlePreMove(pieceOnSquare, position);
+      return;
+    }
 
+    setSelectedSquare((old) => {
+      const isOwnPiece = pieceOnSquare?.color === playerColor;
+
+      // First click
       if (!old) {
-        return pieceOnSquare?.color === playerColor ? position : null;
+        setMoveFrom(isOwnPiece ? position : null);
+        return isOwnPiece ? position : null;
       }
 
-      if (old.rank !== position.rank || old.file !== position.file) {
-        if (pieceOnSquare?.color === playerColor) {
-          setMoveFrom(position);
-          return position;
-        }
+      // Second click on same piece
+      if (old.rank === position.rank && old.file === position.file) {
+        setMoveFrom(null);
+        return null;
+      }
 
-        if (
-          !selectedPieceDestinations.includes(
-            `${position.rank}${position.file}`
-          )
-        ) {
-          return null;
-        }
+      // Second click on new piece
+      if (isOwnPiece) {
+        setMoveFrom(position);
+        return position;
+      }
 
-        sendWebSocketMessage({
-          route: API_ROUTE,
-          data: {
-            [PlayerActionName.MovePiece]: {
-              gameId,
-              playerMove: {
-                from: {
-                  rank: old.rank,
-                  file: old.file,
-                },
-                to: {
-                  rank: position.rank,
-                  file: position.file,
-                },
+      // Second click on invalid destination
+      if (
+        !selectedPieceDestinations.includes(`${position.rank}${position.file}`)
+      ) {
+        setMoveFrom(null);
+        return null;
+      }
+
+      sendWebSocketMessage({
+        route: API_ROUTE,
+        data: {
+          [PlayerActionName.MovePiece]: {
+            gameId,
+            playerMove: {
+              from: {
+                rank: old.rank,
+                file: old.file,
+              },
+              to: {
+                rank: position.rank,
+                file: position.file,
               },
             },
           },
-        });
-      }
+        },
+      });
 
+      setMoveFrom(null);
       return null;
     });
   };
@@ -290,6 +377,15 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                     selectedPieceDestinations.includes(`${rank}${file}`)
                       ? " square--possible-move"
                       : ""
+                  }${
+                    (preMoveFrom?.file === file && preMoveFrom.rank === rank) ||
+                    (preMoveTo?.file === file && preMoveTo.rank === rank)
+                      ? " square--pre-move"
+                      : ""
+                  }${
+                    preMoveFrom?.file === file && preMoveFrom.rank === rank
+                      ? " square--pre-move--from"
+                      : ""
                   }`}
                   onClick={(e) => {
                     onClickSquare(e, piece, { rank, file });
@@ -315,12 +411,22 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                       data-file={file}
                       onDragStart={(e) => {
                         if (piece.color === playerColor) {
-                          handleDragStart(e, piece);
+                          handleDragStart(
+                            e,
+                            piece,
+                            setSelectedSquare,
+                            setMoveFrom
+                          );
                         }
                       }}
                       onTouchMove={(e) => {
                         if (piece.color === playerColor) {
-                          handleDragStart(e, piece);
+                          handleDragStart(
+                            e,
+                            piece,
+                            setSelectedSquare,
+                            setMoveFrom
+                          );
                         }
                       }}
                     />

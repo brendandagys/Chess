@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { Piece } from "@src/types/piece";
 import { GameRequest } from "@src/types/api";
@@ -11,7 +17,9 @@ import "@src/css/ChessBoard.css";
 export const useDrag = (
   gameId: string,
   onPointerUp: (action: GameRequest) => void,
-  disabled = false
+  disabled = false,
+  selectedPieceDestinations: string[],
+  setMoveFrom: Dispatch<SetStateAction<Position | null>>
 ) => {
   const [draggingPiece, setDraggingPiece] = useState<{
     piece: Piece;
@@ -25,7 +33,9 @@ export const useDrag = (
     event:
       | React.DragEvent<HTMLImageElement>
       | React.TouchEvent<HTMLImageElement>,
-    piece: Piece
+    piece: Piece,
+    setSelectedSquare: Dispatch<SetStateAction<Position | null>>,
+    setMoveFrom: Dispatch<SetStateAction<Position | null>>
   ) => {
     if (disabled) {
       return;
@@ -34,9 +44,7 @@ export const useDrag = (
     // Prevent native drag behavior (which wasn't working in Firefox)
     event.preventDefault();
 
-    document.querySelectorAll(".square--selected").forEach((el) => {
-      el.classList.remove("square--selected");
-    });
+    setSelectedSquare(null);
 
     const elem = event.currentTarget;
 
@@ -44,6 +52,11 @@ export const useDrag = (
 
     if (elem.dataset.rank && elem.dataset.file) {
       setFrom({
+        rank: parseInt(elem.dataset.rank),
+        file: parseInt(elem.dataset.file),
+      });
+
+      setMoveFrom({
         rank: parseInt(elem.dataset.rank),
         file: parseInt(elem.dataset.file),
       });
@@ -117,7 +130,7 @@ export const useDrag = (
           const toFile = parseInt(piece.dataset.file);
 
           // Prohibit same-square moves
-          if (toRank !== from.rank || toFile !== from.file) {
+          if (selectedPieceDestinations.includes(`${toRank}${toFile}`)) {
             onPointerUp({
               route: API_ROUTE,
               data: {
@@ -141,6 +154,8 @@ export const useDrag = (
 
             console.info(`Piece placed at rank: ${toRank}, file: ${toFile}`);
           }
+
+          setMoveFrom(null);
         }
       }
 
@@ -153,7 +168,15 @@ export const useDrag = (
       setDraggingPiece(null);
       setFrom(null);
     }
-  }, [draggingPiece, from, gameId, onPointerUp, disabled]);
+  }, [
+    draggingPiece,
+    disabled,
+    from,
+    selectedPieceDestinations,
+    onPointerUp,
+    gameId,
+    setMoveFrom,
+  ]);
 
   useEffect(() => {
     if (draggingPiece && !disabled) {

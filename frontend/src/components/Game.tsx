@@ -483,6 +483,7 @@ export const Game: React.FC<GameProps> = ({
             historyIndex={historyIndex}
             isViewingLatestBoard={isViewingLatestBoard}
             gameOverMessage={gameOverMessage}
+            isTurn={isTurn}
           />
         </div>
 
