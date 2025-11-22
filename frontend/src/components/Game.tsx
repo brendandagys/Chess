@@ -93,9 +93,27 @@ export const Game: React.FC<GameProps> = ({
   const opponentColor = getOppositePlayerColor(playerColor);
 
   const isTurn = playerColor === currentGameState.currentTurn;
-  const isActivePlayerTurn = isTurn && gameIsInProgress && bothPlayersReady;
 
-  useTitleAnimation(isActivePlayerTurn, "♟️ Your turn!");
+  const isActivePlayerTurn = useMemo(
+    () => isTurn && gameIsInProgress && bothPlayersReady,
+    [isTurn, gameIsInProgress, bothPlayersReady]
+  );
+
+  const [isDocumentHidden, setIsDocumentHidden] = useState(document.hidden);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsDocumentHidden(document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  useTitleAnimation(isActivePlayerTurn && isDocumentHidden, "♟️ Your turn!");
 
   const viewedGameState = history[historyIndex];
 
