@@ -111,6 +111,7 @@ export interface GameStateAtPointInTime {
   inCheck: Color | null;
   board: CompactBoard;
   capturedPieces: CompactCapturedPieces;
+  moves: string[];
   engineResult: SearchStatistics | null;
 }
 

@@ -213,6 +213,7 @@ pub struct GameStateAtPointInTime {
     pub in_check: Option<Color>,
     pub board: Board,
     pub captured_pieces: CapturedPieces,
+    pub moves: Vec<String>,
     pub engine_result: Option<SearchStatistics>,
 }
 
@@ -247,6 +248,7 @@ impl GameState {
                 in_check: None,
                 board: board.clone(),
                 captured_pieces: captured_pieces.clone(),
+                moves: Vec::new(),
                 engine_result: None,
             }],
             game_time: seconds_per_player.map(|seconds| GameTime {

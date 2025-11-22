@@ -24,6 +24,54 @@ export const formatTime = (seconds: number): string => {
   return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
 };
 
+/**
+ * Convert a UCI move string into 1-based [rank, file] tuples.
+ * Returns an object with from and to positions, and optional promotion piece.
+ * @param uciMove - UCI move string (e.g., "a1a2", "e7e8q")
+ * @returns Object with from and to positions, and optional promotion piece
+ * @example
+ * parseUciMove("a1a2") // { from: [1, 1], to: [2, 1] }
+ * parseUciMove("e7e8q") // { from: [7, 5], to: [8, 5], promotion: "q" }
+ */
+export const parseUciMove = (uciMove: string): {
+  from: [number, number];
+  to: [number, number];
+  promotion?: string;
+} => {
+  if (uciMove.length < 4) {
+    throw new Error(`Invalid UCI move: ${uciMove}`);
+  }
+
+  const fromFile = uciMove.charCodeAt(0) - 96; // 'a' = 1, 'b' = 2, etc.
+  const fromRank = parseInt(uciMove[1], 10);
+  const toFile = uciMove.charCodeAt(2) - 96;
+  const toRank = parseInt(uciMove[3], 10);
+
+  if (
+    fromFile < 1 || fromFile > 8 ||
+    toFile < 1 || toFile > 8 ||
+    fromRank < 1 || fromRank > 8 ||
+    toRank < 1 || toRank > 8
+  ) {
+    throw new Error(`Invalid UCI move: ${uciMove}`);
+  }
+
+  const result: {
+    from: [number, number];
+    to: [number, number];
+    promotion?: string;
+  } = {
+    from: [fromRank, fromFile],
+    to: [toRank, toFile],
+  };
+
+  if (uciMove.length === 5) {
+    result.promotion = uciMove[4];
+  }
+
+  return result;
+};
+
 
 export const decodePiece = (code: number): Piece | null => {
   if (code === 255) return null;

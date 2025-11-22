@@ -405,6 +405,7 @@ mod tests {
                 white_points: 0,
                 black_points: 0,
             },
+            moves: Vec::new(),
             engine_result: None,
         };
 

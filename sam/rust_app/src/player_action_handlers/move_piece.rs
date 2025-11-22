@@ -5,12 +5,11 @@ use lambda_runtime::Error;
 
 use chess::{
     helpers::game::{
-        can_player_make_a_move, get_engine_result_if_turn, get_game,
-        get_next_move_from_engine_search_result, get_player_details_from_connection_id,
-        handle_if_game_is_finished, make_move, notify_player_about_game_update, save_game,
-        update_game_time_after_engine_move, validate_move, PlayerDetails,
+        can_player_make_a_move, get_engine, get_game, get_player_details_from_connection_id,
+        handle_engine_move, handle_if_game_is_finished, make_move, notify_player_about_game_update,
+        save_game, validate_move, PlayerDetails,
     },
-    types::game::{PlayerMove, SearchStatistics},
+    types::game::PlayerMove,
     utils::api::build_response,
 };
 
@@ -68,42 +67,20 @@ pub async fn move_piece(
                 );
             }
 
-            if let Err(e) = make_move(&mut game.game_state, &player_move) {
-                return build_response(
-                    StatusCode::BAD_REQUEST,
-                    Some(connection_id.to_string()),
-                    Some(vec![e.into()]),
-                    Some(game),
-                );
-            }
+            make_move(&mut game.game_state, &player_move);
 
-            if game.engine_difficulty.is_some() {
-                if let Some(search_result) =
-                    get_engine_result_if_turn(sdk_config, request_context, &mut game, connection_id)
-                        .await?
-                {
-                    let engine_move = get_next_move_from_engine_search_result(&search_result);
+            let mut engine = get_engine(&game);
 
-                    update_game_time_after_engine_move(&mut game.game_state, search_result.time_ms);
+            handle_engine_move(
+                &mut engine,
+                &mut game,
+                sdk_config,
+                request_context,
+                connection_id,
+            )
+            .await?;
 
-                    if let Err(e) = make_move(&mut game.game_state, &engine_move) {
-                        return build_response(
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            Some(connection_id.to_string()),
-                            Some(vec![e.into()]),
-                            Some(game),
-                        );
-                    }
-
-                    game.game_state.current_state_mut().engine_result = Some(SearchStatistics {
-                        depth: search_result.depth,
-                        nodes: search_result.nodes,
-                        qnodes: search_result.qnodes,
-                        time_ms: search_result.time_ms,
-                        from_book: search_result.from_book,
-                    });
-                }
-            }
+            game.game_state.current_state_mut().moves = engine.position.get_legal_moves();
 
             save_game(dynamo_db_client, game_table, &game).await?;
 

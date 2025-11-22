@@ -6,7 +6,7 @@ use crate::types::board::{Board, BoardSetup, File, Position, Rank};
 use crate::types::dynamo_db::GameRecord;
 use crate::types::game::{
     ColorPreference, EngineDifficulty, GameEnding, GameState, GameStateAtPointInTime, GameTime,
-    PlayerMove, State,
+    PlayerMove, SearchStatistics, State,
 };
 use crate::types::piece::{Color, Piece};
 use crate::utils::api_gateway::post_to_connection;
@@ -495,7 +495,7 @@ pub fn check_if_both_players_just_joined(game_record: &mut GameRecord) {
     }
 }
 
-pub fn update_game_time_after_engine_move(game_state: &mut GameState, search_duration: u64) {
+pub fn handle_engine_think_time(game_state: &mut GameState, search_duration: u64) {
     let engine_color = game_state.current_state().current_turn;
 
     if let Some(game_time) = &mut game_state.game_time {
@@ -596,7 +596,8 @@ fn check_for_mates(game_state: &mut GameStateAtPointInTime) {
     game_state.current_turn = opponent_color;
 }
 
-pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result<(), &'static str> {
+/// Make a move and update game state. Assumes that the move has been validated.
+pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) {
     let mut next_state = game_state.current_state().clone();
     next_state.engine_result = None; // Clear previous engine result
 
@@ -625,41 +626,44 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) -> Result
     };
 
     game_state.history.push(next_state);
-
-    Ok(())
 }
 
-pub fn get_next_move_from_engine_search_result(search_result: &SearchResult) -> PlayerMove {
-    let from_square = search_result
-        .best_move_from
-        .expect("Engine did not return a move");
-    let to_square = search_result
-        .best_move_to
-        .expect("Engine did not return a move");
+pub fn get_and_apply_next_move_from_engine_search_result(
+    engine: &mut Engine,
+    search_result: &SearchResult,
+) -> Option<PlayerMove> {
+    if let Some(from_square) = search_result.best_move_from {
+        if let Some(to_square) = search_result.best_move_to {
+            engine
+                .position
+                .make_move(from_square, to_square, search_result.best_move_promote);
 
-    PlayerMove {
-        from: Position {
-            file: File((from_square.file() + 1) as usize),
-            rank: Rank((from_square.rank() + 1) as usize),
-        },
-        to: Position {
-            file: File((to_square.file() + 1) as usize),
-            rank: Rank((to_square.rank() + 1) as usize),
-        },
+            return Some(PlayerMove {
+                from: Position {
+                    file: File((from_square.file() + 1) as usize),
+                    rank: Rank((from_square.rank() + 1) as usize),
+                },
+                to: Position {
+                    file: File((to_square.file() + 1) as usize),
+                    rank: Rank((to_square.rank() + 1) as usize),
+                },
+            });
+        }
     }
+
+    None
 }
 
-pub fn get_engine_result(game_record: &GameRecord) -> SearchResult {
-    let fen = game_state_to_fen(game_record.game_state.history.last().unwrap());
-
+pub fn get_engine(game_record: &GameRecord) -> Engine {
     let opening_book_path = get_opening_book_path();
+    let fen = game_state_to_fen(game_record.game_state.history.last().unwrap());
 
     let mut engine = Engine::new(
         None,
         None,
         None,
         None,
-        Some(5000),
+        Some(3000),
         None,
         None,
         opening_book_path,
@@ -669,7 +673,7 @@ pub fn get_engine_result(game_record: &GameRecord) -> SearchResult {
     engine.position = chess_engine::position::Position::from_fen(&fen)
         .unwrap_or_else(|_| panic!("Failed to load FEN: {fen}"));
 
-    engine.think::<fn(u16, i32, &mut chess_engine::position::Position)>(None)
+    engine
 }
 
 pub async fn get_engine_result_if_turn(
@@ -677,6 +681,7 @@ pub async fn get_engine_result_if_turn(
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     game: &mut GameRecord,
     connection_id: &str,
+    engine: &mut Engine,
 ) -> Result<Option<SearchResult>, Error> {
     let current_turn = game.game_state.current_state().current_turn;
 
@@ -697,7 +702,11 @@ pub async fn get_engine_result_if_turn(
         )
         .await?;
 
-        return Ok(Some(get_engine_result(game)));
+        return Ok(Some(engine.think::<fn(
+            u16,
+            i32,
+            &mut chess_engine::position::Position,
+        )>(None)));
     }
 
     Ok(None)
@@ -738,6 +747,39 @@ pub async fn handle_if_game_is_finished(
             }
         }
         _ => {}
+    }
+
+    Ok(())
+}
+
+pub async fn handle_engine_move(
+    engine: &mut Engine,
+    game: &mut GameRecord,
+    sdk_config: &aws_config::SdkConfig,
+    request_context: &ApiGatewayWebsocketProxyRequestContext,
+    connection_id: &str,
+) -> Result<(), Error> {
+    if game.engine_difficulty.is_some() {
+        if let Some(search_result) =
+            get_engine_result_if_turn(sdk_config, request_context, game, connection_id, engine)
+                .await?
+        {
+            if let Some(engine_move) =
+                get_and_apply_next_move_from_engine_search_result(engine, &search_result)
+            {
+                make_move(&mut game.game_state, &engine_move);
+            }
+
+            handle_engine_think_time(&mut game.game_state, search_result.time_ms);
+
+            game.game_state.current_state_mut().engine_result = Some(SearchStatistics {
+                depth: search_result.depth,
+                nodes: search_result.nodes,
+                qnodes: search_result.qnodes,
+                time_ms: search_result.time_ms,
+                from_book: search_result.from_book,
+            });
+        }
     }
 
     Ok(())

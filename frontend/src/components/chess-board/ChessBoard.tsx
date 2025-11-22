@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { imageMap } from "@src/images";
-import { rotateMatrix180Degrees } from "@src/utils";
+import { parseUciMove, rotateMatrix180Degrees } from "@src/utils";
 import { useDrag } from "@src/hooks/useDrag";
 import { GameRequest } from "@src/types/api";
 import { PlayerActionName } from "@src/types/game";
@@ -34,6 +34,22 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
 
   const viewedBoardState = expandedHistory[historyIndex].board;
   const viewedBoardStateSquares = viewedBoardState.squares;
+
+  const moves = expandedHistory[historyIndex].moves;
+  const [moveFrom, setMoveFrom] = useState<Position | null>(null);
+
+  const selectedPieceDestinations = useMemo(
+    () =>
+      !moveFrom
+        ? []
+        : moves
+            .map(parseUciMove)
+            .filter(
+              (m) => m.from[0] === moveFrom.rank && m.from[1] === moveFrom.file
+            )
+            .map((move) => `${move.to[0]}${move.to[1]}`), // rank, file
+    [moveFrom, moves]
+  );
 
   const boardForRendering = shouldRotate
     ? rotateMatrix180Degrees(viewedBoardStateSquares)
@@ -103,11 +119,26 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     }
 
     setSelectedSquare((old) => {
+      setMoveFrom(old ? null : position);
+
       if (!old) {
         return pieceOnSquare?.color === playerColor ? position : null;
       }
 
       if (old.rank !== position.rank || old.file !== position.file) {
+        if (pieceOnSquare?.color === playerColor) {
+          setMoveFrom(position);
+          return position;
+        }
+
+        if (
+          !selectedPieceDestinations.includes(
+            `${position.rank}${position.file}`
+          )
+        ) {
+          return null;
+        }
+
         sendWebSocketMessage({
           route: API_ROUTE,
           data: {
@@ -254,6 +285,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                   }${
                     piece?.color === playerColor && !disableMoving
                       ? " square--moveable"
+                      : ""
+                  }${
+                    selectedPieceDestinations.includes(`${rank}${file}`)
+                      ? " square--possible-move"
                       : ""
                   }`}
                   onClick={(e) => {

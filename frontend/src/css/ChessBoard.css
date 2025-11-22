@@ -105,6 +105,16 @@ body:not(.dragging-piece) .square--moveable {
   background: yellow !important;
 }
 
+.square--possible-move::after {
+  content: '';
+  position: absolute;
+  width: 33%;
+  height: 33%;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.2) 100%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
 .floating-piece {
   background: rgba(255, 208, 0, 0.627) !important;
   border-radius: 25%;
