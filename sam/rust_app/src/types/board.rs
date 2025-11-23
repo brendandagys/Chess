@@ -194,7 +194,17 @@ impl Serialize for Board {
             })
             .collect();
 
-        let mut state = serializer.serialize_struct("Board", 4)?;
+        let piece_move_counts: Vec<usize> = self
+            .squares
+            .iter()
+            .rev()
+            .flat_map(|row| {
+                row.iter()
+                    .map(|square| square.as_ref().map_or(0, |p| p.move_count))
+            })
+            .collect();
+
+        let mut state = serializer.serialize_struct("Board", 5)?;
 
         state.serialize_field("squares", &bitboards.to_base64())?;
         state.serialize_field("moveCount", &self.move_count)?;
@@ -206,6 +216,7 @@ impl Serialize for Board {
             },
         )?;
         state.serialize_field("lastGameMoves", &last_game_moves)?;
+        state.serialize_field("pieceMoveCounts", &piece_move_counts)?;
 
         state.end()
     }
@@ -226,6 +237,7 @@ impl<'de> Deserialize<'de> for Board {
             move_count: Option<usize>,
             dimensions: BoardDimensions,
             last_game_moves: Option<Vec<Vec<Option<usize>>>>,
+            piece_move_counts: Option<Vec<usize>>,
         }
 
         struct BoardVisitor;
@@ -234,7 +246,7 @@ impl<'de> Deserialize<'de> for Board {
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str(
-                    "struct Board with base64 squares, move_count, dimensions, and last_game_moves",
+                    "struct Board with base64 squares, move_count, dimensions, last_game_moves, and piece_move_counts",
                 )
             }
 
@@ -246,6 +258,7 @@ impl<'de> Deserialize<'de> for Board {
                 let mut move_count = None;
                 let mut dimensions = None;
                 let mut last_game_moves: Option<Vec<Option<usize>>> = None;
+                let mut piece_move_counts: Option<Vec<usize>> = None;
 
                 while let Some(key) = map.next_key::<String>()? {
                     match key.as_str() {
@@ -260,6 +273,9 @@ impl<'de> Deserialize<'de> for Board {
                         }
                         "lastGameMoves" => {
                             last_game_moves = Some(map.next_value()?);
+                        }
+                        "pieceMoveCounts" => {
+                            piece_move_counts = Some(map.next_value()?);
                         }
                         _ => {
                             let _: de::IgnoredAny = map.next_value()?;
@@ -281,18 +297,23 @@ impl<'de> Deserialize<'de> for Board {
 
                 let mut squares = bitboards.to_board();
 
-                if let Some(last_game_moves) = last_game_moves {
-                    let mut index = 0;
+                let mut index = 0;
 
-                    for rank in (0..ranks).rev() {
-                        for file in 0..files {
-                            if let Some(piece) = squares[rank][file].as_mut() {
+                for rank in (0..ranks).rev() {
+                    for file in 0..files {
+                        if let Some(piece) = squares[rank][file].as_mut() {
+                            if let Some(last_game_moves) = &last_game_moves {
                                 piece.last_game_move =
                                     last_game_moves.get(index).copied().flatten();
                             }
 
-                            index += 1;
+                            if let Some(piece_move_counts) = &piece_move_counts {
+                                piece.move_count =
+                                    piece_move_counts.get(index).copied().unwrap_or(0);
+                            }
                         }
+
+                        index += 1;
                     }
                 }
 
@@ -305,7 +326,13 @@ impl<'de> Deserialize<'de> for Board {
 
         deserializer.deserialize_struct(
             "Board",
-            &["squares", "move_count", "dimensions", "last_game_moves"],
+            &[
+                "squares",
+                "move_count",
+                "dimensions",
+                "last_game_moves",
+                "piece_move_counts",
+            ],
             BoardVisitor,
         )
     }
