@@ -370,6 +370,7 @@ fn generate_en_passant_target(squares: &[Vec<Option<Piece>>], move_count: usize)
         if let Some(piece) = square {
             if piece.piece_type == PieceType::Pawn
                 && piece.color == Color::Black
+                && piece.last_game_move == Some(move_count)
                 && piece.move_count == 1
             {
                 // Check if the square two ranks back is empty (rank 7, row 1)
