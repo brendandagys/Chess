@@ -4,7 +4,7 @@ import { ApiResponse, GameRequest } from "@src/types/api";
 import { GameRecord, PlayerActionName } from "@src/types/game";
 import { API_ROUTE } from "@src/constants";
 
-const HEARTBEAT_INTERVAL_MS = 30_000;
+const HEARTBEAT_INTERVAL_MS = 50_000;
 
 const MAX_RECONNECT_ATTEMPTS = 5;
 const INITIAL_RECONNECT_DELAY_MS = 1_000;
