@@ -79,6 +79,9 @@ pub async fn analyze_position(
         &search_result,
         prev_eval,
         move_number,
+        current_state.in_check,
+        current_state.captured_pieces.white_points,
+        current_state.captured_pieces.black_points,
     );
 
     let text = call_bedrock(sdk_config, &prompt).await?;

@@ -45,6 +45,41 @@ fn square_to_algebraic(sq: Square) -> String {
     format!("{file}{rank}")
 }
 
+fn promotion_char(piece: chess_engine::types::Piece) -> &'static str {
+    match piece {
+        chess_engine::types::Piece::Knight => "n",
+        chess_engine::types::Piece::Bishop => "b",
+        chess_engine::types::Piece::Rook => "r",
+        chess_engine::types::Piece::Queen => "q",
+        _ => "",
+    }
+}
+
+/// Formats the engine's principal variation as a UCI move sequence (up to 5 moves).
+fn format_pv(search_result: &SearchResult) -> String {
+    let moves: Vec<String> = search_result
+        .principal_variation
+        .iter()
+        .take(5)
+        .map(|m| {
+            let promo = m.promote.map(promotion_char).unwrap_or("");
+            format!(
+                "{}{}{}",
+                square_to_algebraic(m.from),
+                square_to_algebraic(m.to),
+                promo
+            )
+        })
+        .collect();
+
+    if moves.is_empty() {
+        String::new()
+    } else {
+        format!("Engine line: {}.", moves.join(" "))
+    }
+}
+
+/// Describes the evaluation from White's absolute perspective.
 fn eval_description(eval_cp: i32, side_to_move: Color) -> String {
     // Normalize to white's perspective
     let white_cp = match side_to_move {
@@ -56,16 +91,38 @@ fn eval_description(eval_cp: i32, side_to_move: Color) -> String {
 
     // MATE_THRESHOLD in chess_engine/src/constants.rs is 9000 (private)
     if white_cp.abs() > 9000 {
-        let mover = if white_cp > 0 { "White" } else { "Black" };
-        format!("{mover} has a forced checkmate")
+        let winner = if white_cp > 0 { "White" } else { "Black" };
+        format!("{winner} has a forced checkmate")
     } else if white_cp.abs() > 500 {
-        let mover = if white_cp > 0 { "White" } else { "Black" };
-        format!("{mover} has a winning advantage")
+        let leader = if white_cp > 0 { "White" } else { "Black" };
+        format!("{leader} has a winning advantage ({pawns:.1} pawns)")
     } else if white_cp.abs() < 40 {
-        "the position is approximately equal".to_string()
+        "equal (0.0 pawns)".to_string()
     } else {
         let leader = if white_cp > 0 { "White" } else { "Black" };
-        format!("{leader} is ahead by {pawns:.1} pawns")
+        format!("{leader} +{pawns:.1} pawns")
+    }
+}
+
+fn material_context(white_points: u16, black_points: u16) -> String {
+    match white_points.cmp(&black_points) {
+        std::cmp::Ordering::Greater => {
+            format!("White leads in material +{}.", white_points - black_points)
+        }
+        std::cmp::Ordering::Less => {
+            format!("Black leads in material +{}.", black_points - white_points)
+        }
+        std::cmp::Ordering::Equal => "Material is equal.".to_string(),
+    }
+}
+
+/// Classifies a centipawn loss into a quality tier.
+fn cpl_category(cpl: i32) -> &'static str {
+    match cpl {
+        i32::MIN..=20 => "best/good",
+        21..=50 => "an inaccuracy",
+        51..=100 => "a mistake",
+        _ => "a blunder",
     }
 }
 
@@ -76,6 +133,9 @@ pub fn build_analysis_prompt(
     search_result: &SearchResult,
     prev_eval: Option<(i32, Color)>,
     move_number: usize,
+    in_check: Option<Color>,
+    white_material: u16,
+    black_material: u16,
 ) -> String {
     let turn_str = match current_turn {
         Color::White => "White",
@@ -86,8 +146,8 @@ pub fn build_analysis_prompt(
         (Some(from), Some(to)) => {
             let promo = search_result
                 .best_move_promote
-                .map(|p| format!("={p:?}"))
-                .unwrap_or_default();
+                .map(promotion_char)
+                .unwrap_or("");
             format!(
                 "{}{}{}",
                 square_to_algebraic(from),
@@ -99,49 +159,83 @@ pub fn build_analysis_prompt(
     };
 
     let eval_desc = eval_description(search_result.evaluation, current_turn);
+    let pv_str = format_pv(search_result);
+    let mat_str = material_context(white_material, black_material);
 
+    let check_note = match in_check {
+        Some(Color::White) => " White is in check.",
+        Some(Color::Black) => " Black is in check.",
+        None => "",
+    };
+
+    let book_note = if search_result.from_book {
+        " Still in opening theory."
+    } else {
+        ""
+    };
+
+    let pv_note = if pv_str.is_empty() {
+        String::new()
+    } else {
+        format!(" {pv_str}")
+    };
+
+    // Shared context block used by all prompt types
     let context = format!(
         "Chess position — FEN: {fen}\n\
-         Move {move_number}. It is {turn_str}'s turn.\n\
-         Engine evaluation: {eval_desc}.\n\
-         Engine best move: {best_move_str} (depth {}).",
-        search_result.depth
+         Move {move_number}, {turn_str} to move.{check_note}\n\
+         Eval: {eval_desc}. {mat_str}{book_note}\n\
+         Engine best move: {best_move_str} (depth {depth}).{pv_note}\n",
+        depth = search_result.depth,
     );
 
     match analysis_type {
         AnalysisType::MoveExplanation => format!(
-            "{context}\n\n\
-             In 2-3 sentences, explain the key features of this position and why \
-             the engine recommends {best_move_str}."
+            "{context}\n\
+             In 2-3 sentences, explain {best_move_str}: name the specific threat, tactic, or \
+             strategic plan it sets up, and describe what the engine line leads to. \
+             If the move is a book move, explain the general opening principles \
+             it follows and try to mention the name of the opening/variation. \
+             Be concrete — no generic filler."
         ),
 
         AnalysisType::BlunderDetection => {
-            let prev_context = if let Some((prev_cp, prev_turn)) = prev_eval {
+            let quality_context = if let Some((prev_cp, prev_turn)) = prev_eval {
+                // Centipawn loss: how much the last mover lost vs. their best option.
+                // prev_cp is from last-mover's perspective; search_result.evaluation is
+                // from the opponent's (current_turn) perspective — so negate it.
+                let cpl = (prev_cp + search_result.evaluation).max(0);
+                let category = cpl_category(cpl);
                 let prev_desc = eval_description(prev_cp, prev_turn);
-                format!("\nBefore the last move: {prev_desc}.")
+                format!(
+                    "Before the last move: {prev_desc}. \
+                     Centipawn loss: {cpl} — classifies as {category}.\n"
+                )
             } else {
                 String::new()
             };
 
             format!(
-                "{context}{prev_context}\n\n\
-                 Was the last move a blunder, mistake, or inaccuracy? \
-                 In 2-3 sentences, assess the quality of the last move and explain \
-                 any better alternatives."
+                "{context}{quality_context}\n\
+                 In 2 sentences, state precisely whether the last move was a blunder, \
+                 mistake, inaccuracy, or good move (use the CPL tier above), then name \
+                 the better alternative and the concrete reason it was superior. \
+                 No hedging."
             )
         }
 
         AnalysisType::Coach => format!(
-            "{context}\n\n\
-             In 2-3 sentences, give concrete strategic coaching advice for {turn_str}. \
-             Focus on the single most important plan or improvement."
+            "{context}\n\
+             In 2 sentences, give {turn_str} one concrete, actionable coaching tip. \
+             Identify the single most important plan or improvement right now — \
+             name specific pieces, squares, or threats. Skip generic advice."
         ),
 
         AnalysisType::PostGame => format!(
-            "{context}\n\n\
-             The game has just ended. In 3-4 sentences, provide post-game analysis: \
-             describe the key turning point, highlight the decisive mistake, and \
-             explain what the losing side could have done differently."
+            "{context}\n\
+             The game has just ended. In 3 sentences: identify the single most critical \
+             turning point by move, name the decisive mistake and the specific better move, \
+             and give one concrete takeaway lesson for the losing side."
         ),
     }
 }
