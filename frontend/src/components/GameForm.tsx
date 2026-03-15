@@ -31,16 +31,21 @@ export const GameForm: React.FC<GameFormProps> = ({
   const [username, setUsernameInLocalStorage] = useLocalStorage("username", "");
 
   const [gameId, setGameId] = useState(
-    gameIds.length === 1 && !username ? gameIds[0] : ""
+    gameIds.length === 1 && !username ? gameIds[0] : "",
   );
 
-  const [timeOption, setTimeOption] = useState<TimeOption>(
-    TimeOption.Unlimited
+  const [timeOptionStored, setTimeOptionStored] = useLocalStorage(
+    "pref_time",
+    String(TimeOption.Unlimited),
   );
+  const timeOption = (parseInt(timeOptionStored, 10) ||
+    TimeOption.Unlimited) as TimeOption;
 
-  const [boardSetupName, setBoardSetupName] = useState<BoardSetupName>(
-    BoardSetupName.Standard
+  const [boardSetupNameStored, setBoardSetupNameStored] = useLocalStorage(
+    "pref_board",
+    BoardSetupName.Standard,
   );
+  const boardSetupName = boardSetupNameStored as BoardSetupName;
 
   const [dimensions, setDimensions] = useState({
     ranks: "8",
@@ -49,14 +54,22 @@ export const GameForm: React.FC<GameFormProps> = ({
 
   const isStandardBoard = boardSetupName === BoardSetupName.Standard;
 
-  const [colorPreference, setColorPreference] = useState<ColorPreference>(
-    ColorPreference.Random
+  const [colorPreferenceStored, setColorPreferenceStored] = useLocalStorage(
+    "pref_color",
+    ColorPreference.Random,
   );
+  const colorPreference = colorPreferenceStored as ColorPreference;
 
-  const [versusEngine, setVersusEngine] = useState(false);
-  const [engineDifficulty, setEngineDifficulty] = useState<EngineDifficulty>(
-    EngineDifficulty.Medium
+  const [versusEngineStored, setVersusEngineStored] = useLocalStorage(
+    "pref_engine",
+    "false",
   );
+  const versusEngine = versusEngineStored === "true";
+  const [engineDifficultyStored, setEngineDifficultyStored] = useLocalStorage(
+    "pref_engine_difficulty",
+    EngineDifficulty.Medium,
+  );
+  const engineDifficulty = engineDifficultyStored as EngineDifficulty;
 
   const getBoardSetup = (name: BoardSetupName): BoardSetup => {
     switch (name) {
@@ -124,7 +137,7 @@ export const GameForm: React.FC<GameFormProps> = ({
               className="color-preference-select"
               value={colorPreference}
               onChange={(e) => {
-                setColorPreference(e.target.value as ColorPreference);
+                setColorPreferenceStored(e.target.value);
               }}
             >
               <option value={ColorPreference.Random}>Random</option>
@@ -140,7 +153,7 @@ export const GameForm: React.FC<GameFormProps> = ({
               className="board-setup-select"
               value={timeOption}
               onChange={(e) => {
-                setTimeOption(parseInt(e.target.value, 10) as TimeOption);
+                setTimeOptionStored(e.target.value);
               }}
             >
               <option value={TimeOption.OneMinute}>1 Minute</option>
@@ -162,10 +175,10 @@ export const GameForm: React.FC<GameFormProps> = ({
               value={boardSetupName}
               onChange={(e) => {
                 const newSetup = e.target.value as BoardSetupName;
-                setBoardSetupName(newSetup);
+                setBoardSetupNameStored(newSetup);
 
                 if (newSetup !== BoardSetupName.Standard) {
-                  setVersusEngine(false);
+                  setVersusEngineStored("false");
                 }
               }}
             >
@@ -228,7 +241,7 @@ export const GameForm: React.FC<GameFormProps> = ({
               checked={versusEngine}
               disabled={!isStandardBoard}
               onChange={(e) => {
-                setVersusEngine(e.target.checked);
+                setVersusEngineStored(String(e.target.checked));
               }}
               title={
                 !isStandardBoard
@@ -246,7 +259,7 @@ export const GameForm: React.FC<GameFormProps> = ({
                 className="engine-difficulty-select"
                 value={engineDifficulty}
                 onChange={(e) => {
-                  setEngineDifficulty(e.target.value as EngineDifficulty);
+                  setEngineDifficultyStored(e.target.value as EngineDifficulty);
                 }}
               >
                 <option value={EngineDifficulty.Beginner}>Beginner</option>
