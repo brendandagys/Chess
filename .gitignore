@@ -2,6 +2,7 @@
 debug/
 target/
 .vscode/
+.github/
 sam/events/
 sam/.aws-sam/
 extras/
