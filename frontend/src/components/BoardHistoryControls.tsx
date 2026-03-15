@@ -39,7 +39,7 @@ export const BoardHistoryControls: React.FC<BoardHistoryControlsProps> = ({
       </button>
 
       <span>
-        State {historyIndex + 1} of {numStates}
+        Position {historyIndex + 1} of {numStates}
       </span>
 
       <button
