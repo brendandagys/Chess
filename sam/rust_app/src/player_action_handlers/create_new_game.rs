@@ -20,7 +20,7 @@ pub async fn create_new_game(
     username: &str,
     game_id: Option<&str>,
     board_setup: Option<BoardSetup>,
-    color_preference: ColorPreference,
+    color_preference: Option<ColorPreference>,
     engine_difficulty: Option<EngineDifficulty>,
     seconds_per_player: Option<usize>,
 ) -> Result<ApiGatewayProxyResponse, Error> {

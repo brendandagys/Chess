@@ -193,3 +193,26 @@ body:not(.dragging-piece) .square--moveable {
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.25);
   pointer-events: auto;
 }
+
+.play-again-button {
+  display: block;
+  margin: 1.2rem auto 0;
+  padding: 0.6rem 1.8rem;
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: #fff;
+  background: #3a7c3a;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.play-again-button:hover {
+  background: #2e6b2e;
+}
+
+.play-again-button:active {
+  background: #265726;
+  transform: scale(0.97);
+}

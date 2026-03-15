@@ -34,13 +34,13 @@ pub struct Position {
     pub file: File,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BoardDimensions {
     pub ranks: usize,
     pub files: usize,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum BoardSetup {
     Standard,

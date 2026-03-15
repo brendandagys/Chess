@@ -20,6 +20,7 @@ interface ChessBoardProps {
   isViewingLatestBoard: boolean;
   gameOverMessage: string | null;
   isTurn: boolean;
+  onPlayAgain: () => void;
 }
 
 export const ChessBoard: React.FC<ChessBoardProps> = ({
@@ -31,6 +32,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   isViewingLatestBoard,
   gameOverMessage,
   isTurn,
+  onPlayAgain,
 }) => {
   const shouldRotate = playerColor === Color.Black;
 
@@ -50,10 +52,10 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
         : moves
             .map(parseUciMove)
             .filter(
-              (m) => m.from[0] === moveFrom.rank && m.from[1] === moveFrom.file
+              (m) => m.from[0] === moveFrom.rank && m.from[1] === moveFrom.file,
             )
             .map((move) => `${move.to[0]}${move.to[1]}`), // rank, file
-    [moveFrom, moves]
+    [moveFrom, moves],
   );
 
   const boardForRendering = shouldRotate
@@ -98,17 +100,17 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
     sendWebSocketMessage,
     disableMoving,
     selectedPieceDestinations,
-    setMoveFrom
+    setMoveFrom,
   );
 
   const pieceDiameterClass =
     window.innerWidth < 400
       ? "--piece-diameter-smallest"
       : window.innerWidth < 450
-      ? "--piece-diameter-smaller"
-      : window.innerWidth < 500
-      ? "--piece-diameter-small"
-      : "--piece-diameter";
+        ? "--piece-diameter-smaller"
+        : window.innerWidth < 500
+          ? "--piece-diameter-small"
+          : "--piece-diameter";
 
   useEffect(() => {
     if (gameOverMessage) {
@@ -186,7 +188,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   const onClickSquare = (
     _event: React.MouseEvent<HTMLDivElement>,
     pieceOnSquare: Piece | null,
-    position: Position
+    position: Position,
   ) => {
     if (disableMoving) {
       return;
@@ -363,7 +365,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                       : ""
                   }${
                     lastMoveSquares.some(
-                      (move) => move.rank === rank && move.file === file
+                      (move) => move.rank === rank && move.file === file,
                     )
                       ? (rank + file) % 2 === 0
                         ? " square--previous-move-dark-square"
@@ -415,7 +417,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                             e,
                             piece,
                             setSelectedSquare,
-                            setMoveFrom
+                            setMoveFrom,
                           );
                         }
                       }}
@@ -425,7 +427,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                             e,
                             piece,
                             setSelectedSquare,
-                            setMoveFrom
+                            setMoveFrom,
                           );
                         }
                       }}
@@ -461,16 +463,16 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
               draggingPiece.x -
               (parseFloat(
                 getComputedStyle(document.documentElement).getPropertyValue(
-                  pieceDiameterClass
-                )
+                  pieceDiameterClass,
+                ),
               ) / 2 || 0) +
               window.scrollX,
             top:
               draggingPiece.y -
               (parseFloat(
                 getComputedStyle(document.documentElement).getPropertyValue(
-                  pieceDiameterClass
-                )
+                  pieceDiameterClass,
+                ),
               ) / 2 || 0) +
               window.scrollY,
             pointerEvents: "none",
@@ -484,7 +486,12 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       {/* Game Over Overlay */}
       {gameOverMessage && (
         <div className="game-over-overlay">
-          <div className="game-over-message">{gameOverMessage}</div>
+          <div className="game-over-message">
+            {gameOverMessage}
+            <button className="play-again-button" onClick={onPlayAgain}>
+              Play Again
+            </button>
+          </div>
         </div>
       )}
     </div>

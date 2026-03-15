@@ -1,4 +1,5 @@
-use crate::types::game::{EngineDifficulty, GameState};
+use crate::types::board::BoardSetup;
+use crate::types::game::{ColorPreference, EngineDifficulty, GameState};
 
 use serde::{Deserialize, Serialize};
 
@@ -9,6 +10,9 @@ pub struct GameRecord {
     pub white_username: Option<String>,
     pub black_connection_id: Option<String>,
     pub black_username: Option<String>,
+    pub board_setup: BoardSetup,
+    pub color_preference: ColorPreference,
+    pub seconds_per_player: Option<usize>,
     pub engine_difficulty: Option<EngineDifficulty>,
     pub game_state: GameState,
     pub created: String,

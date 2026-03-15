@@ -381,6 +381,31 @@ export const Game: React.FC<GameProps> = ({
     setShowResignConfirm(false);
   };
 
+  const handlePlayAgain = () => {
+    const username =
+      playerColor === Color.White
+        ? gameRecord.white_username
+        : gameRecord.black_username;
+
+    if (!username) return;
+
+    sendWebSocketMessage({
+      route: API_ROUTE,
+      data: {
+        [PlayerActionName.CreateGame]: {
+          username,
+          gameId: null,
+          boardSetup: gameRecord.board_setup,
+          colorPreference: gameRecord.color_preference,
+          secondsPerPlayer: gameRecord.seconds_per_player,
+          engineDifficulty: gameRecord.engine_difficulty,
+        },
+      },
+    });
+
+    onLeaveGame(gameId);
+  };
+
   useEffect(() => {
     if (aiAnalysis) {
       setAiLoading(null);
@@ -543,6 +568,7 @@ export const Game: React.FC<GameProps> = ({
             isViewingLatestBoard={isViewingLatestBoard}
             gameOverMessage={gameOverMessage}
             isTurn={isTurn}
+            onPlayAgain={handlePlayAgain}
           />
         </div>
 

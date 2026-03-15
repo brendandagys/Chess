@@ -154,7 +154,7 @@ impl<'de> Deserialize<'de> for CapturedPieces {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ColorPreference {
     White,
@@ -296,9 +296,9 @@ pub enum PlayerAction {
         username: String,
         game_id: Option<String>,
         board_setup: Option<BoardSetup>,
-        color_preference: ColorPreference,
-        engine_difficulty: Option<EngineDifficulty>,
+        color_preference: Option<ColorPreference>,
         seconds_per_player: Option<usize>,
+        engine_difficulty: Option<EngineDifficulty>,
     },
     #[serde(rename_all = "camelCase")]
     JoinGame {

@@ -173,21 +173,20 @@ pub fn create_game(
     game_id: Option<&str>,
     username: &str,
     board_setup: Option<BoardSetup>,
-    color_preference: ColorPreference,
+    color_preference: Option<ColorPreference>,
     engine_difficulty: Option<EngineDifficulty>,
     seconds_per_player: Option<usize>,
     connection_id: &str,
 ) -> GameRecord {
     let game_id = game_id.map_or_else(generate_id, |id| id.to_string());
 
-    let game_state = GameState::new(
-        game_id.clone(),
-        &board_setup.unwrap_or(BoardSetup::Standard),
-        seconds_per_player,
-    );
+    let effective_board_setup = board_setup.unwrap_or(BoardSetup::Standard);
+    let effective_color_preference = color_preference.unwrap_or(ColorPreference::Random);
+
+    let game_state = GameState::new(game_id.clone(), &effective_board_setup, seconds_per_player);
 
     let (white_connection_id, white_username, black_connection_id, black_username) =
-        determine_player_color(color_preference, username, connection_id);
+        determine_player_color(effective_color_preference, username, connection_id);
 
     GameRecord {
         game_id,
@@ -195,6 +194,9 @@ pub fn create_game(
         white_username,
         black_connection_id,
         black_username,
+        board_setup: effective_board_setup,
+        color_preference: effective_color_preference,
+        seconds_per_player,
         engine_difficulty,
         game_state,
         created: chrono::Utc::now().to_rfc3339(),

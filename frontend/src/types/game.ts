@@ -156,7 +156,7 @@ interface PlayerActionCreateGame {
     username: string;
     gameId: string | null;
     boardSetup: BoardSetup | null;
-    colorPreference: ColorPreference;
+    colorPreference: ColorPreference | null;
     secondsPerPlayer: TimeOption | null;
     engineDifficulty: EngineDifficulty | null;
   };
@@ -233,6 +233,9 @@ export interface GameRecord {
   white_username: string | null;
   black_connection_id: string | null;
   black_username: string | null;
+  board_setup: BoardSetup;
+  color_preference: ColorPreference;
+  seconds_per_player: TimeOption | null;
   engine_difficulty: EngineDifficulty | null;
   game_state: GameState;
   created: string;
