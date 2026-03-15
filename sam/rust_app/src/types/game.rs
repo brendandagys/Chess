@@ -279,6 +279,15 @@ pub struct PlayerMove {
     pub to: Position,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AnalysisType {
+    MoveExplanation,
+    BlunderDetection,
+    Coach,
+    PostGame,
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum PlayerAction {
@@ -321,5 +330,10 @@ pub enum PlayerAction {
     #[serde(rename_all = "camelCase")]
     OfferDraw {
         game_id: String,
+    },
+    #[serde(rename_all = "camelCase")]
+    AnalyzePosition {
+        game_id: String,
+        analysis_type: AnalysisType,
     },
 }

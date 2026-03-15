@@ -12,6 +12,7 @@ aws_lambda_events = { version = "1.0", default-features = false, features = [
 ] }
 aws-sdk-dynamodb = "1.98"
 aws-sdk-apigatewaymanagement = "1.89"
+aws-sdk-bedrockruntime = "1"
 base64 = "0.22"
 bitboard_chess_engine = "0.1"
 chrono = "0.4"

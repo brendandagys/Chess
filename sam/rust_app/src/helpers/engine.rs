@@ -112,22 +112,30 @@ pub fn handle_engine_think_time(game_state: &mut GameState, search_duration: u64
 }
 
 pub fn get_engine(game_record: &GameRecord) -> Engine {
-    let opening_book_path = get_opening_book_path();
     let fen = game_state_to_fen(game_record.game_state.history.last().unwrap());
+    get_engine_from_fen(&fen, 3000, game_record.engine_difficulty.map(|d| d.into()))
+}
+
+pub fn get_engine_from_fen(
+    fen: &str,
+    movetime_ms: u64,
+    difficulty: Option<chess_engine::types::Difficulty>,
+) -> Engine {
+    let opening_book_path = get_opening_book_path();
 
     let mut engine = Engine::new(
         None,
         None,
         None,
         None,
-        Some(3000),
+        Some(movetime_ms),
         None,
         None,
         opening_book_path,
-        game_record.engine_difficulty.map(|d| d.into()),
+        difficulty,
     );
 
-    engine.position = chess_engine::position::Position::from_fen(&fen)
+    engine.position = chess_engine::position::Position::from_fen(fen)
         .unwrap_or_else(|_| panic!("Failed to load FEN: {fen}"));
 
     engine

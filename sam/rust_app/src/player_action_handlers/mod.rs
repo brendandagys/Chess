@@ -1,3 +1,4 @@
+pub mod analyze_position;
 pub mod create_new_game;
 pub mod get_game_state;
 pub mod join_game;

@@ -16,6 +16,10 @@ lint = true
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = true
 resolve_s3 = true
+s3_prefix = "chess"
+region = "us-east-1"
+parameter_overrides = "ApiGatewayCloudWatchRoleArn=\"arn:aws:iam::708746137251:role/allow-api-gateway-to-push-to-cloudwatch-logs\" GameTableName=\"game\" UserTableName=\"user\" UserTableGsi=\"find-games-upon-disconnect\" GitHubRepositoryOwner=\"brendandagys\" Repository=\"chess\" Branch=\"main\" CreateDeployBucketAndPolicy=\"true\" Domain=\"chess.brendandagys.com\" DnsRecordWwwFlag=\"false\" BedrockModelId=\"us.anthropic.claude-3-5-haiku-20241022-v1:0\" DistributionHomePage=\"/index.html\" CloudFrontHostedZoneId=\"Z2FDTNDATAQYW2\" CloudFrontCachePolicy=\"658327ea-f89d-4fab-a63d-7e88639e58f6\""
+image_repositories = []
 
 [default.package.parameters]
 resolve_s3 = true

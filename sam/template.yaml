@@ -61,6 +61,11 @@ Parameters:
     Default: "false"
     AllowedValues: ["true", "false"]
 
+  BedrockModelId:
+    Type: String
+    Default: us.anthropic.claude-3-5-haiku-20241022-v1:0
+    Description: Bedrock model ID for AI position analysis
+
   DistributionHomePage:
     Type: String
     Default: /index.html
@@ -227,10 +232,12 @@ Resources:
       Runtime: provided.al2023
       Architectures:
         - arm64
+      Timeout: 30
       Environment:
         Variables:
           GAME_TABLE: !Ref GameTableName
           USER_TABLE: !Ref UserTableName
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
           RUST_BACKTRACE: 1
       Policies:
         - DynamoDBCrudPolicy:
@@ -243,6 +250,20 @@ Resources:
               - execute-api:ManageConnections
             Resource:
               - !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocketApi}/Prod/POST/@connections/*
+        - Statement:
+            Effect: Allow
+            Action:
+              - bedrock:InvokeModel
+            Resource:
+              - arn:aws:bedrock:*::foundation-model/*
+              - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/${BedrockModelId}
+        - Statement:
+            Effect: Allow
+            Action:
+              - aws-marketplace:Subscribe
+              - aws-marketplace:Unsubscribe
+              - aws-marketplace:ViewSubscriptions
+            Resource: "*"
 
   GameFunctionPermission:
     Type: AWS::Lambda::Permission
