@@ -590,7 +590,9 @@ export const Game: React.FC<GameProps> = ({
         {hasMovesPlayed && (
           <div className="ai-analysis-section">
             <div className="ai-analysis-buttons">
-              {AI_BUTTONS.map(({ type, label }) => (
+              {AI_BUTTONS.filter(
+                ({ type }) => type !== AnalysisType.PostGame || gameIsFinished,
+              ).map(({ type, label }) => (
                 <button
                   key={type}
                   className={`ai-analysis-button${
