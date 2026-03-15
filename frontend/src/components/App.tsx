@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 import { useNav } from "@src/context/useNav";
 import { useLocalStorage } from "@src/hooks/useLocalStorage";
@@ -13,7 +13,11 @@ import { GameForm } from "@src/components/GameForm";
 import { Game } from "@src/components/Game";
 
 import { ApiMessageType, ApiResponse } from "@src/types/api";
-import { GameRecord, PlayerActionName } from "@src/types/game";
+import {
+  AiAnalysisResult,
+  GameRecord,
+  PlayerActionName,
+} from "@src/types/game";
 import { FormToShow } from "@src/types/sharedComponentTypes";
 import { API_ROUTE, WEBSOCKET_ENDPOINT } from "@src/constants";
 
@@ -38,27 +42,47 @@ export const App: React.FC = () => {
   const [gameMessages, setGameMessages, dismissGameMessage] =
     useMessageDisplay();
 
+  const [aiAnalyses, setAiAnalyses] = useState<
+    Record<string, AiAnalysisResult>
+  >({});
+  const pendingAiGameIdRef = useRef<string | null>(null);
+
   const [formToShow, setFormToShow] = useState<FormToShow>(
-    !username && gameIds.length ? FormToShow.Join : FormToShow.Create
+    !username && gameIds.length ? FormToShow.Join : FormToShow.Create,
   );
   const [showForm, setShowForm] = useState(
     !/^\/game\/(.+)$/.exec(window.location.pathname) ||
-      !usernameFromLocalStorage
+      !usernameFromLocalStorage,
   );
 
   const scrollTo = useScroll();
 
   const onWebSocketMessage = useCallback(
-    (response: ApiResponse<GameRecord | null>) => {
+    (response: ApiResponse<GameRecord | AiAnalysisResult | null>) => {
       const isGameRecord =
         response.data && Object.keys(response.data).includes("game_id");
 
-      const gameRecord = isGameRecord ? response.data : null;
+      const isAiAnalysis =
+        response.data &&
+        Object.keys(response.data).includes("analysisType") &&
+        Object.keys(response.data).includes("text");
+
+      const gameRecord = isGameRecord ? (response.data as GameRecord) : null;
+
+      if (isAiAnalysis) {
+        const result = response.data as AiAnalysisResult;
+        const gameId = pendingAiGameIdRef.current;
+
+        if (gameId) {
+          setAiAnalyses((old) => ({ ...old, [gameId]: result }));
+          pendingAiGameIdRef.current = null;
+        }
+      }
 
       if (gameRecord) {
         setGameRecords((old) => {
           const index = old.findIndex(
-            (game) => game.game_id === gameRecord.game_id
+            (game) => game.game_id === gameRecord.game_id,
           );
 
           if (index === -1) {
@@ -97,8 +121,8 @@ export const App: React.FC = () => {
             (o) =>
               !response.messages.some(
                 (m) =>
-                  m.message === o.message && m.messageType === o.messageType
-              )
+                  m.message === o.message && m.messageType === o.messageType,
+              ),
           ),
           ...response.messages.map(({ message, messageType }) => ({
             id: `${
@@ -111,12 +135,12 @@ export const App: React.FC = () => {
         ]);
       }
     },
-    [scrollTo, setGameMessages, setAppMessages]
+    [scrollTo, setGameMessages, setAppMessages],
   );
 
   const [connectionId, sendWebSocketMessage, isWebsocketOpen] = useWebSocket(
     WEBSOCKET_ENDPOINT,
-    onWebSocketMessage
+    onWebSocketMessage,
   );
 
   useEffect(() => {
@@ -233,11 +257,22 @@ export const App: React.FC = () => {
               onLeaveGame={onLeaveGame}
               connectionId={connectionId}
               messages={gameMessages.filter((message) =>
-                message.id.includes(gameRecord.game_id)
+                message.id.includes(gameRecord.game_id),
               )}
               sendWebSocketMessage={sendWebSocketMessage}
               dismissMessage={dismissGameMessage}
               totalActiveGames={gameRecords.length}
+              aiAnalysis={aiAnalyses[gameRecord.game_id] ?? null}
+              onRequestAiAnalysis={(gameId) => {
+                pendingAiGameIdRef.current = gameId;
+              }}
+              onClearAiAnalysis={(gameId) => {
+                setAiAnalyses((old) =>
+                  Object.fromEntries(
+                    Object.entries(old).filter(([id]) => id !== gameId),
+                  ),
+                );
+              }}
             />
           ))}
         </div>

@@ -126,6 +126,18 @@ export interface PlayerMove {
   to: Position;
 }
 
+export enum AnalysisType {
+  MoveExplanation = 'move-explanation',
+  BlunderDetection = 'blunder-detection',
+  Coach = 'coach',
+  PostGame = 'post-game',
+}
+
+export interface AiAnalysisResult {
+  analysisType: AnalysisType;
+  text: string;
+}
+
 export enum PlayerActionName {
   CreateGame = 'create-game',
   JoinGame = 'join-game',
@@ -136,6 +148,7 @@ export enum PlayerActionName {
   LoseViaOutOfTime = 'lose-via-out-of-time',
   Resign = 'resign',
   OfferDraw = 'offer-draw',
+  AnalyzePosition = 'analyze-position',
 }
 
 interface PlayerActionCreateGame {
@@ -195,6 +208,13 @@ interface PlayerActionResign {
 //   };
 // }
 
+interface PlayerActionAnalyzePosition {
+  [PlayerActionName.AnalyzePosition]: {
+    gameId: string;
+    analysisType: AnalysisType;
+  };
+}
+
 export type PlayerAction =
   | PlayerActionCreateGame
   | PlayerActionJoinGame
@@ -203,7 +223,8 @@ export type PlayerAction =
   | PlayerActionMovePiece
   | PlayerActionHeartbeat
   | PlayerActionLoseViaOutOfTime
-  | PlayerActionResign;
+  | PlayerActionResign
+  | PlayerActionAnalyzePosition;
 // | PlayerActionOfferDraw;
 
 export interface GameRecord {

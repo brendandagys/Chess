@@ -147,12 +147,14 @@
 .game-area {
   display: inline-block;
   margin: 0 auto;
+  max-width: calc(8 * var(--piece-diameter) + 18px);
 }
 
 .player-status-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin: 0 auto;
 }
 
 .game-container .chess-board-container {
@@ -172,4 +174,76 @@
   /* border: 8px solid #333;
   border-radius: 4px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); */
+}
+
+.ai-analysis-section {
+  display: flex;
+  flex-direction: column;
+  margin: 1.25rem 5px 0;
+  gap: 0.5rem;
+  /* max-width: calc(8 * var(--piece-diameter) + 18px); */
+}
+
+.ai-analysis-buttons {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.ai-analysis-button {
+  padding: 0.25rem 0.7rem;
+  border: 1.5px solid #b0c8e8;
+  border-radius: 999px;
+  background-color: #f0f6ff;
+  color: #2c5282;
+  font-size: 0.65rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.ai-analysis-button:hover:not(:disabled) {
+  /* background-color: #dbeafe; */
+  border-color: #4682b4;
+  transform: translateY(-1px);
+}
+
+.ai-analysis-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ai-analysis-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-analysis-button--active {
+  background-color: #4682b4;
+  border-color: #2a5f8a;
+  color: white;
+}
+
+.ai-analysis-result {
+  padding: 0.65rem 0.85rem;
+  background-color: #fafaf8;
+  border: 1px solid #e0e0d8;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.ai-analysis-loading {
+  margin: 0;
+  color: #999;
+  font-size: 0.8rem;
+  font-style: italic;
+  text-align: center;
+}
+
+.ai-analysis-text {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: #2d2d2d;
 }

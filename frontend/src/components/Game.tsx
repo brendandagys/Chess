@@ -20,6 +20,8 @@ import { getSquaresFromCompactBoard } from "@src/utils";
 import { ExpandedGameStateAtPointInTime } from "@src/types/board";
 import { GameRequest } from "@src/types/api";
 import {
+  AiAnalysisResult,
+  AnalysisType,
   GameEndingCheckmate,
   GameEndingOutOfTime,
   GameEndingResignation,
@@ -42,6 +44,9 @@ interface GameProps {
   sendWebSocketMessage: (action: GameRequest) => void;
   dismissMessage: (id: string) => void;
   totalActiveGames: number;
+  aiAnalysis: AiAnalysisResult | null;
+  onRequestAiAnalysis: (gameId: string) => void;
+  onClearAiAnalysis: (gameId: string) => void;
 }
 
 export const Game: React.FC<GameProps> = ({
@@ -52,9 +57,13 @@ export const Game: React.FC<GameProps> = ({
   sendWebSocketMessage,
   dismissMessage,
   totalActiveGames,
+  aiAnalysis,
+  onRequestAiAnalysis,
+  onClearAiAnalysis,
 }) => {
   const gameId = gameRecord.game_id;
   const [showResignConfirm, setShowResignConfirm] = useState(false);
+  const [aiLoading, setAiLoading] = useState<AnalysisType | null>(null);
   const { requestPermission, showNotification } = useNotifications();
   const previousIsTurnRef = useRef<boolean | null>(null);
 
@@ -66,7 +75,7 @@ export const Game: React.FC<GameProps> = ({
         ...state,
         board: { squares: getSquaresFromCompactBoard(state.board) },
       })),
-    [gameState.history]
+    [gameState.history],
   );
 
   const gameTime = gameState.gameTime;
@@ -96,7 +105,7 @@ export const Game: React.FC<GameProps> = ({
 
   const isActivePlayerTurn = useMemo(
     () => isTurn && gameIsInProgress && bothPlayersReady,
-    [isTurn, gameIsInProgress, bothPlayersReady]
+    [isTurn, gameIsInProgress, bothPlayersReady],
   );
 
   const [isDocumentHidden, setIsDocumentHidden] = useState(document.hidden);
@@ -119,7 +128,7 @@ export const Game: React.FC<GameProps> = ({
 
   const expandedCapturedPieces = useMemo(
     () => getCapturedPiecesFromBase64(viewedGameState.capturedPieces),
-    [viewedGameState.capturedPieces]
+    [viewedGameState.capturedPieces],
   );
 
   useEffect(() => {
@@ -180,7 +189,7 @@ export const Game: React.FC<GameProps> = ({
       ? playerColor === Color.White
         ? gameTime.whiteSecondsLeft
         : gameTime.blackSecondsLeft
-      : null
+      : null,
   );
 
   const [opponentSecondsLeft, setOpponentSecondsLeft] = useState(
@@ -188,7 +197,7 @@ export const Game: React.FC<GameProps> = ({
       ? playerColor === Color.White
         ? gameTime.blackSecondsLeft
         : gameTime.whiteSecondsLeft
-      : null
+      : null,
   );
 
   // Reset to latest board when game state updates
@@ -314,7 +323,7 @@ export const Game: React.FC<GameProps> = ({
 
       if (gameEndingType === GameEndingType.Checkmate) {
         const winningColor = getOppositePlayerColor(
-          (gameEnding as GameEndingCheckmate)[gameEndingType]
+          (gameEnding as GameEndingCheckmate)[gameEndingType],
         );
 
         return [
@@ -351,8 +360,8 @@ export const Game: React.FC<GameProps> = ({
   const opponentUsername = gameRecord.engine_difficulty
     ? "Engine"
     : playerColor === Color.White
-    ? gameRecord.black_username
-    : gameRecord.white_username;
+      ? gameRecord.black_username
+      : gameRecord.white_username;
 
   const isViewingLatestBoard = historyIndex === numStates - 1;
 
@@ -371,6 +380,36 @@ export const Game: React.FC<GameProps> = ({
 
     setShowResignConfirm(false);
   };
+
+  useEffect(() => {
+    if (aiAnalysis) {
+      setAiLoading(null);
+    }
+  }, [aiAnalysis]);
+
+  const handleAiAnalysis = (analysisType: AnalysisType) => {
+    setAiLoading(analysisType);
+    onClearAiAnalysis(gameId);
+    onRequestAiAnalysis(gameId);
+    sendWebSocketMessage({
+      route: API_ROUTE,
+      data: {
+        [PlayerActionName.AnalyzePosition]: {
+          gameId,
+          analysisType,
+        },
+      },
+    });
+  };
+
+  const AI_BUTTONS: { type: AnalysisType; label: string }[] = [
+    { type: AnalysisType.MoveExplanation, label: "Explain" },
+    { type: AnalysisType.BlunderDetection, label: "Blunder?" },
+    { type: AnalysisType.Coach, label: "Coach" },
+    { type: AnalysisType.PostGame, label: "Post-game" },
+  ];
+
+  const hasMovesPlayed = numStates > 1;
 
   return (
     <div id={`game-${gameId}`} className="game-container">
@@ -484,7 +523,9 @@ export const Game: React.FC<GameProps> = ({
           {gameIsTimed && (
             <PlayerTime
               secondsLeft={
-                playerOutOfTime === opponentColor ? 0 : opponentSecondsLeft ?? 0
+                playerOutOfTime === opponentColor
+                  ? 0
+                  : (opponentSecondsLeft ?? 0)
               }
             />
           )}
@@ -519,6 +560,40 @@ export const Game: React.FC<GameProps> = ({
           setHistoryIndex={setHistoryIndex}
           numStates={numStates}
         />
+
+        {hasMovesPlayed && (
+          <div className="ai-analysis-section">
+            <div className="ai-analysis-buttons">
+              {AI_BUTTONS.map(({ type, label }) => (
+                <button
+                  key={type}
+                  className={`ai-analysis-button${
+                    aiAnalysis?.analysisType === type
+                      ? " ai-analysis-button--active"
+                      : ""
+                  }`}
+                  disabled={aiLoading !== null}
+                  onClick={() => {
+                    handleAiAnalysis(type);
+                  }}
+                >
+                  {aiLoading === type ? "Analyzing..." : label}
+                </button>
+              ))}
+            </div>
+
+            {(aiLoading ?? aiAnalysis) && (
+              <div className="ai-analysis-result">
+                {aiLoading && !aiAnalysis && (
+                  <p className="ai-analysis-loading">Thinking...</p>
+                )}
+                {aiAnalysis && (
+                  <p className="ai-analysis-text">{aiAnalysis.text}</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
