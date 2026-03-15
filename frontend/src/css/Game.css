@@ -225,11 +225,29 @@
 }
 
 .ai-analysis-result {
-  padding: 0.65rem 0.85rem;
+  position: relative;
+  padding: 0.65rem 1.5rem;
   background-color: #fafaf8;
   border: 1px solid #e0e0d8;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.ai-analysis-clear {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.4rem;
+  background: none;
+  border: none;
+  font-size: 0.65rem;
+  color: #aaa;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.ai-analysis-clear:hover {
+  color: #555;
 }
 
 .ai-analysis-loading {

@@ -584,6 +584,17 @@ export const Game: React.FC<GameProps> = ({
 
             {(aiLoading ?? aiAnalysis) && (
               <div className="ai-analysis-result">
+                {aiAnalysis && (
+                  <button
+                    className="ai-analysis-clear"
+                    onClick={() => {
+                      onClearAiAnalysis(gameId);
+                    }}
+                    aria-label="Clear analysis"
+                  >
+                    ✕
+                  </button>
+                )}
                 {aiLoading && !aiAnalysis && (
                   <p className="ai-analysis-loading">Thinking...</p>
                 )}
