@@ -376,6 +376,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
                       ? " square--moveable"
                       : ""
                   }${
+                    isViewingLatestBoard &&
                     selectedPieceDestinations.includes(`${rank}${file}`)
                       ? " square--possible-move"
                       : ""
