@@ -39,6 +39,7 @@ import "@src/css/Game.css";
 interface GameProps {
   gameRecord: GameRecord;
   onLeaveGame: (gameId: string) => void;
+  onPlayAgain: (gameId: string) => void;
   connectionId: string;
   messages: GameMessage[];
   sendWebSocketMessage: (action: GameRequest) => void;
@@ -52,6 +53,7 @@ interface GameProps {
 export const Game: React.FC<GameProps> = ({
   gameRecord,
   onLeaveGame,
+  onPlayAgain,
   connectionId,
   messages,
   sendWebSocketMessage,
@@ -403,7 +405,7 @@ export const Game: React.FC<GameProps> = ({
       },
     });
 
-    onLeaveGame(gameId);
+    onPlayAgain(gameId);
   };
 
   useEffect(() => {

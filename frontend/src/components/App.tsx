@@ -32,10 +32,9 @@ export const App: React.FC = () => {
     removeGameId,
     setUsername,
   } = useNav();
+
   const [gameIdsFromUrl] = useState([...gameIds]);
-
   const [usernameFromLocalStorage] = useLocalStorage("username", "");
-
   const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
 
   const [appMessages, setAppMessages, dismissAppMessage] = useMessageDisplay();
@@ -46,6 +45,7 @@ export const App: React.FC = () => {
     Record<string, AiAnalysisResult>
   >({});
   const pendingAiGameIdRef = useRef<string | null>(null);
+  const pendingPlayAgainIndexRef = useRef<number | null>(null);
 
   const [formToShow, setFormToShow] = useState<FormToShow>(
     !username && gameIds.length ? FormToShow.Join : FormToShow.Create,
@@ -80,15 +80,29 @@ export const App: React.FC = () => {
       }
 
       if (gameRecord) {
+        const playAgainIndex = pendingPlayAgainIndexRef.current;
+
+        if (playAgainIndex !== null) {
+          pendingPlayAgainIndexRef.current = null;
+        }
+
         setGameRecords((old) => {
           const index = old.findIndex(
             (game) => game.game_id === gameRecord.game_id,
           );
 
           if (index === -1) {
+            if (playAgainIndex !== null) {
+              removeGameId(gameRecord.game_id); // Remove from URL
+              const newGames = [...old];
+              newGames[playAgainIndex] = gameRecord;
+              return newGames;
+            }
+
             setTimeout(() => {
               scrollTo(`game-${gameRecord.game_id}`);
             }, 100);
+
             return [...old, gameRecord];
           }
 
@@ -206,6 +220,12 @@ export const App: React.FC = () => {
     });
   };
 
+  const onPlayAgain = (gameId: string) => {
+    pendingPlayAgainIndexRef.current = gameRecords.findIndex(
+      (g) => g.game_id === gameId,
+    );
+  };
+
   return (
     <div className="app-container">
       {gameIds.length ? <CopyLinkButton /> : null}
@@ -255,6 +275,7 @@ export const App: React.FC = () => {
               key={gameRecord.game_id}
               gameRecord={gameRecord}
               onLeaveGame={onLeaveGame}
+              onPlayAgain={onPlayAgain}
               connectionId={connectionId}
               messages={gameMessages.filter((message) =>
                 message.id.includes(gameRecord.game_id),
