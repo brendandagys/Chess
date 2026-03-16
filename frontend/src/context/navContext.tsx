@@ -26,11 +26,11 @@ function parseUsernameFromSearch(search: string): string {
 
 export const NavProvider = ({ children }: { children: ReactNode }) => {
   const [gameIds, setGameIdsState] = useState<string[]>(() =>
-    parseGameIdsFromPath(window.location.pathname)
+    parseGameIdsFromPath(window.location.pathname),
   );
 
   const [username, setUsernameState] = useState<string>(() =>
-    parseUsernameFromSearch(window.location.search)
+    parseUsernameFromSearch(window.location.search),
   );
 
   useEffect(() => {
@@ -57,13 +57,6 @@ export const NavProvider = ({ children }: { children: ReactNode }) => {
       window.removeEventListener("popstate", handler);
     };
   }, []);
-
-  // Update URL and state
-  const setGameIds = (ids: string[]) => {
-    setGameIdsState([...ids]);
-    const path = buildPathFromGameIds(ids, username);
-    history.pushState({ gameIds: ids, username }, "", path);
-  };
 
   const setUsername = (user: string) => {
     setUsernameState(user);
@@ -95,7 +88,6 @@ export const NavProvider = ({ children }: { children: ReactNode }) => {
       value={{
         gameIds,
         username,
-        setGameIds,
         addGameId,
         removeGameId,
         setUsername,
