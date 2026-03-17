@@ -7,6 +7,7 @@
   margin: 0.25rem 0;
   padding: 0.25rem 0.6rem;
   border-radius: 5px;
+  width: 75px;
 }
 
 .player-time--low {
@@ -17,5 +18,6 @@
   .player-time {
     font-size: 1.1rem;
     padding: 0.2rem 0.5rem;
+    width: 63px;
   }
 }

@@ -549,18 +549,22 @@ export const Game: React.FC<GameProps> = ({
       </div>
 
       <div className="game-area">
-        <CapturedPieces
-          pieces={opponentCapturedPieces}
-          pointsLead={opponentPointsLead}
-        />
-
-        {gameIsTimed && (
-          <PlayerTime
-            secondsLeft={
-              playerOutOfTime === opponentColor ? 0 : (opponentSecondsLeft ?? 0)
-            }
+        <div className="player-status-row">
+          <CapturedPieces
+            pieces={opponentCapturedPieces}
+            pointsLead={opponentPointsLead}
           />
-        )}
+
+          {gameIsTimed && (
+            <PlayerTime
+              secondsLeft={
+                playerOutOfTime === opponentColor
+                  ? 0
+                  : (opponentSecondsLeft ?? 0)
+              }
+            />
+          )}
+        </div>
 
         <div
           className={`chess-board-container${isTurn ? " is-player-turn" : ""}`}
@@ -585,6 +589,11 @@ export const Game: React.FC<GameProps> = ({
         </div>
 
         <div className="player-status-row">
+          <CapturedPieces
+            pieces={playerCapturedPieces}
+            pointsLead={playerPointsLead}
+          />
+
           <div className="board-theme-picker">
             {BOARD_THEMES.map((theme) => (
               <button
@@ -607,11 +616,6 @@ export const Game: React.FC<GameProps> = ({
 
           {gameIsTimed && <PlayerTime secondsLeft={playerSecondsLeft ?? 0} />}
         </div>
-
-        <CapturedPieces
-          pieces={playerCapturedPieces}
-          pointsLead={playerPointsLead}
-        />
 
         <BoardHistoryControls
           historyIndex={historyIndex}
