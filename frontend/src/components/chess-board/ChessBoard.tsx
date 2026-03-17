@@ -6,7 +6,7 @@ import { GameRequest } from "@src/types/api";
 import { PlayerActionName } from "@src/types/game";
 import { ExpandedGameStateAtPointInTime, Position } from "@src/types/board";
 import { Color, Piece } from "@src/types/piece";
-import { API_ROUTE } from "@src/constants";
+import { API_ROUTE, BoardTheme } from "@src/constants";
 import { stateChecks } from "@src/components/chess-board/state-checks";
 
 import "@src/css/ChessBoard.css";
@@ -21,6 +21,7 @@ interface ChessBoardProps {
   gameOverMessage: string | null;
   isTurn: boolean;
   onPlayAgain: () => void;
+  boardTheme: BoardTheme;
 }
 
 export const ChessBoard: React.FC<ChessBoardProps> = ({
@@ -33,6 +34,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   gameOverMessage,
   isTurn,
   onPlayAgain,
+  boardTheme,
 }) => {
   const shouldRotate = playerColor === Color.Black;
 
@@ -342,6 +344,13 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       className={`board rank-count-${numRanks % 2 ? "odd" : "even"}${
         gameOverMessage ? " game-over" : ""
       }`}
+      style={
+        {
+          "--board-dark-color": boardTheme.darkColor,
+          "--board-light-color": boardTheme.lightColor,
+          "--board-border-color": boardTheme.borderColor,
+        } as React.CSSProperties
+      }
     >
       {boardForRendering.map((row, rowIndex) => {
         const rank = 1 + (shouldRotate ? rowIndex : numRanks - rowIndex - 1);

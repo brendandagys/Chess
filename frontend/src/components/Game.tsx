@@ -13,6 +13,7 @@ import { Color, getOppositePlayerColor } from "@src/types/piece";
 import { ChessBoard } from "@src/components/chess-board/ChessBoard";
 import { PlayerTime } from "@src/components/PlayerTime";
 
+import { useLocalStorage } from "@src/hooks/useLocalStorage";
 import { useNotifications } from "@src/hooks/useNotifications";
 import { useTitleAnimation } from "@src/hooks/useTitleAnimation";
 
@@ -32,7 +33,7 @@ import {
 } from "@src/types/game";
 import { GameMessage } from "@src/types/sharedComponentTypes";
 
-import { API_ROUTE } from "@src/constants";
+import { API_ROUTE, BOARD_THEMES, BoardTheme } from "@src/constants";
 
 import "@src/css/Game.css";
 
@@ -68,6 +69,13 @@ export const Game: React.FC<GameProps> = ({
   const [aiLoading, setAiLoading] = useState<AnalysisType | null>(null);
   const { requestPermission, showNotification } = useNotifications();
   const previousIsTurnRef = useRef<boolean | null>(null);
+
+  const [boardThemeId, setBoardThemeId] = useLocalStorage(
+    "board-theme",
+    "classic",
+  );
+  const boardTheme: BoardTheme =
+    BOARD_THEMES.find((theme) => theme.id === boardThemeId) ?? BOARD_THEMES[0];
 
   const gameState = gameRecord.game_state;
 
@@ -546,32 +554,66 @@ export const Game: React.FC<GameProps> = ({
             pieces={opponentCapturedPieces}
             pointsLead={opponentPointsLead}
           />
-
-          {gameIsTimed && (
-            <PlayerTime
-              secondsLeft={
-                playerOutOfTime === opponentColor
-                  ? 0
-                  : (opponentSecondsLeft ?? 0)
-              }
-            />
-          )}
         </div>
 
-        <div
-          className={`chess-board-container${isTurn ? " is-player-turn" : ""}`}
-        >
-          <ChessBoard
-            expandedHistory={history}
-            playerColor={playerColor}
-            gameId={gameId}
-            sendWebSocketMessage={sendWebSocketMessage}
-            historyIndex={historyIndex}
-            isViewingLatestBoard={isViewingLatestBoard}
-            gameOverMessage={gameOverMessage}
-            isTurn={isTurn}
-            onPlayAgain={handlePlayAgain}
-          />
+        <div className="board-with-theme-picker">
+          <div>
+            {gameIsTimed && (
+              <PlayerTime
+                secondsLeft={
+                  playerOutOfTime === opponentColor
+                    ? 0
+                    : (opponentSecondsLeft ?? 0)
+                }
+              />
+            )}
+
+            <div
+              className={`chess-board-container${
+                isTurn ? " is-player-turn" : ""
+              }`}
+              style={
+                {
+                  "--board-border-color": boardTheme.borderColor,
+                } as React.CSSProperties
+              }
+            >
+              <ChessBoard
+                expandedHistory={history}
+                playerColor={playerColor}
+                gameId={gameId}
+                sendWebSocketMessage={sendWebSocketMessage}
+                historyIndex={historyIndex}
+                isViewingLatestBoard={isViewingLatestBoard}
+                gameOverMessage={gameOverMessage}
+                isTurn={isTurn}
+                onPlayAgain={handlePlayAgain}
+                boardTheme={boardTheme}
+              />
+            </div>
+
+            {gameIsTimed && <PlayerTime secondsLeft={playerSecondsLeft ?? 0} />}
+          </div>
+
+          <div className="board-theme-picker">
+            {BOARD_THEMES.map((theme) => (
+              <button
+                key={theme.id}
+                className={`theme-swatch${
+                  boardTheme.id === theme.id ? " theme-swatch--active" : ""
+                }`}
+                style={{
+                  background: `linear-gradient(135deg, ${
+                    theme.lightColor
+                  } 50%, ${theme.darkColor} 50%)`,
+                }}
+                title={theme.label}
+                onClick={() => {
+                  setBoardThemeId(theme.id);
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className="player-status-row">
@@ -579,8 +621,6 @@ export const Game: React.FC<GameProps> = ({
             pieces={playerCapturedPieces}
             pointsLead={playerPointsLead}
           />
-
-          {gameIsTimed && <PlayerTime secondsLeft={playerSecondsLeft ?? 0} />}
         </div>
 
         <BoardHistoryControls
