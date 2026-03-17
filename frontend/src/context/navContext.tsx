@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 
 import { NavContext } from "@src/context/useNav";
 
@@ -74,14 +74,17 @@ export const NavProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const removeGameId = (id: string) => {
-    setGameIdsState((prev) => {
-      const next = prev.filter((gameId) => gameId !== id);
-      const path = buildPathFromGameIds(next, username);
-      history.pushState({ gameIds: next, username }, "", path);
-      return next;
-    });
-  };
+  const removeGameId = useCallback(
+    (id: string) => {
+      setGameIdsState((prev) => {
+        const next = prev.filter((gameId) => gameId !== id);
+        const path = buildPathFromGameIds(next, username);
+        history.pushState({ gameIds: next, username }, "", path);
+        return next;
+      });
+    },
+    [username],
+  );
 
   return (
     <NavContext.Provider

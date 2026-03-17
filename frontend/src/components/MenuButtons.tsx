@@ -5,12 +5,22 @@ import { setSoundsEnabled } from "../sounds";
 
 import "../css/MenuButtons.css";
 
-export const MenuButtons: React.FC = () => {
+interface MenuButtonsProps {
+  realismOn: boolean;
+  setRealismPref: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export const MenuButtons: React.FC<MenuButtonsProps> = ({
+  realismOn,
+  setRealismPref,
+}) => {
   const [soundsPref, setSoundsPref] = useLocalStorage("sounds-enabled", "true");
   const soundsOn = soundsPref !== "false";
 
   const [justCopied, setJustCopied] = useState(false);
   const [justToggledSoundPreference, setJustToggledSoundPreference] =
+    useState(false);
+  const [justToggledRealismPreference, setJustToggledRealismPreference] =
     useState(false);
 
   const { width } = useViewportWidth();
@@ -48,8 +58,18 @@ export const MenuButtons: React.FC = () => {
     }, 1250);
   };
 
+  const toggleRealismPreference = () => {
+    setRealismPref(realismOn ? "false" : "true");
+
+    setJustToggledRealismPreference(true);
+    setTimeout(() => {
+      setJustToggledRealismPreference(false);
+    }, 1250);
+  };
+
   const showCopyButtonText = width >= 600 || justCopied;
   const showSoundButtonText = width >= 600 || justToggledSoundPreference;
+  const showRealismButtonText = width >= 600 || justToggledRealismPreference;
 
   return (
     <div>
@@ -80,7 +100,7 @@ export const MenuButtons: React.FC = () => {
             />
           </svg>
           {showCopyButtonText && (
-            <span>{justCopied ? "Copied!" : "Link to join"}</span>
+            <span>{justCopied ? "Copied!" : "Copy link"}</span>
           )}
         </button>
       </div>
@@ -161,6 +181,42 @@ export const MenuButtons: React.FC = () => {
           )}
           {showSoundButtonText && (
             <span>{soundsOn ? "Sound on" : "Sound off"}</span>
+          )}
+        </button>
+      </div>
+
+      <div className="menu-buttons menu-buttons--realism">
+        <button
+          className={`menu-button realism-toggle-button${
+            !realismOn ? " realism-toggle-button--off" : ""
+          }`}
+          onClick={toggleRealismPreference}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            <polyline
+              points="12 6 12 12 16 14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          {showRealismButtonText && (
+            <span>{realismOn ? "Realism" : "No delay"}</span>
           )}
         </button>
       </div>

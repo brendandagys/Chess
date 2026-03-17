@@ -24,6 +24,17 @@ import { API_ROUTE, WEBSOCKET_ENDPOINT } from "@src/constants";
 import { playIllegalSound } from "@src/sounds";
 import "@src/css/App.css";
 
+// Approximate normal distribution via Box-Muller: mean ~2500ms, std ~500ms,
+// clamped to [1000, 4000]ms so the engine appears to "think" for 1-4 seconds.
+function getRealisticDelayMs(): number {
+  const u1 = Math.random();
+  const u2 = Math.random();
+  const z =
+    Math.sqrt(-2 * Math.log(u1 === 0 ? Number.EPSILON : u1)) *
+    Math.cos(2 * Math.PI * u2);
+  return Math.round(Math.max(1000, Math.min(6000, 2500 + z * 500)));
+}
+
 export const App: React.FC = () => {
   const {
     username,
@@ -36,6 +47,22 @@ export const App: React.FC = () => {
   const [gameIdsFromUrl] = useState([...gameIds]);
   const [usernameFromLocalStorage] = useLocalStorage("username", "");
   const [gameRecords, setGameRecords] = useState<GameRecord[]>([]);
+
+  const [realismPref, setRealismPref] = useLocalStorage(
+    "realism-enabled",
+    "true",
+  );
+  const realismOn = realismPref !== "false";
+
+  const gameRecordsRef = useRef<GameRecord[]>([]);
+  useEffect(() => {
+    gameRecordsRef.current = gameRecords;
+  }, [gameRecords]);
+
+  const realismPrefRef = useRef(realismPref);
+  useEffect(() => {
+    realismPrefRef.current = realismPref;
+  }, [realismPref]);
 
   const [appMessages, setAppMessages, dismissAppMessage] = useMessageDisplay();
   const [gameMessages, setGameMessages, dismissGameMessage] =
@@ -86,41 +113,93 @@ export const App: React.FC = () => {
           pendingPlayAgainIndexRef.current = null;
         }
 
-        setGameRecords((old) => {
-          const index = old.findIndex(
-            (game) => game.game_id === gameRecord.game_id,
-          );
+        // SIMULATED ENGINE DELAY LOGIC
+        const isEngineGame = gameRecord.engine_difficulty !== null;
+        const existingRecord = gameRecordsRef.current.find(
+          (g) => g.game_id === gameRecord.game_id,
+        );
+        const historyGrowth =
+          gameRecord.game_state.history.length -
+          (existingRecord?.game_state.history.length ?? 0);
 
-          if (index === -1) {
-            if (playAgainIndex !== null) {
-              removeGameId(gameRecord.game_id); // Remove from URL
+        // The server sends two messages per engine turn: one after the player
+        // moves (engineResult = null) and one after the engine responds
+        // (engineResult set). Delay only the second message.
+        const latestEngineResult =
+          gameRecord.game_state.history[
+            gameRecord.game_state.history.length - 1
+          ].engineResult;
+
+        const shouldDelay =
+          isEngineGame &&
+          realismPrefRef.current !== "false" &&
+          existingRecord !== undefined &&
+          historyGrowth > 0 &&
+          latestEngineResult !== null;
+
+        if (shouldDelay) {
+          const trimmedRecord: GameRecord = {
+            ...gameRecord,
+            game_state: {
+              ...gameRecord.game_state,
+              history: gameRecord.game_state.history.slice(0, -1),
+            },
+          };
+
+          const replaceRecord = (record: GameRecord) => {
+            setGameRecords((old) => {
+              const index = old.findIndex(
+                (game) => game.game_id === record.game_id,
+              );
+              if (index === -1) return old;
               const newGames = [...old];
-              newGames[playAgainIndex] = gameRecord;
+              newGames[index] = record;
               return newGames;
+            });
+          };
+
+          replaceRecord(trimmedRecord);
+
+          setTimeout(() => {
+            replaceRecord(gameRecord);
+          }, getRealisticDelayMs());
+        } else {
+          setGameRecords((old) => {
+            const index = old.findIndex(
+              (game) => game.game_id === gameRecord.game_id,
+            );
+
+            if (index === -1) {
+              if (playAgainIndex !== null) {
+                removeGameId(gameRecord.game_id); // Remove from URL
+                const newGames = [...old];
+                newGames[playAgainIndex] = gameRecord;
+                return newGames;
+              }
+
+              setTimeout(() => {
+                scrollTo(`game-${gameRecord.game_id}`);
+              }, 100);
+
+              return [...old, gameRecord];
             }
 
-            setTimeout(() => {
-              scrollTo(`game-${gameRecord.game_id}`);
-            }, 100);
+            const newGames = [...old];
+            newGames[index] = gameRecord;
 
-            return [...old, gameRecord];
-          }
+            const moveMade =
+              gameRecord.game_state.history.length !==
+              old[index].game_state.history.length;
 
-          const newGames = [...old];
-          newGames[index] = gameRecord;
+            if (!moveMade) {
+              document.querySelectorAll(".dragging").forEach((el) => {
+                el.classList.remove("dragging");
+              });
+            }
 
-          const moveMade =
-            gameRecord.game_state.history.length !==
-            old[index].game_state.history.length;
-
-          if (!moveMade) {
-            document.querySelectorAll(".dragging").forEach((el) => {
-              el.classList.remove("dragging");
-            });
-          }
-
-          return newGames;
-        });
+            return newGames;
+          });
+        }
       }
 
       if (response.messages.length) {
@@ -228,7 +307,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {gameIds.length ? <MenuButtons /> : null}
+      {gameIds.length ? (
+        <MenuButtons realismOn={realismOn} setRealismPref={setRealismPref} />
+      ) : null}
 
       {appMessages.length ? (
         <div className="app-messages-container">

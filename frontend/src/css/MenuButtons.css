@@ -9,14 +9,18 @@
 }
 
 .menu-buttons--sound {
-  top: 53px;
+  top: calc(15px + 38px);
+}
+
+.menu-buttons--realism {
+  top: calc(15px + 38px * 2);
 }
 
 .menu-buttons .menu-button {
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 4px;
-  padding: 8px 12px;
+  padding: 8px 9px 8px 8px;
   align-items: center;
   gap: 8px;
   cursor: pointer;
@@ -35,6 +39,7 @@
   flex-shrink: 0;
 }
 
-.sound-toggle-button--off {
+.sound-toggle-button--off,
+.realism-toggle-button--off {
   color: rgb(177, 52, 52);
 }
