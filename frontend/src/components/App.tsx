@@ -7,7 +7,7 @@ import { useScroll } from "@src/hooks/useScroll";
 import { useWebSocket } from "@src/hooks/useWebSocket";
 
 import { Alert } from "@src/components/Alert";
-import { CopyLinkButton } from "@src/components/CopyLinkButton";
+import { MenuButtons } from "@src/components/MenuButtons";
 import { HeaderSection } from "@src/components/HeaderSection";
 import { GameForm } from "@src/components/GameForm";
 import { Game } from "@src/components/Game";
@@ -149,7 +149,7 @@ export const App: React.FC = () => {
         ]);
       }
     },
-    [scrollTo, setGameMessages, setAppMessages],
+    [removeGameId, scrollTo, setGameMessages, setAppMessages],
   );
 
   const [connectionId, sendWebSocketMessage, isWebsocketOpen] = useWebSocket(
@@ -228,7 +228,7 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
-      {gameIds.length ? <CopyLinkButton /> : null}
+      {gameIds.length ? <MenuButtons /> : null}
 
       {appMessages.length ? (
         <div className="app-messages-container">

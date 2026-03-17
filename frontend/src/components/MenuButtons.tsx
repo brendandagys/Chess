@@ -3,9 +3,9 @@ import { useViewportWidth } from "../hooks/useViewportWidth";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { setSoundsEnabled } from "../sounds";
 
-import "../css/CopyLinkButton.css";
+import "../css/MenuButtons.css";
 
-export const CopyLinkButton: React.FC = () => {
+export const MenuButtons: React.FC = () => {
   const [soundsPref, setSoundsPref] = useLocalStorage("sounds-enabled", "true");
   const soundsOn = soundsPref !== "false";
 
@@ -53,9 +53,9 @@ export const CopyLinkButton: React.FC = () => {
 
   return (
     <div>
-      <div className="top-right-buttons top-right-buttons--copy">
+      <div className="menu-buttons menu-buttons--copy">
         <button
-          className="top-right-button copy-link-button"
+          className="menu-button copy-link-button"
           onClick={copyLinkToClipboard}
         >
           <svg
@@ -85,9 +85,9 @@ export const CopyLinkButton: React.FC = () => {
         </button>
       </div>
 
-      <div className="top-right-buttons top-right-buttons--sound">
+      <div className="menu-buttons menu-buttons--sound">
         <button
-          className={`top-right-button sound-toggle-button${
+          className={`menu-button sound-toggle-button${
             !soundsOn ? " sound-toggle-button--off" : ""
           }`}
           onClick={() => {
