@@ -67,9 +67,12 @@ export const MenuButtons: React.FC<MenuButtonsProps> = ({
     }, 1250);
   };
 
-  const showCopyButtonText = width >= 600 || justCopied;
-  const showSoundButtonText = width >= 600 || justToggledSoundPreference;
-  const showRealismButtonText = width >= 600 || justToggledRealismPreference;
+  const breakpoint = 850;
+
+  const showCopyButtonText = width >= breakpoint || justCopied;
+  const showSoundButtonText = width >= breakpoint || justToggledSoundPreference;
+  const showRealismButtonText =
+    width >= breakpoint || justToggledRealismPreference;
 
   return (
     <div>
