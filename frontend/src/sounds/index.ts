@@ -19,6 +19,13 @@ const audioMap: Record<string, HTMLAudioElement> = {
   castle: new Audio(castleSound),
 };
 
+// Module-level flag; initialized from storage so it persists across page loads
+let soundsEnabled = localStorage.getItem("sounds-enabled") !== "false";
+
+export const setSoundsEnabled = (enabled: boolean) => {
+  soundsEnabled = enabled;
+};
+
 // Mobile browsers require user interaction to load audio
 let audioLoaded = false;
 
@@ -43,6 +50,8 @@ const addPreloadListener = () => {
 addPreloadListener();
 
 const playSound = (key: keyof typeof audioMap) => {
+  if (!soundsEnabled) return;
+
   try {
     const audio = audioMap[key];
 

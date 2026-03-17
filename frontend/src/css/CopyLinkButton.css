@@ -1,26 +1,40 @@
-.copy-link-button {
+.top-right-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   position: fixed;
   top: 15px;
   right: 20px;
+  z-index: 1000;
+}
+
+.top-right-buttons--sound {
+  top: 53px;
+}
+
+.top-right-buttons .top-right-button {
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 8px 12px;
-  display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  display: flex;
   font-size: 0.875rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
   transition: all 0.2s ease;
 }
 
-.copy-link-button:hover {
+.top-right-button:hover {
   background-color: #f5f5f5;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
 }
 
-.copy-link-button svg {
+.top-right-button svg {
   flex-shrink: 0;
+}
+
+.sound-toggle-button--off {
+  color: rgb(177, 52, 52);
 }
