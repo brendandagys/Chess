@@ -152,22 +152,16 @@
 
 .player-status-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  margin: 0 auto;
-}
-
-.board-with-theme-picker {
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .board-theme-picker {
   display: flex;
-  flex-direction: column;
   gap: 8px;
-  margin-right: 6px;
+  margin-right: 1.5rem;
+  position: relative;
+  top: 1px;
 }
 
 .theme-swatch {
