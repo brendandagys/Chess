@@ -73,18 +73,18 @@ export const GameForm: React.FC<GameFormProps> = ({
 
   const getBoardSetup = (name: BoardSetupName): BoardSetup => {
     switch (name) {
-      case BoardSetupName.Standard:
-        return BoardSetupName.Standard;
-      case BoardSetupName.Random:
+      case BoardSetupName.CustomSize:
         return {
-          [BoardSetupName.Random]: {
+          [BoardSetupName.CustomSize]: {
             ranks: parseInt(dimensions.ranks) || 8,
             files: parseInt(dimensions.files) || 8,
           },
         };
-      case BoardSetupName.KingAndOneOtherPiece:
+      case BoardSetupName.Chess960:
+        return BoardSetupName.Chess960;
+      case BoardSetupName.KingAndKnights:
         return {
-          [BoardSetupName.KingAndOneOtherPiece]: {
+          [BoardSetupName.KingAndKnights]: {
             ranks: parseInt(dimensions.ranks) || 8,
             files: parseInt(dimensions.files) || 8,
           },
@@ -183,14 +183,15 @@ export const GameForm: React.FC<GameFormProps> = ({
               }}
             >
               <option value="standard">Standard</option>
-              <option value="random">Random</option>
-              <option value="king-and-one-other-piece">
-                King and 1 Other Piece
-              </option>
+              <option value="custom-size">Custom Size</option>
+              <option value="chess-960">Chess960</option>
+              <option value="king-and-knights">King and Knights</option>
             </select>
           </div>
 
-          {boardSetupName !== BoardSetupName.Standard && (
+          {[BoardSetupName.CustomSize, BoardSetupName.KingAndKnights].includes(
+            boardSetupName,
+          ) && (
             <div style={{ display: "flex", gap: "0.8rem" }}>
               <div className="game-preferences-form-component">
                 <span className="label">

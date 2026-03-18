@@ -44,8 +44,9 @@ pub struct BoardDimensions {
 #[serde(rename_all = "kebab-case")]
 pub enum BoardSetup {
     Standard,
-    Random(BoardDimensions),
-    KingAndOneOtherPiece(BoardDimensions),
+    CustomSize(BoardDimensions),
+    Chess960,
+    KingAndKnights(BoardDimensions),
 }
 
 impl BoardSetup {
@@ -89,7 +90,7 @@ impl BoardSetup {
                     move_count: 0,
                 }
             }
-            Self::Random(dimensions) => {
+            Self::CustomSize(dimensions) => {
                 let mut squares = vec![vec![None; dimensions.files]; dimensions.ranks];
                 let mut rng = rand::rng();
 
@@ -128,26 +129,75 @@ impl BoardSetup {
                     move_count: 0,
                 }
             }
-            Self::KingAndOneOtherPiece(dimensions) => {
-                let mut squares = vec![vec![None; dimensions.files]; dimensions.ranks];
+            Self::Chess960 => {
+                let mut squares = vec![vec![None; 8]; 8];
                 let mut rng = rand::rng();
 
-                let available_pieces = [
-                    PieceType::Rook,
-                    PieceType::Knight,
-                    PieceType::Bishop,
-                    PieceType::Queen,
-                    PieceType::Pawn,
-                ];
+                // Chess960: generate a valid back rank
+                let mut back_rank = [PieceType::Pawn; 8]; // placeholder
 
-                let other_piece = *available_pieces.choose(&mut rng).unwrap();
+                // 1. Place a bishop on a random dark square (indices 1, 3, 5, 7)
+                let dark_squares = [1usize, 3, 5, 7];
+                let dark_idx = *dark_squares.choose(&mut rng).unwrap();
+                back_rank[dark_idx] = PieceType::Bishop;
+
+                // 2. Place a bishop on a random light square (indices 0, 2, 4, 6)
+                let light_squares = [0usize, 2, 4, 6];
+                let light_idx = *light_squares.choose(&mut rng).unwrap();
+                back_rank[light_idx] = PieceType::Bishop;
+
+                // 3. Collect remaining empty squares
+                let mut empty: Vec<usize> = (0..8)
+                    .filter(|i| *i != dark_idx && *i != light_idx)
+                    .collect();
+
+                // 4. Place queen on a random remaining square
+                let q_pos = *empty.choose(&mut rng).unwrap();
+                back_rank[q_pos] = PieceType::Queen;
+                empty.retain(|i| *i != q_pos);
+
+                // 5. Place first knight on a random remaining square
+                let n1_pos = *empty.choose(&mut rng).unwrap();
+                back_rank[n1_pos] = PieceType::Knight;
+                empty.retain(|i| *i != n1_pos);
+
+                // 6. Place second knight on a random remaining square
+                let n2_pos = *empty.choose(&mut rng).unwrap();
+                back_rank[n2_pos] = PieceType::Knight;
+                empty.retain(|i| *i != n2_pos);
+
+                // 7. Remaining 3 squares get Rook, King, Rook (left to right)
+                //    This guarantees the king is between the rooks.
+                back_rank[empty[0]] = PieceType::Rook;
+                back_rank[empty[1]] = PieceType::King;
+                back_rank[empty[2]] = PieceType::Rook;
+
+                // Place pieces symmetrically for both colors
+                for (i, piece_type) in back_rank.iter().enumerate() {
+                    squares[0][i] = Some(Piece::new(*piece_type, Color::Black));
+                    squares[7][i] = Some(Piece::new(*piece_type, Color::White));
+                }
+
+                // Pawns
+                for col in 0..8 {
+                    squares[1][col] = Some(Piece::new(PieceType::Pawn, Color::Black));
+                    squares[6][col] = Some(Piece::new(PieceType::Pawn, Color::White));
+                }
+
+                Board {
+                    squares,
+                    move_count: 0,
+                }
+            }
+            Self::KingAndKnights(dimensions) => {
+                let mut squares = vec![vec![None; dimensions.files]; dimensions.ranks];
                 let king_file = dimensions.files / 2;
 
                 for i in 0..dimensions.files {
                     let piece_type = if i == king_file {
                         PieceType::King
                     } else {
-                        other_piece
+                        PieceType::Knight
                     };
 
                     squares[0][i] = Some(Piece::new(piece_type, Color::Black));

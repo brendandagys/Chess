@@ -17,24 +17,27 @@ interface BoardDimensions {
 
 export enum BoardSetupName {
   Standard = 'standard',
-  Random = 'random',
-  KingAndOneOtherPiece = 'king-and-one-other-piece',
+  CustomSize = 'custom-size',
+  Chess960 = 'chess-960',
+  KingAndKnights = 'king-and-knights',
 }
 
 export type BoardSetupStandard = 'standard';
 
-interface BoardSetupRandom {
-  [BoardSetupName.Random]: BoardDimensions;
+interface BoardSetupCustomSize {
+  [BoardSetupName.CustomSize]: BoardDimensions;
 }
 
-interface BoardSetupKingAndOneOtherPiece {
-  [BoardSetupName.KingAndOneOtherPiece]: BoardDimensions;
+type BoardSetupChess960 = 'chess-960';
+interface BoardSetupKingAndKnights {
+  [BoardSetupName.KingAndKnights]: BoardDimensions;
 }
 
 export type BoardSetup =
   | BoardSetupStandard
-  | BoardSetupRandom
-  | BoardSetupKingAndOneOtherPiece;
+  | BoardSetupCustomSize
+  | BoardSetupChess960
+  | BoardSetupKingAndKnights;
 
 export interface CompactBoard {
   squares: string; // Base64-encoded string of pieces
