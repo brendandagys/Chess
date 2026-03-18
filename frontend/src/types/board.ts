@@ -18,7 +18,7 @@ interface BoardDimensions {
 export enum BoardSetupName {
   Standard = 'standard',
   CustomSize = 'custom-size',
-  Chess960 = 'chess-960',
+  Chess960 = 'chess960',
   KingAndKnights = 'king-and-knights',
 }
 
@@ -28,7 +28,7 @@ interface BoardSetupCustomSize {
   [BoardSetupName.CustomSize]: BoardDimensions;
 }
 
-type BoardSetupChess960 = 'chess-960';
+type BoardSetupChess960 = 'chess960';
 interface BoardSetupKingAndKnights {
   [BoardSetupName.KingAndKnights]: BoardDimensions;
 }

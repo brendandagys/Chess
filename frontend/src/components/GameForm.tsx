@@ -184,7 +184,7 @@ export const GameForm: React.FC<GameFormProps> = ({
             >
               <option value="standard">Standard</option>
               <option value="custom-size">Custom Size</option>
-              <option value="chess-960">Chess960</option>
+              <option value="chess960">Chess960</option>
               <option value="king-and-knights">King and Knights</option>
             </select>
           </div>
