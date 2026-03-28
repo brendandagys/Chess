@@ -51,6 +51,23 @@ interface GameProps {
   onClearAiAnalysis: (gameId: string) => void;
 }
 
+// Scores above this threshold represent forced checkmate, not a material advantage.
+// Matches the MATE_THRESHOLD constant used in the chess engine (chess_engine/src/constants.rs).
+const MATE_SCORE_THRESHOLD = 9000;
+
+function formatEngineEvaluation(evalCp: number, currentTurn: Color): string {
+  // The engine returns evalCp as a positive value when the side that just moved
+  // has the advantage (i.e., from the mover's own perspective).
+  // After the engine moves, currentTurn has already flipped to the opponent,
+  // so we negate when it is White's turn (meaning the engine just played as Black).
+  const whiteCp = currentTurn === Color.White ? -evalCp : evalCp;
+  if (Math.abs(whiteCp) > MATE_SCORE_THRESHOLD) {
+    return whiteCp > 0 ? "+M" : "-M";
+  }
+  const pawns = whiteCp / 100;
+  return pawns >= 0 ? `+${pawns.toFixed(1)}` : pawns.toFixed(1);
+}
+
 export const Game: React.FC<GameProps> = ({
   gameRecord,
   onLeaveGame,
@@ -531,7 +548,11 @@ export const Game: React.FC<GameProps> = ({
                   "Book move"
                 ) : (
                   <>
-                    D{viewedGameState.engineResult.depth} ·{" "}
+                    {formatEngineEvaluation(
+                      viewedGameState.engineResult.evaluation,
+                      viewedGameState.currentTurn,
+                    )}{" "}
+                    · D{viewedGameState.engineResult.depth} ·{" "}
                     {(
                       (viewedGameState.engineResult.nodes -
                         viewedGameState.engineResult.qnodes) /
