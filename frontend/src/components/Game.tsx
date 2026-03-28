@@ -67,6 +67,7 @@ export const Game: React.FC<GameProps> = ({
   const gameId = gameRecord.game_id;
   const [showResignConfirm, setShowResignConfirm] = useState(false);
   const [aiLoading, setAiLoading] = useState<AnalysisType | null>(null);
+  const [fenCopied, setFenCopied] = useState(false);
   const { requestPermission, showNotification } = useNotifications();
   const previousIsTurnRef = useRef<boolean | null>(null);
 
@@ -437,6 +438,16 @@ export const Game: React.FC<GameProps> = ({
     });
   };
 
+  const handleCopyFen = () => {
+    if (!viewedGameState.fen) return;
+    void navigator.clipboard.writeText(viewedGameState.fen).then(() => {
+      setFenCopied(true);
+      setTimeout(() => {
+        setFenCopied(false);
+      }, 2000);
+    });
+  };
+
   const AI_BUTTONS: { type: AnalysisType; label: string }[] = [
     { type: AnalysisType.MoveExplanation, label: "Explain" },
     { type: AnalysisType.BlunderDetection, label: "Blunder?" },
@@ -622,6 +633,20 @@ export const Game: React.FC<GameProps> = ({
           setHistoryIndex={setHistoryIndex}
           numStates={numStates}
         />
+
+        {viewedGameState.fen && (
+          <div className="fen-copy-row">
+            <button
+              className={`fen-copy-button${
+                fenCopied ? " fen-copy-button--copied" : ""
+              }`}
+              onClick={handleCopyFen}
+              title={viewedGameState.fen}
+            >
+              {fenCopied ? "✓ FEN copied!" : "Copy FEN"}
+            </button>
+          </div>
+        )}
 
         {hasMovesPlayed && (
           <div className="ai-analysis-section">

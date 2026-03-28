@@ -410,6 +410,7 @@ mod tests {
             },
             moves: Vec::new(),
             engine_result: None,
+            fen: None,
         };
 
         let fen = game_state_to_fen(&game_state);

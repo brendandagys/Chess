@@ -1,3 +1,4 @@
+use crate::helpers::board::game_state_to_fen;
 use crate::helpers::user::{get_user_game, save_user_record};
 use crate::types::api::{ApiMessage, ApiResponse};
 use crate::types::board::{Board, BoardSetup, Position};
@@ -603,6 +604,19 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) {
     };
 
     game_state.history.push(next_state);
+
+    let last_state = game_state.history.last_mut().expect("History should not be empty");
+    last_state.fen = if last_state.board.squares.len() == 8
+        && last_state
+            .board
+            .squares
+            .first()
+            .map_or(false, |row| row.len() == 8)
+    {
+        Some(game_state_to_fen(last_state))
+    } else {
+        None
+    };
 }
 
 /// Update the user-game records for both players if the game has finished
