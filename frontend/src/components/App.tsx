@@ -54,6 +54,9 @@ export const App: React.FC = () => {
   );
   const realismOn = realismPref !== "false";
 
+  const [pvPref, setPvPref] = useLocalStorage("pv-enabled", "true");
+  const pvOn = pvPref !== "false";
+
   const gameRecordsRef = useRef<GameRecord[]>([]);
   useEffect(() => {
     gameRecordsRef.current = gameRecords;
@@ -308,7 +311,12 @@ export const App: React.FC = () => {
   return (
     <div className="app-container">
       {gameIds.length ? (
-        <MenuButtons realismOn={realismOn} setRealismPref={setRealismPref} />
+        <MenuButtons
+            realismOn={realismOn}
+            setRealismPref={setRealismPref}
+            pvOn={pvOn}
+            setPvPref={setPvPref}
+          />
       ) : null}
 
       {appMessages.length ? (
@@ -375,6 +383,7 @@ export const App: React.FC = () => {
                   ),
                 );
               }}
+              pvOn={pvOn}
             />
           ))}
         </div>

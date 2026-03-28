@@ -53,11 +53,45 @@ pub async fn use_engine(
         qnodes: search_result.qnodes,
         time_ms: search_result.time_ms,
         from_book: search_result.from_book,
+        pv: pv_to_strings(&search_result),
     });
 
     set_available_moves_for_next_turn(&mut engine, game);
 
     Ok(())
+}
+
+fn square_to_algebraic(sq: chess_engine::types::Square) -> String {
+    let file = (b'a' + sq.file()) as char;
+    let rank = sq.rank() + 1;
+    format!("{file}{rank}")
+}
+
+fn promotion_char(piece: chess_engine::types::Piece) -> &'static str {
+    match piece {
+        chess_engine::types::Piece::Knight => "n",
+        chess_engine::types::Piece::Bishop => "b",
+        chess_engine::types::Piece::Rook => "r",
+        chess_engine::types::Piece::Queen => "q",
+        _ => "",
+    }
+}
+
+fn pv_to_strings(search_result: &SearchResult) -> Vec<String> {
+    search_result
+        .principal_variation
+        .iter()
+        .take(5)
+        .map(|m| {
+            let promo = m.promote.map(promotion_char).unwrap_or("");
+            format!(
+                "{}{}{}",
+                square_to_algebraic(m.from),
+                square_to_algebraic(m.to),
+                promo
+            )
+        })
+        .collect()
 }
 
 fn make_engine_move_from_search_result(engine: &mut Engine, search_result: &SearchResult) {

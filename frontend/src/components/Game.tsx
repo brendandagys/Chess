@@ -49,6 +49,7 @@ interface GameProps {
   aiAnalysis: AiAnalysisResult | null;
   onRequestAiAnalysis: (gameId: string) => void;
   onClearAiAnalysis: (gameId: string) => void;
+  pvOn: boolean;
 }
 
 export const Game: React.FC<GameProps> = ({
@@ -63,6 +64,7 @@ export const Game: React.FC<GameProps> = ({
   aiAnalysis,
   onRequestAiAnalysis,
   onClearAiAnalysis,
+  pvOn,
 }) => {
   const gameId = gameRecord.game_id;
   const [showResignConfirm, setShowResignConfirm] = useState(false);
@@ -544,6 +546,16 @@ export const Game: React.FC<GameProps> = ({
                 )}
               </p>
             )}
+
+            {pvOn &&
+              gameRecord.engine_difficulty &&
+              viewedGameState.engineResult &&
+              !viewedGameState.engineResult.fromBook &&
+              viewedGameState.engineResult.pv.length > 0 && (
+                <p className="pill pill--gray">
+                  {viewedGameState.engineResult.pv.join(" ")}
+                </p>
+              )}
           </>
         )}
       </div>

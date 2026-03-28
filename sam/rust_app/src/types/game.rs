@@ -203,6 +203,7 @@ pub struct SearchStatistics {
     pub qnodes: usize,
     pub time_ms: u64,
     pub from_book: bool,
+    pub pv: Vec<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
