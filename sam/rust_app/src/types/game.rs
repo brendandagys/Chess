@@ -2,7 +2,7 @@ use chess_engine::types::Difficulty;
 use serde::{ser::SerializeStruct, Deserialize, Serialize};
 
 use crate::helpers::{
-    board::{decode_piece, encode_piece},
+    board::{decode_piece, encode_piece, game_state_to_fen},
     generic::{base64_to_bytes, bytes_to_base64},
 };
 
@@ -215,6 +215,8 @@ pub struct GameStateAtPointInTime {
     pub captured_pieces: CapturedPieces,
     pub moves: Vec<String>,
     pub engine_result: Option<SearchStatistics>,
+    #[serde(default)]
+    pub fen: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -240,17 +242,26 @@ impl GameState {
             black_points: 0,
         };
 
+        let mut initial_state = GameStateAtPointInTime {
+            state: State::NotStarted,
+            current_turn: Color::White,
+            in_check: None,
+            board: board.clone(),
+            captured_pieces: captured_pieces.clone(),
+            moves: Vec::new(),
+            engine_result: None,
+            fen: None,
+        };
+
+        if board.squares.len() == 8
+            && board.squares.first().map_or(false, |row| row.len() == 8)
+        {
+            initial_state.fen = Some(game_state_to_fen(&initial_state));
+        };
+
         GameState {
             game_id,
-            history: vec![GameStateAtPointInTime {
-                state: State::NotStarted,
-                current_turn: Color::White,
-                in_check: None,
-                board: board.clone(),
-                captured_pieces: captured_pieces.clone(),
-                moves: Vec::new(),
-                engine_result: None,
-            }],
+            history: vec![initial_state],
             game_time: seconds_per_player.map(|seconds| GameTime {
                 both_players_last_connected_at: None,
                 last_move_at: None,

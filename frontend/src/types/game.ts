@@ -113,6 +113,7 @@ export interface GameStateAtPointInTime {
   capturedPieces: CompactCapturedPieces;
   moves: string[];
   engineResult: SearchStatistics | null;
+  fen: string | null;
 }
 
 export interface GameState {
