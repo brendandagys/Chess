@@ -223,6 +223,7 @@ pub struct GameState {
     pub game_id: String,
     pub game_time: Option<GameTime>,
     pub history: Vec<GameStateAtPointInTime>,
+    pub move_list: Vec<String>,
 }
 
 impl GameState {
@@ -257,6 +258,7 @@ impl GameState {
                 white_seconds_left: seconds,
                 black_seconds_left: seconds,
             }),
+            move_list: Vec::new(),
         }
     }
 
