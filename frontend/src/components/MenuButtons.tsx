@@ -8,11 +8,15 @@ import "../css/MenuButtons.css";
 interface MenuButtonsProps {
   realismOn: boolean;
   setRealismPref: React.Dispatch<React.SetStateAction<string>>;
+  evalOn: boolean;
+  setEvalPref: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const MenuButtons: React.FC<MenuButtonsProps> = ({
   realismOn,
   setRealismPref,
+  evalOn,
+  setEvalPref,
 }) => {
   const [soundsPref, setSoundsPref] = useLocalStorage("sounds-enabled", "true");
   const soundsOn = soundsPref !== "false";
@@ -21,6 +25,8 @@ export const MenuButtons: React.FC<MenuButtonsProps> = ({
   const [justToggledSoundPreference, setJustToggledSoundPreference] =
     useState(false);
   const [justToggledRealismPreference, setJustToggledRealismPreference] =
+    useState(false);
+  const [justToggledEvalPreference, setJustToggledEvalPreference] =
     useState(false);
 
   const { width } = useViewportWidth();
@@ -67,12 +73,22 @@ export const MenuButtons: React.FC<MenuButtonsProps> = ({
     }, 1250);
   };
 
+  const toggleEvalPreference = () => {
+    setEvalPref(evalOn ? "false" : "true");
+
+    setJustToggledEvalPreference(true);
+    setTimeout(() => {
+      setJustToggledEvalPreference(false);
+    }, 1250);
+  };
+
   const breakpoint = 850;
 
   const showCopyButtonText = width >= breakpoint || justCopied;
   const showSoundButtonText = width >= breakpoint || justToggledSoundPreference;
   const showRealismButtonText =
     width >= breakpoint || justToggledRealismPreference;
+  const showEvalButtonText = width >= breakpoint || justToggledEvalPreference;
 
   return (
     <div>
@@ -220,6 +236,59 @@ export const MenuButtons: React.FC<MenuButtonsProps> = ({
           </svg>
           {showRealismButtonText && (
             <span>{realismOn ? "Realism" : "No delay"}</span>
+          )}
+        </button>
+      </div>
+
+      <div className="menu-buttons menu-buttons--eval">
+        <button
+          className={`menu-button eval-toggle-button${
+            !evalOn ? " eval-toggle-button--off" : ""
+          }`}
+          onClick={toggleEvalPreference}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+          >
+            <rect
+              x="2"
+              y="14"
+              width="4"
+              height="8"
+              rx="1"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+            <rect
+              x="9"
+              y="9"
+              width="4"
+              height="13"
+              rx="1"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+            <rect
+              x="16"
+              y="4"
+              width="4"
+              height="18"
+              rx="1"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+          </svg>
+          {showEvalButtonText && (
+            <span>{evalOn ? "Eval on" : "Eval off"}</span>
           )}
         </button>
       </div>

@@ -17,3 +17,7 @@ export const BOARD_THEMES: BoardTheme[] = [
   { id: "purple", label: "Purple", darkColor: "#886cb3", lightColor: "#dfd2e8", borderColor: "#703e75" },
   { id: "maroon", label: "Maroon", darkColor: "#a64d3d", lightColor: "#f5dbc3", borderColor: "#393636" },
 ];
+
+// Scores above this threshold represent forced checkmate, not a material
+// advantage. Matches the MATE_THRESHOLD constant used in the chess engine.
+export const MATE_SCORE_THRESHOLD = 9000;

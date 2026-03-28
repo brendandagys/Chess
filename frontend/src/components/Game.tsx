@@ -33,7 +33,12 @@ import {
 } from "@src/types/game";
 import { GameMessage } from "@src/types/sharedComponentTypes";
 
-import { API_ROUTE, BOARD_THEMES, BoardTheme } from "@src/constants";
+import {
+  API_ROUTE,
+  BOARD_THEMES,
+  BoardTheme,
+  MATE_SCORE_THRESHOLD,
+} from "@src/constants";
 
 import "@src/css/Game.css";
 
@@ -49,6 +54,19 @@ interface GameProps {
   aiAnalysis: AiAnalysisResult | null;
   onRequestAiAnalysis: (gameId: string) => void;
   onClearAiAnalysis: (gameId: string) => void;
+  evalOn: boolean;
+}
+
+function formatEngineEvaluation(evalCp: number): string {
+  const humanEvalCp = -evalCp;
+
+  if (Math.abs(humanEvalCp) > MATE_SCORE_THRESHOLD) {
+    return humanEvalCp > 0 ? "+M" : "-M";
+  }
+
+  const pawns = humanEvalCp / 100;
+
+  return pawns >= 0 ? `+${pawns.toFixed(1)}` : pawns.toFixed(1);
 }
 
 export const Game: React.FC<GameProps> = ({
@@ -63,6 +81,7 @@ export const Game: React.FC<GameProps> = ({
   aiAnalysis,
   onRequestAiAnalysis,
   onClearAiAnalysis,
+  evalOn,
 }) => {
   const gameId = gameRecord.game_id;
   const [showResignConfirm, setShowResignConfirm] = useState(false);
@@ -525,13 +544,18 @@ export const Game: React.FC<GameProps> = ({
               </p>
             )}
 
-            {gameRecord.engine_difficulty && viewedGameState.engineResult && (
+            {evalOn &&
+              gameRecord.engine_difficulty &&
+              viewedGameState.engineResult && (
               <p className="pill pill--blue">
                 {viewedGameState.engineResult.fromBook ? (
                   "Book move"
                 ) : (
                   <>
-                    D{viewedGameState.engineResult.depth} ·{" "}
+                    {formatEngineEvaluation(
+                      viewedGameState.engineResult.evaluation,
+                    )}{" "}
+                    · D{viewedGameState.engineResult.depth} ·{" "}
                     {(
                       (viewedGameState.engineResult.nodes -
                         viewedGameState.engineResult.qnodes) /

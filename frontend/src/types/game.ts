@@ -103,6 +103,7 @@ export interface SearchStatistics {
   qnodes: number;
   timeMs: number;
   fromBook: boolean;
+  evaluation: number;
 }
 
 export interface GameStateAtPointInTime {

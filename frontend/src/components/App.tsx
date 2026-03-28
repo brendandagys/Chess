@@ -54,6 +54,9 @@ export const App: React.FC = () => {
   );
   const realismOn = realismPref !== "false";
 
+  const [evalPref, setEvalPref] = useLocalStorage("evaluation-enabled", "true");
+  const evalOn = evalPref !== "false";
+
   const gameRecordsRef = useRef<GameRecord[]>([]);
   useEffect(() => {
     gameRecordsRef.current = gameRecords;
@@ -308,7 +311,12 @@ export const App: React.FC = () => {
   return (
     <div className="app-container">
       {gameIds.length ? (
-        <MenuButtons realismOn={realismOn} setRealismPref={setRealismPref} />
+        <MenuButtons
+          realismOn={realismOn}
+          setRealismPref={setRealismPref}
+          evalOn={evalOn}
+          setEvalPref={setEvalPref}
+        />
       ) : null}
 
       {appMessages.length ? (
@@ -368,6 +376,7 @@ export const App: React.FC = () => {
               onRequestAiAnalysis={(gameId) => {
                 pendingAiGameIdRef.current = gameId;
               }}
+              evalOn={evalOn}
               onClearAiAnalysis={(gameId) => {
                 setAiAnalyses((old) =>
                   Object.fromEntries(
