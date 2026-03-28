@@ -8,11 +8,15 @@ import "../css/MenuButtons.css";
 interface MenuButtonsProps {
   realismOn: boolean;
   setRealismPref: React.Dispatch<React.SetStateAction<string>>;
+  pvOn: boolean;
+  setPvPref: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const MenuButtons: React.FC<MenuButtonsProps> = ({
   realismOn,
   setRealismPref,
+  pvOn,
+  setPvPref,
 }) => {
   const [soundsPref, setSoundsPref] = useLocalStorage("sounds-enabled", "true");
   const soundsOn = soundsPref !== "false";
@@ -67,12 +71,25 @@ export const MenuButtons: React.FC<MenuButtonsProps> = ({
     }, 1250);
   };
 
+  const [justToggledPvPreference, setJustToggledPvPreference] =
+    useState(false);
+
+  const togglePvPreference = () => {
+    setPvPref(pvOn ? "false" : "true");
+
+    setJustToggledPvPreference(true);
+    setTimeout(() => {
+      setJustToggledPvPreference(false);
+    }, 1250);
+  };
+
   const breakpoint = 850;
 
   const showCopyButtonText = width >= breakpoint || justCopied;
   const showSoundButtonText = width >= breakpoint || justToggledSoundPreference;
   const showRealismButtonText =
     width >= breakpoint || justToggledRealismPreference;
+  const showPvButtonText = width >= breakpoint || justToggledPvPreference;
 
   return (
     <div>
@@ -220,6 +237,34 @@ export const MenuButtons: React.FC<MenuButtonsProps> = ({
           </svg>
           {showRealismButtonText && (
             <span>{realismOn ? "Realism" : "No delay"}</span>
+          )}
+        </button>
+      </div>
+
+      <div className="menu-buttons menu-buttons--pv">
+        <button
+          className={`menu-button pv-toggle-button${
+            !pvOn ? " pv-toggle-button--off" : ""
+          }`}
+          onClick={togglePvPreference}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+          >
+            <polyline
+              points="22 12 18 12 15 21 9 3 6 12 2 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          {showPvButtonText && (
+            <span>{pvOn ? "Hide line" : "Show line"}</span>
           )}
         </button>
       </div>

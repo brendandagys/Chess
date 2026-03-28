@@ -16,6 +16,10 @@
   top: calc(15px + 38px * 2);
 }
 
+.menu-buttons--pv {
+  top: calc(15px + 38px * 3);
+}
+
 .menu-buttons .menu-button {
   background-color: white;
   border: 1px solid #ccc;
@@ -40,6 +44,7 @@
 }
 
 .sound-toggle-button--off,
-.realism-toggle-button--off {
+.realism-toggle-button--off,
+.pv-toggle-button--off {
   color: rgb(177, 52, 52);
 }
