@@ -53,6 +53,7 @@ pub async fn use_engine(
         qnodes: search_result.qnodes,
         time_ms: search_result.time_ms,
         from_book: search_result.from_book,
+        evaluation: search_result.evaluation,
     });
 
     set_available_moves_for_next_turn(&mut engine, game);
