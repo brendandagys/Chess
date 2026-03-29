@@ -1,5 +1,5 @@
 .eval-bar {
-  width: 33px;
+  width: 30px;
   flex-shrink: 0;
   position: relative;
   display: flex;
@@ -38,7 +38,7 @@
 
 @media (max-width: 500px) {
   .eval-bar {
-    width: 24px;
+    width: 21px;
   }
 
   .eval-bar__label {
