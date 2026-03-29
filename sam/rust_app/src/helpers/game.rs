@@ -6,7 +6,7 @@ use crate::types::game::{
     ColorPreference, EngineDifficulty, GameEnding, GameState, GameStateAtPointInTime, GameTime,
     PlayerMove, State,
 };
-use crate::types::piece::{Color, Piece};
+use crate::types::piece::{Color, Piece, PieceType};
 use crate::utils::api_gateway::post_to_connection;
 use crate::utils::dynamo_db::{get_item, put_item};
 
@@ -573,10 +573,39 @@ fn check_for_mates(game_state: &mut GameStateAtPointInTime) {
     game_state.current_turn = opponent_color;
 }
 
+/// Convert a Position to UCI algebraic notation (e.g., Position { rank: 1, file: 1 } → "a1")
+fn position_to_algebraic(position: &Position) -> String {
+    let file_char = (b'a' + (position.file.0 - 1) as u8) as char;
+    format!("{}{}", file_char, position.rank.0)
+}
+
+/// Convert a PlayerMove to a UCI move string, detecting pawn promotion.
+fn player_move_to_uci(board: &Board, player_move: &PlayerMove) -> String {
+    let mut uci = format!(
+        "{}{}",
+        position_to_algebraic(&player_move.from),
+        position_to_algebraic(&player_move.to),
+    );
+
+    if let Some(piece) = board.get_piece_at_position(&player_move.from) {
+        if piece.piece_type == PieceType::Pawn
+            && (player_move.to.rank.0 == 1 || player_move.to.rank.0 == board.squares.len())
+        {
+            uci.push('q');
+        }
+    }
+
+    uci
+}
+
 /// Make a move and update game state. Assumes that the move has been validated.
 pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) {
     let mut next_state = game_state.current_state().clone();
     next_state.engine_result = None; // Clear previous engine result
+
+    // Record the UCI move before applying it (need piece info from current board)
+    let uci_move = player_move_to_uci(&next_state.board, player_move);
+    game_state.move_list.push(uci_move);
 
     if let Some(game_time) = &mut game_state.game_time {
         update_game_time(game_time, &mut next_state);
@@ -643,4 +672,84 @@ pub async fn handle_if_game_is_finished(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::board::{BoardSetup, File, Rank};
+
+    #[test]
+    fn test_position_to_algebraic() {
+        assert_eq!(
+            position_to_algebraic(&Position {
+                rank: Rank(1),
+                file: File(1)
+            }),
+            "a1"
+        );
+        assert_eq!(
+            position_to_algebraic(&Position {
+                rank: Rank(8),
+                file: File(5)
+            }),
+            "e8"
+        );
+        assert_eq!(
+            position_to_algebraic(&Position {
+                rank: Rank(4),
+                file: File(4)
+            }),
+            "d4"
+        );
+    }
+
+    #[test]
+    fn test_player_move_to_uci_simple() {
+        let board = Board::new(&BoardSetup::Standard);
+        let player_move = PlayerMove {
+            from: Position {
+                rank: Rank(2),
+                file: File(5),
+            },
+            to: Position {
+                rank: Rank(4),
+                file: File(5),
+            },
+        };
+        assert_eq!(player_move_to_uci(&board, &player_move), "e2e4");
+    }
+
+    #[test]
+    fn test_player_move_to_uci_promotion() {
+        let mut board = Board::new(&BoardSetup::Standard);
+        // Place a white pawn on e7
+        board.set_piece_at_position(
+            &Position {
+                rank: Rank(7),
+                file: File(5),
+            },
+            Some(Piece::new(
+                crate::types::piece::PieceType::Pawn,
+                Color::White,
+            )),
+        );
+        let player_move = PlayerMove {
+            from: Position {
+                rank: Rank(7),
+                file: File(5),
+            },
+            to: Position {
+                rank: Rank(8),
+                file: File(5),
+            },
+        };
+        assert_eq!(player_move_to_uci(&board, &player_move), "e7e8q");
+    }
+
+    #[test]
+    fn test_move_list_initialized_empty() {
+        let game_state = GameState::new("test".into(), &BoardSetup::Standard, None);
+        assert!(game_state.move_list.is_empty());
+    }
 }

@@ -120,6 +120,7 @@ export interface GameState {
   gameId: string;
   gameTime: GameTime | null;
   history: GameStateAtPointInTime[];
+  moveList: string[];
 }
 
 export interface PlayerMove {
