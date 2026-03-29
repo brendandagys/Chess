@@ -257,6 +257,16 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     if (
+      gameRecords.length === 0 &&
+      (hasSentInitialJoinRequests || !gameIdsFromUrl.length)
+    ) {
+      setShowForm(true);
+      setFormToShow(FormToShow.Create);
+    }
+  }, [gameRecords.length, hasSentInitialJoinRequests, gameIdsFromUrl.length]);
+
+  useEffect(() => {
+    if (
       !isWebsocketOpen ||
       !gameIdsFromUrl.length ||
       !username ||
