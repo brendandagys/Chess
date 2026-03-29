@@ -1,0 +1,46 @@
+.eval-bar {
+  width: 33px;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  border: 2px solid var(--board-border-color, #634832);
+}
+
+.eval-bar__black {
+  background-color: #333;
+  transition: flex 0.4s ease;
+}
+
+.eval-bar__white {
+  background-color: #f0f0f0;
+  transition: flex 0.4s ease;
+}
+
+.eval-bar__label {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.55rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  color: #111;
+  background-color: white;
+  border: 1px solid #333;
+  border-radius: 5px;
+  padding: 0.1rem;
+  width: 100%;
+  z-index: 11;
+}
+
+@media (max-width: 500px) {
+  .eval-bar {
+    width: 24px;
+  }
+
+  .eval-bar__label {
+    font-size: 0.35rem;
+  }
+}

@@ -11,6 +11,7 @@ import { BoardHistoryControls } from "@src/components/BoardHistoryControls";
 import { CapturedPieces } from "@src/components/CapturedPieces";
 import { Color, getOppositePlayerColor } from "@src/types/piece";
 import { ChessBoard } from "@src/components/chess-board/ChessBoard";
+import { EvalBar } from "@src/components/EvalBar";
 import { PlayerTime } from "@src/components/PlayerTime";
 
 import { useLocalStorage } from "@src/hooks/useLocalStorage";
@@ -33,12 +34,7 @@ import {
 } from "@src/types/game";
 import { GameMessage } from "@src/types/sharedComponentTypes";
 
-import {
-  API_ROUTE,
-  BOARD_THEMES,
-  BoardTheme,
-  MATE_SCORE_THRESHOLD,
-} from "@src/constants";
+import { API_ROUTE, BOARD_THEMES, BoardTheme } from "@src/constants";
 
 import "@src/css/Game.css";
 
@@ -55,18 +51,6 @@ interface GameProps {
   onRequestAiAnalysis: (gameId: string) => void;
   onClearAiAnalysis: (gameId: string) => void;
   evalOn: boolean;
-}
-
-function formatEngineEvaluation(evalCp: number): string {
-  const humanEvalCp = -evalCp;
-
-  if (Math.abs(humanEvalCp) > MATE_SCORE_THRESHOLD) {
-    return humanEvalCp > 0 ? "+M" : "-M";
-  }
-
-  const pawns = humanEvalCp / 100;
-
-  return pawns >= 0 ? `+${pawns.toFixed(1)}` : pawns.toFixed(1);
 }
 
 export const Game: React.FC<GameProps> = ({
@@ -159,6 +143,18 @@ export const Game: React.FC<GameProps> = ({
     () => getCapturedPiecesFromBase64(viewedGameState.capturedPieces),
     [viewedGameState.capturedPieces],
   );
+
+  const latestEngineResult = useMemo(() => {
+    for (let i = historyIndex; i >= 0; i--) {
+      if (history[i].engineResult) {
+        return history[i].engineResult;
+      }
+    }
+
+    return null;
+  }, [history, historyIndex]);
+
+  const showEvalBar = evalOn && gameRecord.engine_difficulty !== null;
 
   useEffect(() => {
     const justBecameMyTurn =
@@ -547,27 +543,24 @@ export const Game: React.FC<GameProps> = ({
             {evalOn &&
               gameRecord.engine_difficulty &&
               viewedGameState.engineResult && (
-              <p className="pill pill--blue">
-                {viewedGameState.engineResult.fromBook ? (
-                  "Book move"
-                ) : (
-                  <>
-                    {formatEngineEvaluation(
-                      viewedGameState.engineResult.evaluation,
-                    )}{" "}
-                    · D{viewedGameState.engineResult.depth} ·{" "}
-                    {(
-                      (viewedGameState.engineResult.nodes -
-                        viewedGameState.engineResult.qnodes) /
-                      1000
-                    ).toFixed(1)}
-                    k N ·{" "}
-                    {(viewedGameState.engineResult.qnodes / 1000).toFixed(1)}k
-                    QN · {viewedGameState.engineResult.timeMs}ms
-                  </>
-                )}
-              </p>
-            )}
+                <p className="pill pill--blue">
+                  {viewedGameState.engineResult.fromBook ? (
+                    "Book move"
+                  ) : (
+                    <>
+                      D{viewedGameState.engineResult.depth} ·{" "}
+                      {(
+                        (viewedGameState.engineResult.nodes -
+                          viewedGameState.engineResult.qnodes) /
+                        1000
+                      ).toFixed(1)}
+                      k N ·{" "}
+                      {(viewedGameState.engineResult.qnodes / 1000).toFixed(1)}k
+                      QN · {viewedGameState.engineResult.timeMs}ms
+                    </>
+                  )}
+                </p>
+              )}
           </>
         )}
       </div>
@@ -598,6 +591,13 @@ export const Game: React.FC<GameProps> = ({
             } as React.CSSProperties
           }
         >
+          {showEvalBar && (
+            <EvalBar
+              evaluation={latestEngineResult?.evaluation ?? 0}
+              isBookMove={latestEngineResult?.fromBook ?? true}
+              playerColor={playerColor}
+            />
+          )}
           <ChessBoard
             expandedHistory={history}
             playerColor={playerColor}
