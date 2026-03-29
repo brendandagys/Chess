@@ -6,7 +6,7 @@
   flex-direction: column;
   overflow: visible;
   border: solid var(--board-border-color, #634832);
-  border-width: 2px 0;
+  border-width: 2px 0 2px 2px;
 }
 
 .eval-bar__black {

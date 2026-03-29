@@ -214,7 +214,7 @@ pub struct GameStateAtPointInTime {
     pub in_check: Option<Color>,
     pub board: Board,
     pub captured_pieces: CapturedPieces,
-    pub moves: Vec<String>,
+    pub moves: Vec<String>, // Available moves
     pub engine_result: Option<SearchStatistics>,
 }
 
@@ -338,5 +338,10 @@ pub enum PlayerAction {
     AnalyzePosition {
         game_id: String,
         analysis_type: AnalysisType,
+    },
+    #[serde(rename_all = "camelCase")]
+    GetFen {
+        game_id: String,
+        history_index: usize,
     },
 }

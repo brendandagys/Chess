@@ -32,6 +32,7 @@ import {
   GameStateType,
   PlayerActionName,
 } from "@src/types/game";
+import { BoardSetupName } from "@src/types/board";
 import { GameMessage } from "@src/types/sharedComponentTypes";
 
 import { API_ROUTE, BOARD_THEMES, BoardTheme } from "@src/constants";
@@ -50,6 +51,9 @@ interface GameProps {
   aiAnalysis: AiAnalysisResult | null;
   onRequestAiAnalysis: (gameId: string) => void;
   onClearAiAnalysis: (gameId: string) => void;
+  fenResult: string | null;
+  onRequestFen: (gameId: string) => void;
+  onClearFen: (gameId: string) => void;
   evalOn: boolean;
 }
 
@@ -65,11 +69,16 @@ export const Game: React.FC<GameProps> = ({
   aiAnalysis,
   onRequestAiAnalysis,
   onClearAiAnalysis,
+  fenResult,
+  onRequestFen,
+  onClearFen,
   evalOn,
 }) => {
   const gameId = gameRecord.game_id;
   const [showResignConfirm, setShowResignConfirm] = useState(false);
   const [aiLoading, setAiLoading] = useState<AnalysisType | null>(null);
+  const [fenCopied, setFenCopied] = useState(false);
+  const [fenLoading, setFenLoading] = useState(false);
   const { requestPermission, showNotification } = useNotifications();
   const previousIsTurnRef = useRef<boolean | null>(null);
 
@@ -452,6 +461,35 @@ export const Game: React.FC<GameProps> = ({
     });
   };
 
+  const handleCopyFen = () => {
+    onClearFen(gameId);
+    onRequestFen(gameId);
+    setFenLoading(true);
+    sendWebSocketMessage({
+      route: API_ROUTE,
+      data: {
+        [PlayerActionName.GetFen]: {
+          gameId,
+          historyIndex,
+        },
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (fenResult !== null) {
+      void navigator.clipboard.writeText(fenResult).then(() => {
+        setFenCopied(true);
+        setFenLoading(false);
+        setTimeout(() => {
+          setFenCopied(false);
+          onClearFen(gameId);
+        }, 2000);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fenResult]);
+
   const AI_BUTTONS: { type: AnalysisType; label: string }[] = [
     { type: AnalysisType.MoveExplanation, label: "Explain" },
     { type: AnalysisType.BlunderDetection, label: "Blunder?" },
@@ -646,6 +684,20 @@ export const Game: React.FC<GameProps> = ({
           setHistoryIndex={setHistoryIndex}
           numStates={numStates}
         />
+
+        {gameRecord.board_setup === BoardSetupName.Standard && (
+          <div className="fen-copy-row">
+            <button
+              className={`fen-copy-button${
+                fenCopied ? " fen-copy-button--copied" : ""
+              }`}
+              onClick={handleCopyFen}
+              disabled={fenLoading}
+            >
+              {fenCopied ? "✓ FEN copied!" : "Copy FEN"}
+            </button>
+          </div>
+        )}
 
         {hasMovesPlayed && (
           <div className="ai-analysis-section">

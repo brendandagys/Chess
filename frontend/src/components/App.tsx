@@ -15,6 +15,7 @@ import { Game } from "@src/components/Game";
 import { ApiMessageType, ApiResponse } from "@src/types/api";
 import {
   AiAnalysisResult,
+  FenResult,
   GameRecord,
   PlayerActionName,
 } from "@src/types/game";
@@ -75,6 +76,8 @@ export const App: React.FC = () => {
     Record<string, AiAnalysisResult>
   >({});
   const pendingAiGameIdRef = useRef<string | null>(null);
+  const [fenResults, setFenResults] = useState<Record<string, string>>({});
+  const pendingFenGameIdRef = useRef<string | null>(null);
   const pendingPlayAgainIndexRef = useRef<number | null>(null);
 
   const [formToShow, setFormToShow] = useState<FormToShow>(
@@ -88,7 +91,9 @@ export const App: React.FC = () => {
   const scrollTo = useScroll();
 
   const onWebSocketMessage = useCallback(
-    (response: ApiResponse<GameRecord | AiAnalysisResult | null>) => {
+    (
+      response: ApiResponse<GameRecord | AiAnalysisResult | FenResult | null>,
+    ) => {
       const isGameRecord =
         response.data && Object.keys(response.data).includes("game_id");
 
@@ -96,6 +101,11 @@ export const App: React.FC = () => {
         response.data &&
         Object.keys(response.data).includes("analysisType") &&
         Object.keys(response.data).includes("text");
+
+      const isFenResult =
+        response.data &&
+        Object.keys(response.data).includes("fen") &&
+        Object.keys(response.data).length === 1;
 
       const gameRecord = isGameRecord ? (response.data as GameRecord) : null;
 
@@ -106,6 +116,17 @@ export const App: React.FC = () => {
         if (gameId) {
           setAiAnalyses((old) => ({ ...old, [gameId]: result }));
           pendingAiGameIdRef.current = null;
+        }
+      }
+
+      if (isFenResult) {
+        const result = response.data as FenResult;
+        const gameId = pendingFenGameIdRef.current;
+
+        if (gameId && result.fen) {
+          const fen = result.fen;
+          setFenResults((old) => ({ ...old, [gameId]: fen }));
+          pendingFenGameIdRef.current = null;
         }
       }
 
@@ -385,6 +406,17 @@ export const App: React.FC = () => {
               aiAnalysis={aiAnalyses[gameRecord.game_id] ?? null}
               onRequestAiAnalysis={(gameId) => {
                 pendingAiGameIdRef.current = gameId;
+              }}
+              fenResult={fenResults[gameRecord.game_id] ?? null}
+              onRequestFen={(gameId) => {
+                pendingFenGameIdRef.current = gameId;
+              }}
+              onClearFen={(gameId) => {
+                setFenResults((old) =>
+                  Object.fromEntries(
+                    Object.entries(old).filter(([id]) => id !== gameId),
+                  ),
+                );
               }}
               evalOn={evalOn}
               onClearAiAnalysis={(gameId) => {

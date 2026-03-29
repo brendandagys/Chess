@@ -140,11 +140,16 @@ export interface AiAnalysisResult {
   text: string;
 }
 
+export interface FenResult {
+  fen: string | null;
+}
+
 export enum PlayerActionName {
   CreateGame = 'create-game',
   JoinGame = 'join-game',
   LeaveGame = 'leave-game',
   GetGameState = 'get-game-state',
+  GetFen = 'get-fen',
   MovePiece = 'move-piece',
   Heartbeat = 'heartbeat',
   LoseViaOutOfTime = 'lose-via-out-of-time',
@@ -181,6 +186,13 @@ interface PlayerActionLeaveGame {
 interface PlayerActionGetGameState {
   [PlayerActionName.GetGameState]: {
     gameId: string;
+  };
+}
+
+interface PlayerActionGetFen {
+  [PlayerActionName.GetFen]: {
+    gameId: string;
+    historyIndex: number;
   };
 }
 
@@ -222,6 +234,7 @@ export type PlayerAction =
   | PlayerActionJoinGame
   | PlayerActionLeaveGame
   | PlayerActionGetGameState
+  | PlayerActionGetFen
   | PlayerActionMovePiece
   | PlayerActionHeartbeat
   | PlayerActionLoseViaOutOfTime

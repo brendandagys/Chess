@@ -172,6 +172,19 @@ async fn function_handler(
             )
             .await
         }
+        PlayerAction::GetFen {
+            game_id,
+            history_index,
+        } => {
+            player_action_handlers::get_fen::get_fen(
+                dynamo_db_client,
+                connection_id,
+                &game_table,
+                game_id.trim(),
+                history_index,
+            )
+            .await
+        }
     }
 }
 

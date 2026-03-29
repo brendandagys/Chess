@@ -1,5 +1,6 @@
 pub mod analyze_position;
 pub mod create_new_game;
+pub mod get_fen;
 pub mod get_game_state;
 pub mod join_game;
 pub mod leave_game;

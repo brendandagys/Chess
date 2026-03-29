@@ -682,4 +682,9 @@ impl Board {
 
         captured_piece
     }
+
+    /// Determine if this is a standard 8x8 board, allowing FEN and chess engine use
+    pub fn is_standard_board(&self) -> bool {
+        self.squares.len() == 8 && self.squares.first().map_or(false, |row| row.len() == 8)
+    }
 }
