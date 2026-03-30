@@ -7,7 +7,8 @@ use crate::types::game::{GameState, PlayerMove, SearchStatistics};
 use crate::types::piece::Color;
 
 use aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequestContext;
-use chess_engine::engine::{Engine, SearchResult};
+use chess_engine::engine::Engine;
+use chess_engine::types::{Piece, Square};
 use lambda_runtime::Error;
 
 fn get_engine_color(game: &mut GameRecord) -> Color {
@@ -22,14 +23,16 @@ fn set_available_moves_for_next_turn(engine: &mut Engine, game: &mut GameRecord)
     game.game_state.current_state_mut().moves = engine.position.get_legal_moves();
 }
 
+/// The human's move has already been made
 pub async fn use_engine(
     game: &mut GameRecord,
     sdk_config: &aws_config::SdkConfig,
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     connection_id: &str,
 ) -> Result<(), Error> {
+    let mut engine = get_engine(game);
+
     if game.engine_difficulty.is_none() || !is_engine_turn(game) {
-        let mut engine = get_engine(game);
         set_available_moves_for_next_turn(&mut engine, game);
         return Ok(());
     }
@@ -37,46 +40,65 @@ pub async fn use_engine(
     notify_player_about_game_update(sdk_config, request_context, connection_id, game, None, true)
         .await?;
 
-    let mut engine = get_engine(game);
+    // This evaluates the position after the human's move. The best move is played by the engine.
     let search_result = engine.think::<fn(u16, i32, &mut chess_engine::position::Position)>(None);
 
-    if let Some(engine_move) = get_engine_move_from_search_result(&search_result) {
-        make_engine_move_from_search_result(&mut engine, &search_result);
+    let engine_move_think_ms = search_result.time_ms;
+    let engine_best_move_from = search_result.best_move_from;
+    let engine_best_move_to = search_result.best_move_to;
+    let engine_best_move_promote = search_result.best_move_promote;
+
+    // Store evaluation on the human's move state and notify the player immediately
+    game.game_state.current_state_mut().engine_result = Some(SearchStatistics::from(search_result));
+
+    notify_player_about_game_update(sdk_config, request_context, connection_id, game, None, true)
+        .await?;
+
+    if let Some(engine_move) =
+        get_engine_move_from_search_result(engine_best_move_from, engine_best_move_to)
+    {
+        make_engine_move_from_search_result(
+            &mut engine,
+            engine_best_move_from,
+            engine_best_move_to,
+            engine_best_move_promote,
+        );
         make_move(&mut game.game_state, &engine_move);
+
+        // Evaluate the position after the engine's move
+        let search_result =
+            engine.think::<fn(u16, i32, &mut chess_engine::position::Position)>(None);
+
+        let search_statistics = SearchStatistics::from(search_result);
+
+        game.game_state.current_state_mut().engine_result = Some(search_statistics);
     }
 
-    handle_engine_think_time(&mut game.game_state, search_result.time_ms);
-
-    game.game_state.current_state_mut().engine_result = Some(SearchStatistics {
-        depth: search_result.depth,
-        nodes: search_result.nodes,
-        qnodes: search_result.qnodes,
-        time_ms: search_result.time_ms,
-        from_book: search_result.from_book,
-        evaluation: search_result.evaluation,
-    });
+    handle_engine_think_time(&mut game.game_state, engine_move_think_ms);
 
     set_available_moves_for_next_turn(&mut engine, game);
 
     Ok(())
 }
 
-fn make_engine_move_from_search_result(engine: &mut Engine, search_result: &SearchResult) {
-    let from_square = search_result
-        .best_move_from
-        .expect("Engine must provide a move");
-    let to_square = search_result
-        .best_move_to
-        .expect("Engine must provide a move");
+fn make_engine_move_from_search_result(
+    engine: &mut Engine,
+    from: Option<Square>,
+    to: Option<Square>,
+    promote: Option<Piece>,
+) {
+    let from_square = from.expect("Engine must provide a 'from' move");
+    let to_square = to.expect("Engine must provide a 'to' move");
 
-    engine
-        .position
-        .make_move(from_square, to_square, search_result.best_move_promote);
+    engine.position.make_move(from_square, to_square, promote);
 }
 
-pub fn get_engine_move_from_search_result(search_result: &SearchResult) -> Option<PlayerMove> {
-    let from_square = search_result.best_move_from?;
-    let to_square = search_result.best_move_to?;
+pub fn get_engine_move_from_search_result(
+    from: Option<Square>,
+    to: Option<Square>,
+) -> Option<PlayerMove> {
+    let from_square = from?;
+    let to_square = to?;
 
     Some(PlayerMove {
         from: Position {
@@ -112,6 +134,7 @@ pub fn handle_engine_think_time(game_state: &mut GameState, search_duration: u64
     }
 }
 
+/// Initializes an engine with the current game position and difficulty settings.
 pub fn get_engine(game_record: &GameRecord) -> Engine {
     let fen = game_state_to_fen(game_record.game_state.history.last().unwrap());
     get_engine_from_fen(&fen, 3000, game_record.engine_difficulty.map(|d| d.into()))

@@ -153,15 +153,23 @@ export const Game: React.FC<GameProps> = ({
     [viewedGameState.capturedPieces],
   );
 
-  const latestEngineResult = useMemo(() => {
+  // Player's turn: eval is post-engine-move (+ for human)
+  // Engine's turn: eval is post-human-move (+ for engine)
+  const latestSearchResult = useMemo(() => {
     for (let i = historyIndex; i >= 0; i--) {
-      if (history[i].engineResult) {
-        return history[i].engineResult;
+      const result = history[i].engineResult;
+
+      if (result) {
+        if (history[i].currentTurn !== playerColor) {
+          return { ...result, evaluation: -result.evaluation };
+        }
+
+        return result;
       }
     }
 
     return null;
-  }, [history, historyIndex]);
+  }, [history, historyIndex, playerColor]);
 
   const showEvalBar = evalOn && gameRecord.engine_difficulty !== null;
 
@@ -631,8 +639,8 @@ export const Game: React.FC<GameProps> = ({
         >
           {showEvalBar && (
             <EvalBar
-              evaluation={latestEngineResult?.evaluation ?? 0}
-              isBookMove={latestEngineResult?.fromBook ?? true}
+              normalizedEvaluation={latestSearchResult?.evaluation ?? 0}
+              isBookMove={latestSearchResult?.fromBook ?? true}
               playerColor={playerColor}
             />
           )}

@@ -70,7 +70,7 @@ pub async fn move_piece(
                 );
             }
 
-            make_move(&mut game.game_state, &player_move);
+            make_move(&mut game.game_state, &player_move); // Move is toggled here
             use_engine(&mut game, sdk_config, request_context, connection_id).await?;
             save_game(dynamo_db_client, game_table, &game).await?;
 

@@ -4,48 +4,44 @@ import { MATE_SCORE_THRESHOLD } from "@src/constants";
 import "@src/css/EvalBar.css";
 
 interface EvalBarProps {
-  evaluation: number;
+  normalizedEvaluation: number;
   isBookMove: boolean;
   playerColor: Color;
 }
 
 function evalToHumanPercent(evalCp: number): number {
-  const humanEvalCp = -evalCp;
-
-  if (Math.abs(humanEvalCp) > MATE_SCORE_THRESHOLD) {
-    return humanEvalCp > 0 ? 97 : 3;
+  if (Math.abs(evalCp) > MATE_SCORE_THRESHOLD) {
+    return evalCp > 0 ? 97 : 3;
   }
 
   // Linear (clamped): less responsive near center, more extreme at edges
-  const clamped = Math.max(-1000, Math.min(1000, humanEvalCp));
+  const clamped = Math.max(-1000, Math.min(1000, evalCp));
   return 50 + (clamped / 1000) * 50;
 }
 
 function formatEval(evalCp: number): string {
-  const humanEvalCp = -evalCp;
-
-  if (Math.abs(humanEvalCp) > MATE_SCORE_THRESHOLD) {
-    return humanEvalCp > 0 ? "M" : "−M";
+  if (Math.abs(evalCp) > MATE_SCORE_THRESHOLD) {
+    return evalCp > 0 ? "M" : "−M";
   }
 
-  const pawns = humanEvalCp / 100;
+  const pawns = evalCp / 100;
 
   return pawns >= 0 ? `+${pawns.toFixed(1)}` : pawns.toFixed(1);
 }
 
 export const EvalBar: React.FC<EvalBarProps> = ({
-  evaluation,
+  normalizedEvaluation, // From human's perspective (negated in Game.tsx)
   playerColor,
 }) => {
   const isPlayerWhite = playerColor === Color.White;
 
-  const humanPercent = evalToHumanPercent(evaluation);
+  const humanPercent = evalToHumanPercent(normalizedEvaluation);
   const enginePercent = 100 - humanPercent;
 
   const topColor = isPlayerWhite ? "black" : "white";
   const bottomColor = isPlayerWhite ? "white" : "black";
 
-  const labelText = formatEval(evaluation);
+  const labelText = formatEval(normalizedEvaluation);
 
   return (
     <div className="eval-bar">

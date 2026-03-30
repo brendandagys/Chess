@@ -1,4 +1,4 @@
-use chess_engine::types::Difficulty;
+use chess_engine::{engine::SearchResult, types::Difficulty};
 use serde::{ser::SerializeStruct, Deserialize, Serialize};
 
 use crate::helpers::{
@@ -204,6 +204,19 @@ pub struct SearchStatistics {
     pub time_ms: u64,
     pub from_book: bool,
     pub evaluation: i32,
+}
+
+impl From<SearchResult> for SearchStatistics {
+    fn from(value: SearchResult) -> Self {
+        SearchStatistics {
+            depth: value.depth,
+            nodes: value.nodes,
+            qnodes: value.qnodes,
+            time_ms: value.time_ms,
+            from_book: value.from_book,
+            evaluation: value.evaluation,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
