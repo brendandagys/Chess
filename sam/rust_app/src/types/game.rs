@@ -4,6 +4,7 @@ use serde::{ser::SerializeStruct, Deserialize, Serialize};
 use crate::helpers::{
     board::{decode_piece, encode_piece},
     generic::{base64_to_bytes, bytes_to_base64},
+    opening_detection::OpeningInfo,
 };
 
 use super::{
@@ -238,6 +239,7 @@ pub struct GameState {
     pub game_time: Option<GameTime>,
     pub history: Vec<GameStateAtPointInTime>,
     pub move_list: Vec<String>,
+    pub opening: Option<OpeningInfo>,
 }
 
 impl GameState {
@@ -273,6 +275,7 @@ impl GameState {
                 black_seconds_left: seconds,
             }),
             move_list: Vec::new(),
+            opening: None,
         }
     }
 

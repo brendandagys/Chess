@@ -121,6 +121,21 @@ export interface GameState {
   gameTime: GameTime | null;
   history: GameStateAtPointInTime[];
   moveList: string[];
+  opening: OpeningInfo | null;
+}
+
+export enum GamePhase {
+  Opening = 'opening',
+  EarlyMiddlegame = 'early-middlegame',
+  Middlegame = 'middlegame',
+  EarlyEndgame = 'early-endgame',
+  Endgame = 'endgame',
+}
+
+export interface OpeningInfo {
+  eco: string;
+  name: string;
+  phase: GamePhase;
 }
 
 export interface PlayerMove {

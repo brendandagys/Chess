@@ -1,3 +1,5 @@
+use crate::helpers::board::game_state_to_fen;
+use crate::helpers::opening_detection::detect_opening;
 use crate::helpers::user::{get_user_game, save_user_record};
 use crate::types::api::{ApiMessage, ApiResponse};
 use crate::types::board::{Board, BoardSetup, Position};
@@ -631,6 +633,16 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) {
             check_for_mates(&mut next_state); // Toggles turn
         }
     };
+
+    // Detect opening name and game phase
+    let total_pieces = next_state.board.get_all_pieces(None).len();
+    let fen = game_state_to_fen(&next_state);
+    let epd = fen.split_whitespace().take(4).collect::<Vec<_>>().join(" ");
+    game_state.opening = Some(detect_opening(
+        &game_state.move_list,
+        Some(&epd),
+        total_pieces,
+    ));
 
     game_state.history.push(next_state);
 }

@@ -128,6 +128,16 @@
   border: 2px solid #a9a9a9;
 }
 
+.game-container .status-container .pill--purple {
+  background-color: #e0cffc;
+  border: 2px solid #9370db;
+}
+
+.game-container .status-container .pill--small {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+}
+
 /* .game-container .pill.highlight {
   animation: highlight-animation 5s ease-in-out;
 }
