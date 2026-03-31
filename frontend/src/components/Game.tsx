@@ -81,6 +81,7 @@ export const Game: React.FC<GameProps> = ({
   const [fenLoading, setFenLoading] = useState(false);
   const { requestPermission, showNotification } = useNotifications();
   const previousIsTurnRef = useRef<boolean | null>(null);
+  const fenClipboardResolveRef = useRef<((blob: Blob) => void) | null>(null);
 
   const [boardThemeId, setBoardThemeId] = useLocalStorage(
     "board-theme",
@@ -484,6 +485,18 @@ export const Game: React.FC<GameProps> = ({
     onClearFen(gameId);
     onRequestFen(gameId);
     setFenLoading(true);
+
+    // Initiate clipboard write during the user gesture so mobile browsers treat
+    // it as user-activated. The Promise is resolved during the WS response.
+    if (typeof ClipboardItem !== "undefined") {
+      const fenClipboardPromise = new Promise<Blob>((resolve) => {
+        fenClipboardResolveRef.current = resolve;
+      });
+      void navigator.clipboard.write([
+        new ClipboardItem({ "text/plain": fenClipboardPromise }),
+      ]);
+    }
+
     sendWebSocketMessage({
       route: API_ROUTE,
       data: {
@@ -497,14 +510,23 @@ export const Game: React.FC<GameProps> = ({
 
   useEffect(() => {
     if (fenResult !== null) {
-      void navigator.clipboard.writeText(fenResult).then(() => {
-        setFenCopied(true);
-        setFenLoading(false);
-        setTimeout(() => {
-          setFenCopied(false);
-          onClearFen(gameId);
-        }, 2000);
-      });
+      if (fenClipboardResolveRef.current) {
+        // Fulfill the deferred ClipboardItem Promise (mobile-compatible path)
+        fenClipboardResolveRef.current(
+          new Blob([fenResult], { type: "text/plain" }),
+        );
+        fenClipboardResolveRef.current = null;
+      } else {
+        // Fallback for browsers without ClipboardItem Promise support
+        void navigator.clipboard.writeText(fenResult);
+      }
+
+      setFenCopied(true);
+      setFenLoading(false);
+      setTimeout(() => {
+        setFenCopied(false);
+        onClearFen(gameId);
+      }, 2000);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fenResult]);
