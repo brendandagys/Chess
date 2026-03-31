@@ -566,6 +566,7 @@ fn check_for_mates(game_state: &mut GameStateAtPointInTime) {
         }
 
         game_state.state = State::Finished(GameEnding::Checkmate(opponent_color));
+        game_state.current_turn = opponent_color;
         return;
     }
 

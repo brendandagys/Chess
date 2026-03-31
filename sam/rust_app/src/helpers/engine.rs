@@ -48,11 +48,8 @@ pub async fn use_engine(
     let engine_best_move_to = search_result.best_move_to;
     let engine_best_move_promote = search_result.best_move_promote;
 
-    // Store evaluation on the human's move state and notify the player immediately
+    // Store evaluation on the human's move state (included in the final Lambda response)
     game.game_state.current_state_mut().engine_result = Some(SearchStatistics::from(search_result));
-
-    notify_player_about_game_update(sdk_config, request_context, connection_id, game, None, true)
-        .await?;
 
     if let Some(engine_move) =
         get_engine_move_from_search_result(engine_best_move_from, engine_best_move_to)
