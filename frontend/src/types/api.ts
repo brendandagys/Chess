@@ -17,9 +17,21 @@ interface ApiMessage {
   messageType: ApiMessageType;
 }
 
+export interface ApiRunTimeError {
+  message: string;
+  connectionId: string | null;
+  requestId: string | null;
+}
+
 export interface ApiResponse<T> {
   statusCode: number;
   connectionId: string | null;
   messages: ApiMessage[];
   data: T;
+}
+
+export function isApiRunTimeError(
+  response: ApiResponse<unknown> | ApiRunTimeError,
+): response is ApiRunTimeError {
+  return !("statusCode" in response);
 }

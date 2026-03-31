@@ -12,7 +12,12 @@ import { HeaderSection } from "@src/components/HeaderSection";
 import { GameForm } from "@src/components/GameForm";
 import { Game } from "@src/components/Game";
 
-import { ApiMessageType, ApiResponse } from "@src/types/api";
+import {
+  ApiMessageType,
+  ApiResponse,
+  ApiRunTimeError,
+  isApiRunTimeError,
+} from "@src/types/api";
 import {
   AiAnalysisResult,
   FenResult,
@@ -92,8 +97,24 @@ export const App: React.FC = () => {
 
   const onWebSocketMessage = useCallback(
     (
-      response: ApiResponse<GameRecord | AiAnalysisResult | FenResult | null>,
+      response:
+        | ApiResponse<GameRecord | AiAnalysisResult | FenResult | null>
+        | ApiRunTimeError,
     ) => {
+      if (isApiRunTimeError(response)) {
+        playIllegalSound();
+        setAppMessages((old) => [
+          ...old,
+          {
+            id: Math.random().toString(36).slice(2),
+            message: response.message,
+            messageType: ApiMessageType.Error,
+            duration: 4000,
+          },
+        ]);
+        return;
+      }
+
       const isGameRecord =
         response.data && Object.keys(response.data).includes("game_id");
 
