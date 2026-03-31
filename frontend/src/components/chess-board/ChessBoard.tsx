@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { imageMap } from "@src/images";
 import { parseUciMove, rotateMatrix180Degrees } from "@src/utils";
 import { useDrag } from "@src/hooks/useDrag";
@@ -24,7 +24,7 @@ interface ChessBoardProps {
   boardTheme: BoardTheme;
 }
 
-export const ChessBoard: React.FC<ChessBoardProps> = ({
+export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
   expandedHistory,
   playerColor,
   gameId,
@@ -35,7 +35,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
   isTurn,
   onPlayAgain,
   boardTheme,
-}) => {
+}) {
   const shouldRotate = playerColor === Color.Black;
 
   const viewedBoardState = expandedHistory[historyIndex].board;
@@ -114,8 +114,11 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
           ? "--piece-diameter-small"
           : "--piece-diameter";
 
+  const [isOverlayDismissed, setIsOverlayDismissed] = useState(false);
+
   useEffect(() => {
     if (gameOverMessage) {
+      setIsOverlayDismissed(false);
       setSelectedSquare(null);
     }
   }, [gameOverMessage]);
@@ -494,9 +497,18 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       )}
 
       {/* Game Over Overlay */}
-      {gameOverMessage && (
+      {gameOverMessage && !isOverlayDismissed && (
         <div className="game-over-overlay">
           <div className="game-over-message">
+            <button
+              className="game-over-close"
+              onClick={() => {
+                setIsOverlayDismissed(true);
+              }}
+              aria-label="Close"
+            >
+              ✕
+            </button>
             {gameOverMessage}
             <button className="play-again-button" onClick={onPlayAgain}>
               Play Again
@@ -506,4 +518,4 @@ export const ChessBoard: React.FC<ChessBoardProps> = ({
       )}
     </div>
   );
-};
+});

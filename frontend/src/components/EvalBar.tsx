@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { Color } from "@src/types/piece";
 import { MATE_SCORE_THRESHOLD } from "@src/constants";
 
@@ -11,7 +13,7 @@ interface EvalBarProps {
 
 function evalToHumanPercent(evalCp: number): number {
   if (Math.abs(evalCp) > MATE_SCORE_THRESHOLD) {
-    return evalCp > 0 ? 97 : 3;
+    return evalCp > 0 ? 98.5 : 1.5;
   }
 
   // Linear (clamped): less responsive near center, more extreme at edges
@@ -29,12 +31,11 @@ function formatEval(evalCp: number): string {
   return pawns >= 0 ? `+${pawns.toFixed(1)}` : pawns.toFixed(1);
 }
 
-export const EvalBar: React.FC<EvalBarProps> = ({
+export const EvalBar: React.FC<EvalBarProps> = memo(function EvalBar({
   normalizedEvaluation, // From human's perspective (negated in Game.tsx)
   playerColor,
-}) => {
+}) {
   const isPlayerWhite = playerColor === Color.White;
-
   const humanPercent = evalToHumanPercent(normalizedEvaluation);
   const enginePercent = 100 - humanPercent;
 
@@ -60,4 +61,4 @@ export const EvalBar: React.FC<EvalBarProps> = ({
       )}
     </div>
   );
-};
+});

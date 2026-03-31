@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { imageMap } from "@src/images";
 import { Piece } from "@src/types/piece";
 
@@ -8,23 +9,24 @@ interface CapturedPiecesProps {
   pointsLead: number;
 }
 
-export const CapturedPieces: React.FC<CapturedPiecesProps> = ({
-  pieces,
-  pointsLead,
-}) => (
-  <div className="captured-pieces">
-    {pieces.map((piece, i) => (
-      <div
-        key={`${piece.color}-${piece.pieceType}-${i}`}
-        className="image-container"
-      >
-        <img
-          src={imageMap[piece.pieceType][piece.color]}
-          alt={`${piece.color} ${piece.pieceType}`}
-        />
-      </div>
-    ))}
+export const CapturedPieces: React.FC<CapturedPiecesProps> = memo(
+  function CapturedPieces({ pieces, pointsLead }) {
+    return (
+      <div className="captured-pieces">
+        {pieces.map((piece, i) => (
+          <div
+            key={`${piece.color}-${piece.pieceType}-${i}`}
+            className="image-container"
+          >
+            <img
+              src={imageMap[piece.pieceType][piece.color]}
+              alt={`${piece.color} ${piece.pieceType}`}
+            />
+          </div>
+        ))}
 
-    {pointsLead > 0 && <div className="score">+{pointsLead}</div>}
-  </div>
+        {pointsLead > 0 && <div className="score">+{pointsLead}</div>}
+      </div>
+    );
+  },
 );

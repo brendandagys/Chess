@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useCallback, useMemo, useState, useEffect, useRef } from "react";
 
 import {
   capitalizeFirstLetter,
@@ -423,7 +423,7 @@ export const Game: React.FC<GameProps> = ({
     setShowResignConfirm(false);
   };
 
-  const handlePlayAgain = () => {
+  const handlePlayAgain = useCallback(() => {
     const username =
       playerColor === Color.White
         ? gameRecord.white_username
@@ -446,7 +446,18 @@ export const Game: React.FC<GameProps> = ({
     });
 
     onPlayAgain(gameId);
-  };
+  }, [
+    gameId,
+    gameRecord.black_username,
+    gameRecord.board_setup,
+    gameRecord.color_preference,
+    gameRecord.engine_difficulty,
+    gameRecord.seconds_per_player,
+    gameRecord.white_username,
+    onPlayAgain,
+    playerColor,
+    sendWebSocketMessage,
+  ]);
 
   useEffect(() => {
     if (aiAnalysis) {
