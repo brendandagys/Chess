@@ -389,12 +389,13 @@ pub fn fen_to_board(fen: &str) -> Result<FenParseResult, String> {
             return Err(format!("Invalid en passant target: '{en_passant_str}'"));
         }
 
-        // The en passant target square is behind the pawn that just moved
-        // If target is rank 3, white just moved a pawn from rank 2 to rank 4, so pawn is at rank 4 (row 4)
-        // If target is rank 6, black just moved a pawn from rank 7 to rank 5, so pawn is at rank 5 (row 3)
+        // The en passant target square is behind the pawn that just moved.
+        // In this board representation, row_index = 8 - rank.
+        // ep_rank 3: white pawn moved from rank 2 to rank 4 → pawn at row_index = 8 - 4 = 4
+        // ep_rank 6: black pawn moved from rank 7 to rank 5 → pawn at row_index = 8 - 5 = 3
         let pawn_row = match ep_rank {
-            3 => 4, // White pawn at rank 4 = row index 4
-            6 => 3, // Black pawn at rank 5 = row index 3
+            3 => 8 - 4, // White pawn at rank 4
+            6 => 8 - 5, // Black pawn at rank 5
             _ => return Err(format!("Invalid en passant target rank: {ep_rank}")),
         };
 
