@@ -1,71 +1,158 @@
+/* ── Game Form Card ───────────────────────────────── */
 .game-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  justify-content: center;
-  align-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
-.game-preferences-container,
+/* ── Preferences Section ─────────────────────────── */
+.game-preferences-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0.75rem 1rem 0.5rem;
+}
+
+/* Each preference row: label left, control right */
+.game-preferences-form-component {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 0.75rem;
+}
+
+.game-preferences-form-component:last-child {
+  border-bottom: none;
+}
+
+.game-preferences-form-component .label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #444;
+  white-space: nowrap;
+}
+
+.game-preferences-form-component .label small {
+  font-weight: 400;
+  color: #888;
+}
+
+/* ── Shared Select Styles ────────────────────────── */
+.board-setup-select,
+.color-preference-select,
+.engine-difficulty-select {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fafafa;
+  height: 32px;
+  font-size: 0.85rem;
+  color: #333;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.board-setup-select:focus,
+.color-preference-select:focus,
+.engine-difficulty-select:focus {
+  border-color: #4f8cff;
+}
+
+/* ── Dimensions Row ──────────────────────────────── */
+.game-form .dimensions-row {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.game-form .dimensions-row .game-preferences-form-component {
+  flex: 1;
+  border-bottom: none;
+  padding: 0;
+}
+
+.game-form .game-preferences-form-component input[type="number"] {
+  width: 52px;
+  padding: 0.3rem 0.25rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.85rem;
+  height: 32px;
+  background-color: #fafafa;
+  color: #333;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.game-form .game-preferences-form-component input[type="number"]:focus {
+  border-color: #4f8cff;
+}
+
+/* ── Checkbox (Play engine toggle) ───────────────── */
+.game-form .game-preferences-form-component input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #4f8cff;
+}
+
+.game-form .game-preferences-form-component input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* ── Details Section (username, game ID, submit) ── */
 .game-details-container {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.game-details-container {
-  gap: 1rem;
-  margin-top: 0.5rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fafafa;
+  border-top: 1px solid #eee;
 }
 
 .game-form .username-field,
 .game-form .game-id-field {
-  padding: 0 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  height: 35px;
-}
-
-.game-preferences-form-component {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.game-preferences-form-component .label {
-  font-size: 0.8rem;
-  margin-bottom: 0.2rem;
-}
-
-.board-setup-select,
-.color-preference-select,
-.engine-difficulty-select {
-  padding: 0 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  text-align-last: center;
-  background-color: white;
-  height: 30px;
-  font-size: 16px;
-}
-
-.game-form .game-preferences-form-component input[type="number"] {
-  width: 50px;
-  padding: 0 0.25rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  text-align: center;
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  height: 36px;
   font-size: 0.9rem;
-  height: 30px;
+  background: #fff;
+  color: #333;
+  outline: none;
+  transition: border-color 0.15s;
 }
 
-.game-form .game-preferences-form-component input[type="checkbox"] {
-  width: 24px;
-  height: 24px;
-  margin: 3px 0;
-  cursor: pointer;
+.game-form .username-field:focus,
+.game-form .game-id-field:focus {
+  border-color: #4f8cff;
+}
+
+.game-form .username-field::placeholder,
+.game-form .game-id-field::placeholder {
+  color: #aaa;
+}
+
+/* ── Submit Button (inherits .main-action-button) ─ */
+.game-form .main-action-button {
+  width: 100%;
+  border-radius: 6px;
+  height: 38px;
+  font-size: 0.9rem;
+  margin-top: 0.15rem;
 }

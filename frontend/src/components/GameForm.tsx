@@ -132,7 +132,6 @@ export const GameForm: React.FC<GameFormProps> = ({
         <div className="game-preferences-container">
           <div className="game-preferences-form-component">
             <span className="label">Color</span>
-
             <select
               className="color-preference-select"
               value={colorPreference}
@@ -148,7 +147,6 @@ export const GameForm: React.FC<GameFormProps> = ({
 
           <div className="game-preferences-form-component">
             <span className="label">Time</span>
-
             <select
               className="board-setup-select"
               value={timeOption}
@@ -156,20 +154,19 @@ export const GameForm: React.FC<GameFormProps> = ({
                 setTimeOptionStored(e.target.value);
               }}
             >
-              <option value={TimeOption.OneMinute}>1 Minute</option>
-              <option value={TimeOption.ThreeMinutes}>3 Minutes</option>
-              <option value={TimeOption.FiveMinutes}>5 Minutes</option>
-              <option value={TimeOption.TenMinutes}>10 Minutes</option>
-              <option value={TimeOption.FifteenMinutes}>15 Minutes</option>
-              <option value={TimeOption.ThirtyMinutes}>30 Minutes</option>
-              <option value={TimeOption.OneHour}>1 Hour</option>
+              <option value={TimeOption.OneMinute}>1 min</option>
+              <option value={TimeOption.ThreeMinutes}>3 min</option>
+              <option value={TimeOption.FiveMinutes}>5 min</option>
+              <option value={TimeOption.TenMinutes}>10 min</option>
+              <option value={TimeOption.FifteenMinutes}>15 min</option>
+              <option value={TimeOption.ThirtyMinutes}>30 min</option>
+              <option value={TimeOption.OneHour}>1 hr</option>
               <option value={TimeOption.Unlimited}>Unlimited</option>
             </select>
           </div>
 
           <div className="game-preferences-form-component">
-            <span className="label">Board setup</span>
-
+            <span className="label">Board</span>
             <select
               className="board-setup-select"
               value={boardSetupName}
@@ -185,14 +182,14 @@ export const GameForm: React.FC<GameFormProps> = ({
               <option value="standard">Standard</option>
               <option value="custom-size">Custom Size</option>
               <option value="chess960">Chess960</option>
-              <option value="king-and-knights">King and Knights</option>
+              <option value="king-and-knights">King & Knights</option>
             </select>
           </div>
 
           {[BoardSetupName.CustomSize, BoardSetupName.KingAndKnights].includes(
             boardSetupName,
           ) && (
-            <div style={{ display: "flex", gap: "0.8rem" }}>
+            <div className="dimensions-row">
               <div className="game-preferences-form-component">
                 <span className="label">
                   Ranks <small>(6-12)</small>
@@ -255,7 +252,6 @@ export const GameForm: React.FC<GameFormProps> = ({
           {versusEngine && (
             <div className="game-preferences-form-component">
               <span className="label">Difficulty</span>
-
               <select
                 className="engine-difficulty-select"
                 value={engineDifficulty}
