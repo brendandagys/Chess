@@ -14,7 +14,7 @@ pub async fn call_bedrock(
     let client = BedrockClient::new(sdk_config);
 
     let model_id = std::env::var("BEDROCK_MODEL_ID")
-        .unwrap_or_else(|_| "us.anthropic.claude-3-5-haiku-20241022-v1:0".to_string());
+        .unwrap_or_else(|_| "anthropic.claude-3-haiku-20240307-v1:0".to_string());
 
     let body = serde_json::json!({
         "anthropic_version": "bedrock-2023-05-31",
