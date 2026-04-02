@@ -279,6 +279,41 @@ impl GameState {
         }
     }
 
+    pub fn new_from_fen(
+        game_id: String,
+        board: Board,
+        active_color: Color,
+        seconds_per_player: Option<usize>,
+    ) -> Self {
+        let captured_pieces = CapturedPieces {
+            white: Vec::new(),
+            black: Vec::new(),
+            white_points: 0,
+            black_points: 0,
+        };
+
+        GameState {
+            game_id,
+            history: vec![GameStateAtPointInTime {
+                state: State::NotStarted,
+                current_turn: active_color,
+                in_check: None,
+                board: board.clone(),
+                captured_pieces: captured_pieces.clone(),
+                moves: Vec::new(),
+                engine_result: None,
+            }],
+            game_time: seconds_per_player.map(|seconds| GameTime {
+                both_players_last_connected_at: None,
+                last_move_at: None,
+                white_seconds_left: seconds,
+                black_seconds_left: seconds,
+            }),
+            move_list: Vec::new(),
+            opening: None,
+        }
+    }
+
     pub fn current_state(&self) -> &GameStateAtPointInTime {
         self.history
             .last()
@@ -318,6 +353,7 @@ pub enum PlayerAction {
         color_preference: Option<ColorPreference>,
         seconds_per_player: Option<usize>,
         engine_difficulty: Option<EngineDifficulty>,
+        fen: Option<String>,
     },
     #[serde(rename_all = "camelCase")]
     JoinGame {

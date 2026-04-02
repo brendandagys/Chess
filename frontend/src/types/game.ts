@@ -181,6 +181,7 @@ interface PlayerActionCreateGame {
     colorPreference: ColorPreference | null;
     secondsPerPlayer: TimeOption | null;
     engineDifficulty: EngineDifficulty | null;
+    fen: string | null;
   };
 }
 

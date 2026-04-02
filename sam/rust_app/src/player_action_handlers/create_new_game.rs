@@ -1,5 +1,6 @@
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
+use chess::helpers::board::fen_to_board;
 use chess::helpers::engine::use_engine;
 use chess::types::board::BoardSetup;
 use chess::types::game::{ColorPreference, EngineDifficulty};
@@ -23,6 +24,7 @@ pub async fn create_new_game(
     color_preference: Option<ColorPreference>,
     engine_difficulty: Option<EngineDifficulty>,
     seconds_per_player: Option<usize>,
+    fen: Option<&str>,
 ) -> Result<ApiGatewayProxyResponse, Error> {
     if username.trim().is_empty() {
         return build_response(
@@ -33,8 +35,33 @@ pub async fn create_new_game(
         );
     }
 
+    // Validate FEN if provided
+    let fen_result = match fen {
+        Some(fen_str) if !fen_str.is_empty() => match fen_to_board(fen_str) {
+            Ok(result) => Some(result),
+            Err(e) => {
+                return build_response(
+                    StatusCode::BAD_REQUEST,
+                    Some(connection_id.to_string()),
+                    Some(vec![format!("Invalid FEN: {e}").into()]),
+                    None::<()>,
+                );
+            }
+        },
+        _ => None,
+    };
+
+    // When FEN is provided, treat as standard board for engine compatibility
+    let effective_board_setup = if fen_result.is_some() {
+        Some(BoardSetup::Standard)
+    } else {
+        board_setup
+    };
+
     // Validate that engine difficulty is only set for standard 8x8 boards
-    if engine_difficulty.is_some() && !matches!(board_setup, Some(BoardSetup::Standard) | None) {
+    if engine_difficulty.is_some()
+        && !matches!(effective_board_setup, Some(BoardSetup::Standard) | None)
+    {
         return build_response(
             StatusCode::BAD_REQUEST,
             Some(connection_id.to_string()),
@@ -62,21 +89,23 @@ pub async fn create_new_game(
             create_game(
                 Some(game_id),
                 username,
-                board_setup,
+                effective_board_setup,
                 color_preference,
                 engine_difficulty,
                 seconds_per_player,
                 connection_id,
+                fen_result,
             )
         }
         None => create_game(
             None,
             username,
-            board_setup,
+            effective_board_setup,
             color_preference,
             engine_difficulty,
             seconds_per_player,
             connection_id,
+            fen_result,
         ),
     };
 

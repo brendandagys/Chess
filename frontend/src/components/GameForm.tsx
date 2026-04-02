@@ -52,7 +52,11 @@ export const GameForm: React.FC<GameFormProps> = ({
     files: "8",
   });
 
-  const isStandardBoard = boardSetupName === BoardSetupName.Standard;
+  const [fen, setFen] = useState("");
+
+  const isStandardBoard =
+    boardSetupName === BoardSetupName.Standard
+    || fen.trim().length > 0;
 
   const [colorPreferenceStored, setColorPreferenceStored] = useLocalStorage(
     "pref_color",
@@ -103,11 +107,14 @@ export const GameForm: React.FC<GameFormProps> = ({
             [PlayerActionName.CreateGame]: {
               username,
               gameId: gameId || null,
-              boardSetup: getBoardSetup(boardSetupName),
+              boardSetup: fen
+                ? (BoardSetupName.Standard as BoardSetup)
+                : getBoardSetup(boardSetupName),
               colorPreference,
               secondsPerPlayer:
                 timeOption === TimeOption.Unlimited ? null : timeOption,
               engineDifficulty: versusEngine ? engineDifficulty : null,
+              fen: fen || null,
             },
           }
         : {
@@ -272,6 +279,19 @@ export const GameForm: React.FC<GameFormProps> = ({
               </select>
             </div>
           )}
+
+          <div className="fen-input-container">
+            <span className="label">FEN <small>(optional)</small></span>
+            <input
+              type="text"
+              className="fen-input-field"
+              placeholder="Paste FEN string for custom position"
+              value={fen}
+              onChange={(e) => {
+                setFen(e.target.value);
+              }}
+            />
+          </div>
         </div>
       )}
 

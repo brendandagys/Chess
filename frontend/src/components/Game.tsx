@@ -458,6 +458,7 @@ export const Game: React.FC<GameProps> = ({
           colorPreference: gameRecord.color_preference,
           secondsPerPlayer: gameRecord.seconds_per_player,
           engineDifficulty: gameRecord.engine_difficulty,
+          fen: null,
         },
       },
     });

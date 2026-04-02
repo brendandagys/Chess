@@ -65,6 +65,7 @@ async fn function_handler(
             color_preference,
             engine_difficulty,
             seconds_per_player,
+            fen,
         } => {
             create_new_game(
                 sdk_config,
@@ -79,6 +80,7 @@ async fn function_handler(
                 color_preference,
                 engine_difficulty,
                 seconds_per_player,
+                fen.as_deref().map(|s| s.trim()),
             )
             .await
         }

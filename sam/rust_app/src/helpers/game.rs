@@ -1,4 +1,4 @@
-use crate::helpers::board::game_state_to_fen;
+use crate::helpers::board::{game_state_to_fen, FenParseResult};
 use crate::helpers::opening_detection::detect_opening;
 use crate::helpers::user::{get_user_game, save_user_record};
 use crate::types::api::{ApiMessage, ApiResponse};
@@ -179,13 +179,19 @@ pub fn create_game(
     engine_difficulty: Option<EngineDifficulty>,
     seconds_per_player: Option<usize>,
     connection_id: &str,
+    fen_result: Option<FenParseResult>,
 ) -> GameRecord {
     let game_id = game_id.map_or_else(generate_id, |id| id.to_string());
 
     let effective_board_setup = board_setup.unwrap_or(BoardSetup::Standard);
     let effective_color_preference = color_preference.unwrap_or(ColorPreference::Random);
 
-    let game_state = GameState::new(game_id.clone(), &effective_board_setup, seconds_per_player);
+    let game_state = match fen_result {
+        Some(fen) => {
+            GameState::new_from_fen(game_id.clone(), fen.board, fen.active_color, seconds_per_player)
+        }
+        None => GameState::new(game_id.clone(), &effective_board_setup, seconds_per_player),
+    };
 
     let (white_connection_id, white_username, black_connection_id, black_username) =
         determine_player_color(effective_color_preference, username, connection_id);
