@@ -636,9 +636,9 @@ export const Game: React.FC<GameProps> = ({
                   {gameState.opening.eco} · {gameState.opening.name}
                 </p>
 
-                <p className="pill pill--gray pill--small">
+                {/* <p className="pill pill--gray pill">
                   {PHASE_LABELS[gameState.opening.phase]}
-                </p>
+                </p> */}
               </Fragment>
             )}
 
@@ -757,8 +757,8 @@ export const Game: React.FC<GameProps> = ({
           numStates={numStates}
         />
 
-        {gameRecord.board_setup === BoardSetupName.Standard && (
-          <div className="fen-copy-row">
+        <div className="game-analysis-actions">
+          {gameRecord.board_setup === BoardSetupName.Standard && (
             <button
               className={`fen-copy-button${
                 fenCopied ? " fen-copy-button--copied" : ""
@@ -768,55 +768,56 @@ export const Game: React.FC<GameProps> = ({
             >
               {fenCopied ? "✓ FEN copied!" : "Copy FEN"}
             </button>
-          </div>
-        )}
+          )}
 
-        {hasMovesPlayed && (
-          <div className="ai-analysis-section">
-            <div className="ai-analysis-buttons">
-              {AI_BUTTONS.filter(
-                ({ type }) => type !== AnalysisType.PostGame || gameIsFinished,
-              ).map(({ type, label }) => (
-                <button
-                  key={type}
-                  className={`ai-analysis-button${
-                    aiAnalysis?.analysisType === type
-                      ? " ai-analysis-button--active"
-                      : ""
-                  }`}
-                  disabled={aiLoading !== null}
-                  onClick={() => {
-                    handleAiAnalysis(type);
-                  }}
-                >
-                  {aiLoading === type ? "Analyzing..." : label}
-                </button>
-              ))}
-            </div>
-
-            {(aiLoading ?? aiAnalysis) && (
-              <div className="ai-analysis-result">
-                {aiAnalysis && (
+          {hasMovesPlayed && (
+            <div className="ai-analysis-section">
+              <div className="ai-analysis-buttons">
+                {AI_BUTTONS.filter(
+                  ({ type }) =>
+                    type !== AnalysisType.PostGame || gameIsFinished,
+                ).map(({ type, label }) => (
                   <button
-                    className="ai-analysis-clear"
+                    key={type}
+                    className={`ai-analysis-button${
+                      aiAnalysis?.analysisType === type
+                        ? " ai-analysis-button--active"
+                        : ""
+                    }`}
+                    disabled={aiLoading !== null}
                     onClick={() => {
-                      onClearAiAnalysis(gameId);
+                      handleAiAnalysis(type);
                     }}
-                    aria-label="Clear analysis"
                   >
-                    ✕
+                    {aiLoading === type ? "Analyzing..." : label}
                   </button>
-                )}
-                {aiLoading && !aiAnalysis && (
-                  <p className="ai-analysis-loading">Thinking...</p>
-                )}
-                {aiAnalysis && (
-                  <p className="ai-analysis-text">{aiAnalysis.text}</p>
-                )}
+                ))}
               </div>
-            )}
-          </div>
-        )}
+
+              {(aiLoading ?? aiAnalysis) && (
+                <div className="ai-analysis-result">
+                  {aiAnalysis && (
+                    <button
+                      className="ai-analysis-clear"
+                      onClick={() => {
+                        onClearAiAnalysis(gameId);
+                      }}
+                      aria-label="Clear analysis"
+                    >
+                      ✕
+                    </button>
+                  )}
+                  {aiLoading && !aiAnalysis && (
+                    <p className="ai-analysis-loading">Thinking...</p>
+                  )}
+                  {aiAnalysis && (
+                    <p className="ai-analysis-text">{aiAnalysis.text}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
