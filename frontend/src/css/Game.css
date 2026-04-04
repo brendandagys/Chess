@@ -136,6 +136,24 @@
   border: 2px solid #32cd32;
 }
 
+@keyframes your-turn-flash {
+
+  0%,
+  100% {
+    background-color: #90ee90;
+    box-shadow: none;
+  }
+
+  50% {
+    background-color: #a4f99c;
+    box-shadow: 0 0 10px rgba(50, 205, 50, 0.8);
+  }
+}
+
+.game-container .status-container .pill--flashing {
+  animation: your-turn-flash 1s ease-in-out infinite;
+}
+
 .game-container .status-container .pill--gray {
   background-color: #d3d3d3;
   border: 2px solid #a9a9a9;
@@ -235,13 +253,6 @@
   display: inline-flex;
   justify-content: center;
   align-items: stretch;
-  border: 5px solid transparent;
-  border-radius: 8px;
-  transition: border-color 0.25s ease;
-}
-
-.game-container .chess-board-container.is-player-turn {
-  border-color: var(--board-border-color, #713c0b);
 }
 
 .game-analysis-actions {

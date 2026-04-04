@@ -630,7 +630,11 @@ export const Game: React.FC<GameProps> = ({
             )}
 
             {gameIsInProgress && bothPlayersReady && (
-              <p className={`pill pill--green ${!isTurn ? "pill--faded" : ""}`}>
+              <p
+                className={`pill pill--green ${
+                  !isTurn ? "pill--faded" : "pill--flashing"
+                }`}
+              >
                 {isTurn
                   ? "YOUR TURN"
                   : `${playerColor === Color.White ? "Black" : "White"}'s turn`}
