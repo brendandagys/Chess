@@ -12,8 +12,8 @@ interface MenuButtonsProps {
   setEvalPref: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const EXPANDED_AUTO_CLOSE_MS = 5000;
-const POST_ACTION_CLOSE_MS = 2500;
+const EXPANDED_AUTO_CLOSE_MS = 2000;
+const POST_ACTION_CLOSE_MS = 1250;
 
 export const MenuButtons: React.FC<MenuButtonsProps> = ({
   realismOn,
