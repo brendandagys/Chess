@@ -35,7 +35,6 @@ import {
   GameEndingOutOfTime,
   GameEndingResignation,
   GameEndingType,
-  GamePhase,
   GameRecord,
   GameStateType,
   PlayerActionName,
@@ -46,14 +45,6 @@ import { GameMessage } from "@src/types/sharedComponentTypes";
 import { API_ROUTE, BOARD_THEMES, BoardTheme } from "@src/constants";
 
 import "@src/css/Game.css";
-
-const PHASE_LABELS: Record<GamePhase, string> = {
-  [GamePhase.Opening]: "Opening",
-  [GamePhase.EarlyMiddlegame]: "Early Middlegame",
-  [GamePhase.Middlegame]: "Middlegame",
-  [GamePhase.EarlyEndgame]: "Early Endgame",
-  [GamePhase.Endgame]: "Endgame",
-};
 
 interface GameProps {
   gameRecord: GameRecord;
@@ -635,10 +626,6 @@ export const Game: React.FC<GameProps> = ({
                 >
                   {gameState.opening.eco} · {gameState.opening.name}
                 </p>
-
-                {/* <p className="pill pill--gray pill">
-                  {PHASE_LABELS[gameState.opening.phase]}
-                </p> */}
               </Fragment>
             )}
 
