@@ -28,7 +28,7 @@
 
 @media (max-width: 600px) {
   .app-container .title-container {
-    margin-top: 1rem;
+    margin-top: 0.6rem;
   }
 
   .app-container .title-container .hero-image {
