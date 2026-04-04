@@ -27,6 +27,10 @@
 }
 
 @media (max-width: 600px) {
+  .app-container .title-container {
+    margin-top: 1rem;
+  }
+
   .app-container .title-container .hero-image {
     max-height: 100px;
   }
