@@ -85,6 +85,11 @@
   touch-action: none;
 }
 
+.piece[data-piece-color="black"],
+.floating-piece[data-piece-color="black"] {
+  filter: var(--black-piece-filter, none);
+}
+
 body.dragging-piece {
   cursor: none;
 }

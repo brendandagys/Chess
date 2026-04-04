@@ -352,6 +352,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
           "--board-dark-color": boardTheme.darkColor,
           "--board-light-color": boardTheme.lightColor,
           "--board-border-color": boardTheme.borderColor,
+          "--black-piece-filter": boardTheme.blackPieceFilter ?? "none",
         } as React.CSSProperties
       }
     >
@@ -422,6 +423,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
                       className="piece"
                       src={imageMap[piece.pieceType][piece.color]}
                       alt={`${piece.color} ${piece.pieceType}`}
+                      data-piece-color={piece.color}
                       data-rank={rank}
                       data-file={file}
                       onDragStart={(e) => {
@@ -470,6 +472,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
             imageMap[draggingPiece.piece.pieceType][draggingPiece.piece.color]
           }
           className="floating-piece"
+          data-piece-color={draggingPiece.piece.color}
           style={{
             position: "absolute",
             left:
