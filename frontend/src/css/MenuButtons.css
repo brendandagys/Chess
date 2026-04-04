@@ -6,6 +6,10 @@
   top: 15px;
   right: 20px;
   z-index: 1000;
+
+  @media (max-width: 850px) {
+    right: 8px;
+  }
 }
 
 .menu-buttons--sound {
