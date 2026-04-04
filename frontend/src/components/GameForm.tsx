@@ -146,7 +146,7 @@ export const GameForm: React.FC<GameFormProps> = ({
           </div>
 
           <div className="game-preferences-form-component">
-            <span className="label">Time</span>
+            <span className="label">Time control</span>
             <select
               className="board-setup-select"
               value={timeOption}
@@ -154,13 +154,13 @@ export const GameForm: React.FC<GameFormProps> = ({
                 setTimeOptionStored(e.target.value);
               }}
             >
-              <option value={TimeOption.OneMinute}>1 min</option>
-              <option value={TimeOption.ThreeMinutes}>3 min</option>
-              <option value={TimeOption.FiveMinutes}>5 min</option>
-              <option value={TimeOption.TenMinutes}>10 min</option>
-              <option value={TimeOption.FifteenMinutes}>15 min</option>
-              <option value={TimeOption.ThirtyMinutes}>30 min</option>
-              <option value={TimeOption.OneHour}>1 hr</option>
+              <option value={TimeOption.OneMinute}>1 minute</option>
+              <option value={TimeOption.ThreeMinutes}>3 minutes</option>
+              <option value={TimeOption.FiveMinutes}>5 minutes</option>
+              <option value={TimeOption.TenMinutes}>10 minutes</option>
+              <option value={TimeOption.FifteenMinutes}>15 minutes</option>
+              <option value={TimeOption.ThirtyMinutes}>30 minutes</option>
+              <option value={TimeOption.OneHour}>1 hour</option>
               <option value={TimeOption.Unlimited}>Unlimited</option>
             </select>
           </div>

@@ -16,7 +16,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 0.75rem 1rem 0.5rem;
+  padding: 0.25rem 1rem 0;
 }
 
 /* Each preference row: label left, control right */
@@ -102,9 +102,9 @@
 
 /* ── Checkbox (Play engine toggle) ───────────────── */
 .game-form .game-preferences-form-component input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  margin: 0;
+  width: 20px;
+  height: 20px;
+  margin: 6px 0;
   cursor: pointer;
   accent-color: #4f8cff;
 }

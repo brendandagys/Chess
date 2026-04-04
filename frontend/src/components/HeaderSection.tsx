@@ -41,7 +41,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
           }}
           className="main-action-button main-action-button"
         >
-          Join existing game
+          Join game
         </button>
       </div>
     </>
