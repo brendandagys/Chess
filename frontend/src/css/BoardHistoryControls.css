@@ -9,12 +9,17 @@
 }
 
 .board-history-controls button {
-  padding: 5px 10px;
+  background-color: #f0f0f0;
   border: 1px solid #ccc;
   border-radius: 12px;
-  padding: 0.4rem 0.75rem;
-  background-color: #f0f0f0;
   cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0.55rem 0.75rem;
+
+  @media (max-width: 600px) {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.75rem;
+  }
 }
 
 .board-history-controls button:disabled {
