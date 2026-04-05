@@ -14,11 +14,11 @@
   border-radius: 12px;
   cursor: pointer;
   font-size: 0.8rem;
-  padding: 0.55rem 0.75rem;
+  padding: 0.3rem 0.7rem;
 
   @media (max-width: 600px) {
     font-size: 0.75rem;
-    padding: 0.4rem 0.75rem;
+    padding: 0.25rem 0.75rem;
   }
 }
 
