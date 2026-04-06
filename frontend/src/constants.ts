@@ -12,7 +12,7 @@ export interface BoardTheme {
 }
 
 export const BOARD_THEMES: BoardTheme[] = [
-  { id: "classic", label: "Classic", darkColor: "#779556", lightColor: "#ebecd0", borderColor: "#6f9941" },
+  { id: "classic", label: "Classic", darkColor: "#779556", lightColor: "#ebecd0", borderColor: "#507924" },
   { id: "blue", label: "Blue", darkColor: "#7599ae", lightColor: "#d9e4e8", borderColor: "#366f90" },
   { id: "walnut", label: "Walnut", darkColor: "#b88762", lightColor: "#f0d9b5", borderColor: "#713c0b" },
   { id: "purple", label: "Purple", darkColor: "#886cb3", lightColor: "#dfd2e8", borderColor: "#703e75" },
