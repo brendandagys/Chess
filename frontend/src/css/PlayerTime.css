@@ -8,16 +8,18 @@
   padding: 0.25rem 0.6rem;
   border-radius: 5px;
   width: 75px;
-}
 
-.player-time--low {
-  background: red;
-}
+  @media (max-width: 600px) {
+    margin-right: 2px;
+  }
 
-@media (max-width: 500px) {
-  .player-time {
+  @media (max-width: 500px) {
     font-size: 1.1rem;
     padding: 0.2rem 0.5rem;
     width: 63px;
   }
+}
+
+.player-time--low {
+  background: red;
 }
