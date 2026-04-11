@@ -185,6 +185,15 @@ async fn function_handler(
             )
             .await
         }
+        PlayerAction::GetPgn { game_id } => {
+            player_action_handlers::get_pgn::get_pgn(
+                dynamo_db_client,
+                connection_id,
+                &game_table,
+                game_id.trim(),
+            )
+            .await
+        }
     }
 }
 

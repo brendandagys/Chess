@@ -5,4 +5,5 @@ pub mod game;
 pub mod generic;
 pub mod opening_book;
 pub mod opening_detection;
+pub mod pgn;
 pub mod user;

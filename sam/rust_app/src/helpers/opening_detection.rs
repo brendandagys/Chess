@@ -69,6 +69,7 @@ fn parse_and_build() -> OpeningDatabase {
 
     for line in OPENINGS_TSV.lines().skip(1) {
         let fields: Vec<&str> = line.split('\t').collect();
+
         if fields.len() < 5 {
             continue;
         }
@@ -86,12 +87,14 @@ fn parse_and_build() -> OpeningDatabase {
         // Insert into trie
         let moves: Vec<&str> = uci.split_whitespace().collect();
         let mut node = &mut root;
+
         for mv in &moves {
             node = node
                 .children
                 .entry((*mv).to_string())
                 .or_insert_with(new_trie_node);
         }
+
         node.opening = Some(meta.clone());
 
         // Insert into EPD map (last entry wins for duplicate EPDs)

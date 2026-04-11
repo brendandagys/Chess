@@ -61,6 +61,9 @@ interface GameProps {
   fenResult: string | null;
   onRequestFen: (gameId: string) => void;
   onClearFen: (gameId: string) => void;
+  pgnResult: string | null;
+  onRequestPgn: (gameId: string) => void;
+  onClearPgn: (gameId: string) => void;
   evalOn: boolean;
 }
 
@@ -79,21 +82,32 @@ export const Game: React.FC<GameProps> = ({
   fenResult,
   onRequestFen,
   onClearFen,
+  pgnResult,
+  onRequestPgn,
+  onClearPgn,
   evalOn,
 }) => {
   const gameId = gameRecord.game_id;
-  const [showResignConfirm, setShowResignConfirm] = useState(false);
-  const [aiLoading, setAiLoading] = useState<AnalysisType | null>(null);
-  const [fenCopied, setFenCopied] = useState(false);
-  const [fenLoading, setFenLoading] = useState(false);
-  const { requestPermission, showNotification } = useNotifications();
-  const previousIsTurnRef = useRef<boolean | null>(null);
-  const fenClipboardResolveRef = useRef<((blob: Blob) => void) | null>(null);
 
+  const { requestPermission, showNotification } = useNotifications();
   const [boardThemeId, setBoardThemeId] = useLocalStorage(
     "board-theme",
     "classic",
   );
+
+  const previousIsTurnRef = useRef<boolean | null>(null);
+  const [showResignConfirm, setShowResignConfirm] = useState(false);
+
+  const [aiLoading, setAiLoading] = useState<AnalysisType | null>(null);
+
+  const [fenCopied, setFenCopied] = useState(false);
+  const [fenLoading, setFenLoading] = useState(false);
+  const fenClipboardResolveRef = useRef<((blob: Blob) => void) | null>(null);
+
+  const [pgnCopied, setPgnCopied] = useState(false);
+  const [pgnLoading, setPgnLoading] = useState(false);
+  const pgnClipboardResolveRef = useRef<((blob: Blob) => void) | null>(null);
+
   const boardTheme: BoardTheme =
     BOARD_THEMES.find((theme) => theme.id === boardThemeId) ?? BOARD_THEMES[0];
 
@@ -499,6 +513,7 @@ export const Game: React.FC<GameProps> = ({
       const fenClipboardPromise = new Promise<Blob>((resolve) => {
         fenClipboardResolveRef.current = resolve;
       });
+
       void navigator.clipboard.write([
         new ClipboardItem({ "text/plain": fenClipboardPromise }),
       ]);
@@ -537,6 +552,52 @@ export const Game: React.FC<GameProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fenResult]);
+
+  const handleCopyPgn = () => {
+    onClearPgn(gameId);
+    onRequestPgn(gameId);
+    setPgnLoading(true);
+
+    if (typeof ClipboardItem !== "undefined") {
+      const pgnClipboardPromise = new Promise<Blob>((resolve) => {
+        pgnClipboardResolveRef.current = resolve;
+      });
+
+      void navigator.clipboard.write([
+        new ClipboardItem({ "text/plain": pgnClipboardPromise }),
+      ]);
+    }
+
+    sendWebSocketMessage({
+      route: API_ROUTE,
+      data: {
+        [PlayerActionName.GetPgn]: {
+          gameId,
+        },
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (pgnResult !== null) {
+      if (pgnClipboardResolveRef.current) {
+        pgnClipboardResolveRef.current(
+          new Blob([pgnResult], { type: "text/plain" }),
+        );
+        pgnClipboardResolveRef.current = null;
+      } else {
+        void navigator.clipboard.writeText(pgnResult);
+      }
+
+      setPgnCopied(true);
+      setPgnLoading(false);
+      setTimeout(() => {
+        setPgnCopied(false);
+        onClearPgn(gameId);
+      }, 2000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pgnResult]);
 
   const AI_BUTTONS: { type: AnalysisType; label: string }[] = [
     { type: AnalysisType.MoveExplanation, label: "Explain" },
@@ -758,6 +819,18 @@ export const Game: React.FC<GameProps> = ({
               disabled={fenLoading}
             >
               {fenCopied ? "✓ FEN copied!" : "Copy FEN"}
+            </button>
+          )}
+
+          {gameRecord.board_setup === BoardSetupName.Standard && (
+            <button
+              className={`fen-copy-button${
+                pgnCopied ? " fen-copy-button--copied" : ""
+              }`}
+              onClick={handleCopyPgn}
+              disabled={pgnLoading}
+            >
+              {pgnCopied ? "✓ PGN copied!" : "Copy PGN"}
             </button>
           )}
 

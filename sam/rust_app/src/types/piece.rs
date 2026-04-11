@@ -97,8 +97,8 @@ impl Piece {
     }
 
     fn calculate_offset(&self, position: &Position, offset: (&i32, &i32)) -> Position {
-        let new_rank = position.rank.0 + *offset.0 as usize;
-        let new_file = position.file.0 + *offset.1 as usize;
+        let new_rank = position.rank.0.wrapping_add(*offset.0 as usize);
+        let new_file = position.file.0.wrapping_add(*offset.1 as usize);
 
         Position {
             rank: Rank(new_rank),

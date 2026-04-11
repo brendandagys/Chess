@@ -2,6 +2,7 @@ pub mod analyze_position;
 pub mod create_new_game;
 pub mod get_fen;
 pub mod get_game_state;
+pub mod get_pgn;
 pub mod join_game;
 pub mod leave_game;
 pub mod lose_via_out_of_time;

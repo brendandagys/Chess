@@ -159,12 +159,17 @@ export interface FenResult {
   fen: string | null;
 }
 
+export interface PgnResult {
+  pgn: string | null;
+}
+
 export enum PlayerActionName {
   CreateGame = 'create-game',
   JoinGame = 'join-game',
   LeaveGame = 'leave-game',
   GetGameState = 'get-game-state',
   GetFen = 'get-fen',
+  GetPgn = 'get-pgn',
   MovePiece = 'move-piece',
   Heartbeat = 'heartbeat',
   LoseViaOutOfTime = 'lose-via-out-of-time',
@@ -211,6 +216,12 @@ interface PlayerActionGetFen {
   };
 }
 
+interface PlayerActionGetPgn {
+  [PlayerActionName.GetPgn]: {
+    gameId: string;
+  };
+}
+
 interface PlayerActionMovePiece {
   [PlayerActionName.MovePiece]: {
     gameId: string;
@@ -250,6 +261,7 @@ export type PlayerAction =
   | PlayerActionLeaveGame
   | PlayerActionGetGameState
   | PlayerActionGetFen
+  | PlayerActionGetPgn
   | PlayerActionMovePiece
   | PlayerActionHeartbeat
   | PlayerActionLoseViaOutOfTime

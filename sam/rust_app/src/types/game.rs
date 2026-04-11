@@ -239,6 +239,7 @@ pub struct GameState {
     pub game_time: Option<GameTime>,
     pub history: Vec<GameStateAtPointInTime>,
     pub move_list: Vec<String>,
+    pub san_list: Vec<String>,
     pub opening: Option<OpeningInfo>,
 }
 
@@ -275,6 +276,7 @@ impl GameState {
                 black_seconds_left: seconds,
             }),
             move_list: Vec::new(),
+            san_list: Vec::new(),
             opening: None,
         }
     }
@@ -359,5 +361,9 @@ pub enum PlayerAction {
     GetFen {
         game_id: String,
         history_index: usize,
+    },
+    #[serde(rename_all = "camelCase")]
+    GetPgn {
+        game_id: String,
     },
 }

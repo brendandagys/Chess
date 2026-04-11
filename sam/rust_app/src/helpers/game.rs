@@ -608,7 +608,11 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) {
 
     // Record the UCI move before applying it (need piece info from current board)
     let uci_move = player_move_to_uci(&next_state.board, player_move);
-    game_state.move_list.push(uci_move);
+    game_state.move_list.push(uci_move.clone());
+
+    // Snapshot the board before applying the move (needed for SAN conversion)
+    let board_before = next_state.board.clone();
+    let color = next_state.current_turn;
 
     if let Some(game_time) = &mut game_state.game_time {
         update_game_time(game_time, &mut next_state);
@@ -633,6 +637,12 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) {
             check_for_mates(&mut next_state); // Toggles turn
         }
     };
+
+    // Record SAN move (after check_for_mates so we know about check/checkmate)
+    if board_before.is_standard_board() {
+        let san = super::pgn::uci_to_san(&board_before, &uci_move, &color, &next_state);
+        game_state.san_list.push(san);
+    }
 
     // Detect opening name and game phase
     let total_pieces = next_state.board.get_all_pieces(None).len();

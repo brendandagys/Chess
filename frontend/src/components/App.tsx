@@ -22,6 +22,7 @@ import {
   AiAnalysisResult,
   FenResult,
   GameRecord,
+  PgnResult,
   PlayerActionName,
 } from "@src/types/game";
 import { FormToShow } from "@src/types/sharedComponentTypes";
@@ -83,6 +84,8 @@ export const App: React.FC = () => {
   const pendingAiGameIdRef = useRef<string | null>(null);
   const [fenResults, setFenResults] = useState<Record<string, string>>({});
   const pendingFenGameIdRef = useRef<string | null>(null);
+  const [pgnResults, setPgnResults] = useState<Record<string, string>>({});
+  const pendingPgnGameIdRef = useRef<string | null>(null);
   const pendingPlayAgainIndexRef = useRef<number | null>(null);
 
   const [formToShow, setFormToShow] = useState<FormToShow>(
@@ -98,7 +101,9 @@ export const App: React.FC = () => {
   const onWebSocketMessage = useCallback(
     (
       response:
-        | ApiResponse<GameRecord | AiAnalysisResult | FenResult | null>
+        | ApiResponse<
+            GameRecord | AiAnalysisResult | FenResult | PgnResult | null
+          >
         | ApiRunTimeError,
     ) => {
       if (isApiRunTimeError(response)) {
@@ -128,6 +133,11 @@ export const App: React.FC = () => {
         Object.keys(response.data).includes("fen") &&
         Object.keys(response.data).length === 1;
 
+      const isPgnResult =
+        response.data &&
+        Object.keys(response.data).includes("pgn") &&
+        Object.keys(response.data).length === 1;
+
       const gameRecord = isGameRecord ? (response.data as GameRecord) : null;
 
       if (isAiAnalysis) {
@@ -148,6 +158,17 @@ export const App: React.FC = () => {
           const fen = result.fen;
           setFenResults((old) => ({ ...old, [gameId]: fen }));
           pendingFenGameIdRef.current = null;
+        }
+      }
+
+      if (isPgnResult) {
+        const result = response.data as PgnResult;
+        const gameId = pendingPgnGameIdRef.current;
+
+        if (gameId && result.pgn) {
+          const pgn = result.pgn;
+          setPgnResults((old) => ({ ...old, [gameId]: pgn }));
+          pendingPgnGameIdRef.current = null;
         }
       }
 
@@ -434,6 +455,17 @@ export const App: React.FC = () => {
               }}
               onClearFen={(gameId) => {
                 setFenResults((old) =>
+                  Object.fromEntries(
+                    Object.entries(old).filter(([id]) => id !== gameId),
+                  ),
+                );
+              }}
+              pgnResult={pgnResults[gameRecord.game_id] ?? null}
+              onRequestPgn={(gameId) => {
+                pendingPgnGameIdRef.current = gameId;
+              }}
+              onClearPgn={(gameId) => {
+                setPgnResults((old) =>
                   Object.fromEntries(
                     Object.entries(old).filter(([id]) => id !== gameId),
                   ),
