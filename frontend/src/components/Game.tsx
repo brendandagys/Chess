@@ -780,7 +780,11 @@ export const Game: React.FC<GameProps> = ({
             pointsLead={playerPointsLead}
           />
 
-          <div className="board-theme-picker">
+          <div
+            className={`board-theme-picker${
+              gameIsTimed ? "" : " board-theme-picker--right-aligned"
+            }`}
+          >
             {BOARD_THEMES.map((theme) => (
               <button
                 key={theme.id}
