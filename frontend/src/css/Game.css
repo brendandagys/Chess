@@ -338,17 +338,15 @@
   }
 }
 
-.ai-analysis-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.ai-analysis-buttons {
+.game-analysis-actions__button-group {
   display: flex;
   gap: 0.35rem;
   justify-content: right;
   flex-wrap: wrap;
+}
+
+.game-analysis-actions__button-group--left {
+  justify-content: left;
 }
 
 .ai-analysis-button {
@@ -363,7 +361,7 @@
   transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
 
   @media (max-width: 600px) {
-    font-size: 0.75rem;
+    font-size: 0.6rem;
     padding: 0.25rem 0.5rem;
   }
 }
@@ -439,7 +437,7 @@
   align-self: flex-start;
 
   @media (max-width: 600px) {
-    font-size: 0.75rem;
+    font-size: 0.6rem;
     padding: 0.25rem 0.5rem;
   }
 }

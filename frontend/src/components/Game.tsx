@@ -600,10 +600,8 @@ export const Game: React.FC<GameProps> = ({
   }, [pgnResult]);
 
   const AI_BUTTONS: { type: AnalysisType; label: string }[] = [
-    { type: AnalysisType.MoveExplanation, label: "Explain" },
-    { type: AnalysisType.BlunderDetection, label: "Blunder?" },
     { type: AnalysisType.Coach, label: "Coach" },
-    { type: AnalysisType.PostGame, label: "Post-game" },
+    { type: AnalysisType.MoveExplanation, label: "Analyze position" },
   ];
 
   const hasMovesPlayed = numStates > 1;
@@ -814,33 +812,38 @@ export const Game: React.FC<GameProps> = ({
         />
 
         <div className="game-analysis-actions">
-          {gameRecord.board_setup === BoardSetupName.Standard && (
-            <button
-              className={`fen-copy-button${
-                fenCopied ? " fen-copy-button--copied" : ""
-              }`}
-              onClick={handleCopyFen}
-              disabled={fenLoading}
-            >
-              {fenCopied ? "✓ FEN copied!" : "Copy FEN"}
-            </button>
-          )}
+          <div
+            className="game-analysis-actions__button-group 
+          game-analysis-actions__button-group--left"
+          >
+            {gameRecord.board_setup === BoardSetupName.Standard && (
+              <button
+                className={`fen-copy-button${
+                  fenCopied ? " fen-copy-button--copied" : ""
+                }`}
+                onClick={handleCopyFen}
+                disabled={fenLoading}
+              >
+                {fenCopied ? "✓ FEN copied!" : "Copy FEN"}
+              </button>
+            )}
 
-          {gameRecord.board_setup === BoardSetupName.Standard && (
-            <button
-              className={`fen-copy-button${
-                pgnCopied ? " fen-copy-button--copied" : ""
-              }`}
-              onClick={handleCopyPgn}
-              disabled={pgnLoading}
-            >
-              {pgnCopied ? "✓ PGN copied!" : "Copy PGN"}
-            </button>
-          )}
+            {gameRecord.board_setup === BoardSetupName.Standard && (
+              <button
+                className={`fen-copy-button${
+                  pgnCopied ? " fen-copy-button--copied" : ""
+                }`}
+                onClick={handleCopyPgn}
+                disabled={pgnLoading}
+              >
+                {pgnCopied ? "✓ PGN copied!" : "Copy PGN"}
+              </button>
+            )}
+          </div>
 
           {hasMovesPlayed && (
-            <div className="ai-analysis-section">
-              <div className="ai-analysis-buttons">
+            <Fragment>
+              <div className="game-analysis-actions__button-group">
                 {AI_BUTTONS.filter(
                   ({ type }) =>
                     type !== AnalysisType.PostGame || gameIsFinished,
@@ -883,7 +886,7 @@ export const Game: React.FC<GameProps> = ({
                   )}
                 </div>
               )}
-            </div>
+            </Fragment>
           )}
         </div>
       </div>
