@@ -7,6 +7,8 @@ import {
   Fragment,
 } from "react";
 
+import Markdown from "react-markdown";
+
 import {
   capitalizeFirstLetter,
   getCapturedPiecesFromBase64,
@@ -601,7 +603,7 @@ export const Game: React.FC<GameProps> = ({
 
   const AI_BUTTONS: { type: AnalysisType; label: string }[] = [
     { type: AnalysisType.Coach, label: "Coach" },
-    { type: AnalysisType.MoveExplanation, label: "Analyze position" },
+    { type: AnalysisType.Analysis, label: "Analysis" },
   ];
 
   const hasMovesPlayed = numStates > 1;
@@ -812,81 +814,105 @@ export const Game: React.FC<GameProps> = ({
         />
 
         <div className="game-analysis-actions">
-          <div
-            className="game-analysis-actions__button-group 
-          game-analysis-actions__button-group--left"
-          >
-            {gameRecord.board_setup === BoardSetupName.Standard && (
-              <button
-                className={`fen-copy-button${
-                  fenCopied ? " fen-copy-button--copied" : ""
-                }`}
-                onClick={handleCopyFen}
-                disabled={fenLoading}
-              >
-                {fenCopied ? "✓ FEN copied!" : "Copy FEN"}
-              </button>
-            )}
+          <div className="game-analysis-actions__buttons">
+            <div
+              className={[
+                "game-analysis-actions__button-group",
+                "game-analysis-actions__button-group--left",
+              ].join(" ")}
+            >
+              {gameRecord.board_setup === BoardSetupName.Standard && (
+                <button
+                  className={`fen-copy-button${
+                    fenCopied ? " fen-copy-button--copied" : ""
+                  }`}
+                  onClick={handleCopyFen}
+                  disabled={fenLoading}
+                >
+                  {fenCopied ? "✓ FEN copied!" : "Copy FEN"}
+                </button>
+              )}
 
-            {gameRecord.board_setup === BoardSetupName.Standard && (
-              <button
-                className={`fen-copy-button${
-                  pgnCopied ? " fen-copy-button--copied" : ""
-                }`}
-                onClick={handleCopyPgn}
-                disabled={pgnLoading}
-              >
-                {pgnCopied ? "✓ PGN copied!" : "Copy PGN"}
-              </button>
-            )}
-          </div>
+              {gameRecord.board_setup === BoardSetupName.Standard && (
+                <button
+                  className={`fen-copy-button${
+                    pgnCopied ? " fen-copy-button--copied" : ""
+                  }`}
+                  onClick={handleCopyPgn}
+                  disabled={pgnLoading}
+                >
+                  {pgnCopied ? "✓ PGN copied!" : "Copy PGN"}
+                </button>
+              )}
+            </div>
 
-          {hasMovesPlayed && (
-            <Fragment>
+            {hasMovesPlayed && (
               <div className="game-analysis-actions__button-group">
-                {AI_BUTTONS.filter(
-                  ({ type }) =>
-                    type !== AnalysisType.PostGame || gameIsFinished,
-                ).map(({ type, label }) => (
+                {AI_BUTTONS.map(({ type, label }) => (
                   <button
                     key={type}
                     className={`ai-analysis-button${
                       aiAnalysis?.analysisType === type
                         ? " ai-analysis-button--active"
                         : ""
+                    }${
+                      aiLoading === type ? " ai-analysis-button--loading" : ""
                     }`}
                     disabled={aiLoading !== null}
                     onClick={() => {
                       handleAiAnalysis(type);
                     }}
                   >
-                    {aiLoading === type ? "Analyzing..." : label}
+                    {aiLoading === type ? (
+                      <>
+                        <span className="ai-analysis-spinner" />
+                        Analyzing...
+                      </>
+                    ) : (
+                      label
+                    )}
                   </button>
                 ))}
               </div>
+            )}
+          </div>
 
-              {(aiLoading ?? aiAnalysis) && (
-                <div className="ai-analysis-result">
-                  {aiAnalysis && (
-                    <button
-                      className="ai-analysis-clear"
-                      onClick={() => {
-                        onClearAiAnalysis(gameId);
-                      }}
-                      aria-label="Clear analysis"
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {aiLoading && !aiAnalysis && (
-                    <p className="ai-analysis-loading">Thinking...</p>
-                  )}
-                  {aiAnalysis && (
-                    <p className="ai-analysis-text">{aiAnalysis.text}</p>
-                  )}
+          {hasMovesPlayed && (aiLoading ?? aiAnalysis) && (
+            <div className="ai-analysis-result">
+              {aiAnalysis && (
+                <button
+                  className="ai-analysis-clear"
+                  onClick={() => {
+                    onClearAiAnalysis(gameId);
+                  }}
+                  aria-label="Clear analysis"
+                >
+                  ✕
+                </button>
+              )}
+              {aiLoading && !aiAnalysis && (
+                <div className="ai-analysis-skeleton">
+                  <div
+                    className="ai-analysis-skeleton__line
+                      ai-analysis-skeleton__line--wide"
+                  />
+                  <div className="ai-analysis-skeleton__line" />
+                  <div
+                    className="ai-analysis-skeleton__line
+                      ai-analysis-skeleton__line--medium"
+                  />
+                  <div
+                    className="ai-analysis-skeleton__line
+                      ai-analysis-skeleton__line--narrow"
+                  />
                 </div>
               )}
-            </Fragment>
+              {aiAnalysis && (
+                <div className="ai-analysis-text">
+                  <Markdown>{aiAnalysis.text}</Markdown>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

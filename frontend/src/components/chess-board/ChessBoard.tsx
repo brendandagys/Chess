@@ -390,7 +390,8 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
                       : ""
                   }${
                     isViewingLatestBoard &&
-                    selectedPieceDestinations.includes(`${rank}${file}`)
+                    selectedPieceDestinations.includes(`${rank}${file}`) &&
+                    (moveFrom || draggingPiece)
                       ? " square--possible-move"
                       : ""
                   }${

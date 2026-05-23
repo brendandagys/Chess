@@ -144,10 +144,8 @@ export interface PlayerMove {
 }
 
 export enum AnalysisType {
-  MoveExplanation = 'move-explanation',
-  BlunderDetection = 'blunder-detection',
   Coach = 'coach',
-  PostGame = 'post-game',
+  Analysis = 'analysis',
 }
 
 export interface AiAnalysisResult {

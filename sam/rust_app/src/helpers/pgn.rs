@@ -210,6 +210,32 @@ fn compute_san_list_from_history(game_state: &GameState) -> Vec<String> {
     san_moves
 }
 
+/// Build numbered PGN movetext from a SAN move list (no headers, no result token).
+/// Falls back to computing SAN from history if `san_list` is empty.
+///
+/// Example output: `"1. e4 e5 2. Nf3 Nc6 3. Bb5"`
+pub fn build_pgn_movetext(game_state: &GameState) -> String {
+    let san_list = if game_state.san_list.is_empty() {
+        compute_san_list_from_history(game_state)
+    } else {
+        game_state.san_list.clone()
+    };
+
+    let mut movetext = String::new();
+    for (i, san) in san_list.iter().enumerate() {
+        if i % 2 == 0 {
+            if !movetext.is_empty() {
+                movetext.push(' ');
+            }
+            movetext.push_str(&format!("{}. {}", i / 2 + 1, san));
+        } else {
+            movetext.push(' ');
+            movetext.push_str(san);
+        }
+    }
+    movetext
+}
+
 /// Generate a PGN string for a game record.
 /// Returns `None` if the board is not a standard 8×8 board.
 pub fn game_to_pgn(game: &GameRecord) -> Option<String> {
@@ -259,7 +285,7 @@ pub fn game_to_pgn(game: &GameRecord) -> Option<String> {
 
     pgn.push('\n');
 
-    // Use stored SAN list if available, otherwise compute from history
+    // Use stored SAN list (updated during moves) if available, otherwise compute from history
     let san_list = if game_state.san_list.is_empty() {
         compute_san_list_from_history(game_state)
     } else {

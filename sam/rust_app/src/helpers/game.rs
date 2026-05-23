@@ -647,6 +647,13 @@ pub fn make_move(game_state: &mut GameState, player_move: &PlayerMove) {
     // Detect opening name and game phase
     let total_pieces = next_state.board.get_all_pieces(None).len();
     let fen = game_state_to_fen(&next_state);
+    // Extracts the Extended Position Description (EPD) from a FEN string.
+    // EPD is a subset of FEN that contains only the first 4 fields:
+    // 1. Piece placement
+    // 2. Active color
+    // 3. Castling availability
+    // 4. En passant target square
+    // Omitting the 5th and 6th fields (halfmove clock and fullmove number).
     let epd = fen.split_whitespace().take(4).collect::<Vec<_>>().join(" ");
     game_state.opening = Some(detect_opening(
         &game_state.move_list,

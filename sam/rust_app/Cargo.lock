@@ -166,16 +166,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "aws-sdk-bedrockruntime"
-version = "1.119.0"
+name = "aws-sdk-dynamodb"
+version = "1.100.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f10ccced9e784ef9db4826df2436e440b56a7340e8b9a69e7669a1197efb3b0"
+checksum = "15204f660c916ca74c17dc8dad054b513343618807e779d9d41fdc3635d3343c"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
- "aws-sigv4",
  "aws-smithy-async",
- "aws-smithy-eventstream",
  "aws-smithy-http",
  "aws-smithy-json",
  "aws-smithy-runtime",
@@ -185,20 +183,20 @@ dependencies = [
  "bytes",
  "fastrand",
  "http 0.2.12",
- "hyper 0.14.32",
  "regex-lite",
  "tracing",
 ]
 
 [[package]]
-name = "aws-sdk-dynamodb"
-version = "1.100.0"
+name = "aws-sdk-lambda"
+version = "1.110.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15204f660c916ca74c17dc8dad054b513343618807e779d9d41fdc3635d3343c"
+checksum = "9379d0f0641a0c2100b150169da5453dc93955000e70320cbb0c2541ce6e6276"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
  "aws-smithy-async",
+ "aws-smithy-eventstream",
  "aws-smithy-http",
  "aws-smithy-json",
  "aws-smithy-runtime",
@@ -605,8 +603,8 @@ version = "0.1.0"
 dependencies = [
  "aws-config",
  "aws-sdk-apigatewaymanagement",
- "aws-sdk-bedrockruntime",
  "aws-sdk-dynamodb",
+ "aws-sdk-lambda",
  "aws_lambda_events",
  "base64 0.22.1",
  "bitboard_chess_engine",

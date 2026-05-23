@@ -61,10 +61,10 @@ Parameters:
     Default: "false"
     AllowedValues: ["true", "false"]
 
-  BedrockModelId:
+  ChessAgentFunctionName:
     Type: String
-    Default: anthropic.claude-3-haiku-20240307-v1:0
-    Description: Bedrock model ID for AI position analysis
+    Description: Function name of the chess agent Lambda
+    Default: chess-agent-AnalyzeFunction-qamd0l1SS1Kn
 
   DistributionHomePage:
     Type: String
@@ -237,7 +237,7 @@ Resources:
         Variables:
           GAME_TABLE: !Ref GameTableName
           USER_TABLE: !Ref UserTableName
-          BEDROCK_MODEL_ID: !Ref BedrockModelId
+          CHESS_AGENT_FUNCTION_NAME: !Ref ChessAgentFunctionName
           RUST_BACKTRACE: 1
       Policies:
         - DynamoDBCrudPolicy:
@@ -253,17 +253,9 @@ Resources:
         - Statement:
             Effect: Allow
             Action:
-              - bedrock:InvokeModel
+              - lambda:InvokeFunction
             Resource:
-              - arn:aws:bedrock:*::foundation-model/*
-              - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/${BedrockModelId}
-        - Statement:
-            Effect: Allow
-            Action:
-              - aws-marketplace:Subscribe
-              - aws-marketplace:Unsubscribe
-              - aws-marketplace:ViewSubscriptions
-            Resource: "*"
+              - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ChessAgentFunctionName}
 
   GameFunctionPermission:
     Type: AWS::Lambda::Permission

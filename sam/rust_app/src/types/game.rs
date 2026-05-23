@@ -303,10 +303,8 @@ pub struct PlayerMove {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum AnalysisType {
-    MoveExplanation,
-    BlunderDetection,
     Coach,
-    PostGame,
+    Analysis,
 }
 
 #[derive(Deserialize)]

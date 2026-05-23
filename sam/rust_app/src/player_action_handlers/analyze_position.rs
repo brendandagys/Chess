@@ -1,15 +1,17 @@
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
+use aws_sdk_lambda::primitives::Blob;
 use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use tracing::{info, warn};
 
 use chess::{
     helpers::{
-        ai::{build_analysis_prompt, call_bedrock},
         board::game_state_to_fen,
-        engine::get_engine_from_fen,
         game::{get_game, get_player_details_from_connection_id},
+        opening_detection::GamePhase,
+        pgn::build_pgn_movetext,
     },
     types::{api::ApiResponse, game::AnalysisType},
     utils::{api::build_response, api_gateway::post_to_connection},
@@ -20,6 +22,18 @@ use chess::{
 struct AiAnalysisResult {
     analysis_type: AnalysisType,
     text: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct AgentResponse {
+    // status_code: u16,
+    // headers: std::collections::HashMap<String, String>,
+    body: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct AgentBody {
+    response: String,
 }
 
 pub async fn analyze_position(
@@ -49,42 +63,112 @@ pub async fn analyze_position(
         );
     }
 
-    let history = &game.game_state.history;
-    let current_state = history.last().expect("Game history should not be empty");
-    let current_fen = game_state_to_fen(current_state);
-    let current_turn = current_state.current_turn;
-    let move_number = history.len();
+    let current_state = game
+        .game_state
+        .history
+        .last()
+        .expect("Game history should not be empty");
 
-    // For blunder detection, evaluate the position before the last move
-    let prev_eval = if matches!(analysis_type, AnalysisType::BlunderDetection) && move_number >= 2 {
-        let prev_state = &history[move_number - 2];
-        let prev_fen = game_state_to_fen(prev_state);
-        let mut prev_engine =
-            get_engine_from_fen(&prev_fen, 1000, game.engine_difficulty.map(|d| d.into()));
-        let prev_result =
-            prev_engine.think::<fn(u16, i32, &mut chess_engine::position::Position)>(None);
-        Some((prev_result.evaluation, prev_state.current_turn))
-    } else {
-        None
-    };
-
-    let mut engine =
-        get_engine_from_fen(&current_fen, 2000, game.engine_difficulty.map(|d| d.into()));
-    let search_result = engine.think::<fn(u16, i32, &mut chess_engine::position::Position)>(None);
-
-    let prompt = build_analysis_prompt(
-        &analysis_type,
-        &current_fen,
-        current_turn,
-        &search_result,
-        prev_eval,
-        move_number,
-        current_state.in_check,
-        current_state.captured_pieces.white_points,
-        current_state.captured_pieces.black_points,
+    info!(
+        game_id,
+        analysis_type = ?analysis_type,
+        connection_id,
+        "Starting position analysis"
     );
 
-    let text = call_bedrock(sdk_config, &prompt).await?;
+    let fen = game_state_to_fen(current_state);
+    let pgn_moves = build_pgn_movetext(&game.game_state);
+
+    let opening_name = game
+        .game_state
+        .opening
+        .as_ref()
+        .map(|o| o.name.as_str())
+        .unwrap_or("");
+
+    let game_phase = game
+        .game_state
+        .opening
+        .as_ref()
+        .map(|o| match o.phase {
+            GamePhase::Opening => "Opening",
+            GamePhase::EarlyMiddlegame => "Early Middlegame",
+            GamePhase::Middlegame => "Middlegame",
+            GamePhase::EarlyEndgame => "Early Endgame",
+            GamePhase::Endgame => "Endgame",
+        })
+        .unwrap_or("Middlegame");
+
+    let goal = match analysis_type {
+        AnalysisType::Coach => "Coaching / teaching",
+        AnalysisType::Analysis => "Deep analysis",
+    };
+
+    let payload = serde_json::json!({
+        "fen": fen,
+        "pgn_moves": pgn_moves,
+        "opening_name": opening_name,
+        "game_phase": game_phase,
+        "goal": goal,
+    });
+
+    let function_name =
+        std::env::var("CHESS_AGENT_FUNCTION_NAME").expect("CHESS_AGENT_FUNCTION_NAME must be set");
+
+    let lambda_client = aws_sdk_lambda::Client::new(sdk_config);
+
+    info!(
+        %fen,
+        %pgn_moves,
+        opening_name,
+        game_phase,
+        goal,
+        "Invoking chess agent"
+    );
+    let invoke_output = lambda_client
+        .invoke()
+        .function_name(&function_name)
+        .payload(Blob::new(serde_json::to_vec(&payload)?))
+        .send()
+        .await?;
+
+    info!(
+        status_code = ?invoke_output.status_code(),
+        "Chess agent Lambda invoked successfully"
+    );
+
+    let response_payload = invoke_output
+        .payload()
+        .ok_or("Chess agent returned no payload")?;
+
+    info!(
+        payload_bytes = response_payload.as_ref().len(),
+        "Retrieved response payload from Lambda"
+    );
+
+    if let Some(error) = invoke_output.function_error() {
+        warn!(
+            function_name,
+            error, "Chess agent returned a function error"
+        );
+    }
+
+    let agent_response: AgentResponse = serde_json::from_slice(response_payload.as_ref())?;
+    info!("Agent response: {:?}", agent_response);
+
+    info!(
+        body_length = agent_response.body.len(),
+        "Parsing response body JSON"
+    );
+    let agent_body: AgentBody = serde_json::from_str(&agent_response.body)?;
+
+    info!("Agent body: {:?}", agent_body);
+
+    info!(
+        response_length = agent_body.response.len(),
+        response = %agent_body.response,
+        "Chess agent responded successfully"
+    );
 
     post_to_connection(
         sdk_config,
@@ -96,7 +180,7 @@ pub async fn analyze_position(
             messages: vec![],
             data: Some(AiAnalysisResult {
                 analysis_type,
-                text,
+                text: agent_body.response,
             }),
         },
     )
