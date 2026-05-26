@@ -1,10 +1,10 @@
 use aws_lambda_events::apigw::{ApiGatewayProxyResponse, ApiGatewayWebsocketProxyRequestContext};
 use aws_sdk_dynamodb::Client;
 use aws_sdk_lambda::primitives::Blob;
+use aws_sdk_lambda::types::InvocationType;
 use lambda_http::http::StatusCode;
 use lambda_runtime::Error;
-use serde::{Deserialize, Serialize};
-use tracing::{info, warn};
+use tracing::info;
 
 use chess::{
     helpers::{
@@ -13,28 +13,9 @@ use chess::{
         opening_detection::GamePhase,
         pgn::build_pgn_movetext,
     },
-    types::{api::ApiResponse, game::AnalysisType},
-    utils::{api::build_response, api_gateway::post_to_connection},
+    types::game::AnalysisType,
+    utils::api::build_response,
 };
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct AiAnalysisResult {
-    analysis_type: AnalysisType,
-    text: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct AgentResponse {
-    // status_code: u16,
-    // headers: std::collections::HashMap<String, String>,
-    body: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct AgentBody {
-    response: String,
-}
 
 pub async fn analyze_position(
     sdk_config: &aws_config::SdkConfig,
@@ -104,12 +85,21 @@ pub async fn analyze_position(
         AnalysisType::Analysis => "Deep analysis",
     };
 
+    let callback_url = format!(
+        "https://{}/{}",
+        request_context.domain_name.as_deref().unwrap_or(""),
+        request_context.stage.as_deref().unwrap_or(""),
+    );
+
     let payload = serde_json::json!({
         "fen": fen,
         "pgn_moves": pgn_moves,
         "opening_name": opening_name,
         "game_phase": game_phase,
         "goal": goal,
+        "connection_id": connection_id,
+        "callback_url": callback_url,
+        "analysis_type": analysis_type,
     });
 
     let function_name =
@@ -123,68 +113,19 @@ pub async fn analyze_position(
         opening_name,
         game_phase,
         goal,
-        "Invoking chess agent"
+        %callback_url,
+        "Invoking chess agent asynchronously"
     );
-    let invoke_output = lambda_client
+
+    lambda_client
         .invoke()
         .function_name(&function_name)
+        .invocation_type(InvocationType::Event)
         .payload(Blob::new(serde_json::to_vec(&payload)?))
         .send()
         .await?;
 
-    info!(
-        status_code = ?invoke_output.status_code(),
-        "Chess agent Lambda invoked successfully"
-    );
-
-    let response_payload = invoke_output
-        .payload()
-        .ok_or("Chess agent returned no payload")?;
-
-    info!(
-        payload_bytes = response_payload.as_ref().len(),
-        "Retrieved response payload from Lambda"
-    );
-
-    if let Some(error) = invoke_output.function_error() {
-        warn!(
-            function_name,
-            error, "Chess agent returned a function error"
-        );
-    }
-
-    let agent_response: AgentResponse = serde_json::from_slice(response_payload.as_ref())?;
-    info!("Agent response: {:?}", agent_response);
-
-    info!(
-        body_length = agent_response.body.len(),
-        "Parsing response body JSON"
-    );
-    let agent_body: AgentBody = serde_json::from_str(&agent_response.body)?;
-
-    info!("Agent body: {:?}", agent_body);
-
-    info!(
-        response_length = agent_body.response.len(),
-        response = %agent_body.response,
-        "Chess agent responded successfully"
-    );
-
-    post_to_connection(
-        sdk_config,
-        request_context,
-        connection_id,
-        &ApiResponse {
-            status_code: 200,
-            connection_id: Some(connection_id.to_string()),
-            messages: vec![],
-            data: Some(AiAnalysisResult {
-                analysis_type,
-                text: agent_body.response,
-            }),
-        },
-    )
-    .await?;
+    info!("Chess agent Lambda invoked asynchronously (fire-and-forget)");
 
     build_response(
         StatusCode::OK,
