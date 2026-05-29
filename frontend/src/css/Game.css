@@ -503,6 +503,7 @@
   line-height: 1.5;
   white-space: pre-wrap;
   color: #2d2d2d;
+  text-align: left;
 }
 
 .fen-copy-button {
