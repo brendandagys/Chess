@@ -150,7 +150,7 @@ export const AiAnalysisModal: React.FC<Props> = ({
             aria-label="Regenerate analysis"
             title="Regenerate"
           >
-            ↺
+            ↻
           </button>
           <button
             className="ai-modal__close"
