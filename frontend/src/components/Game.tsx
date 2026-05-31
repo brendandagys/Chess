@@ -7,7 +7,7 @@ import {
   Fragment,
 } from "react";
 
-import Markdown from "react-markdown";
+import { AiAnalysisModal } from "@src/components/AiAnalysisModal";
 
 import {
   capitalizeFirstLetter,
@@ -101,6 +101,12 @@ export const Game: React.FC<GameProps> = ({
   const [showResignConfirm, setShowResignConfirm] = useState(false);
 
   const [aiLoading, setAiLoading] = useState<AnalysisType | null>(null);
+  const [activeModalType, setActiveModalType] = useState<AnalysisType | null>(
+    null,
+  );
+  const [analysisCache, setAnalysisCache] = useState<
+    Partial<Record<AnalysisType, AiAnalysisResult>>
+  >({});
 
   const [fenCopied, setFenCopied] = useState(false);
   const [fenLoading, setFenLoading] = useState(false);
@@ -485,12 +491,25 @@ export const Game: React.FC<GameProps> = ({
 
   useEffect(() => {
     if (aiAnalysis) {
+      setAnalysisCache((prev) => ({
+        ...prev,
+        [aiAnalysis.analysisType]: aiAnalysis,
+      }));
       setAiLoading(null);
     }
   }, [aiAnalysis]);
 
   const handleAiAnalysis = (analysisType: AnalysisType) => {
+    // If cached and not already the active modal type, just reopen —
+    // don't re-fetch. Clicking the currently-active type regenerates.
+    if (analysisCache[analysisType] && activeModalType !== analysisType) {
+      setActiveModalType(analysisType);
+      return;
+    }
+
     setAiLoading(analysisType);
+    setActiveModalType(analysisType);
+    setAnalysisCache((prev) => ({ ...prev, [analysisType]: undefined }));
     onClearAiAnalysis(gameId);
     onRequestAiAnalysis(gameId);
     sendWebSocketMessage({
@@ -610,6 +629,18 @@ export const Game: React.FC<GameProps> = ({
 
   return (
     <div id={`game-${gameId}`} className="game-container">
+      {activeModalType !== null && hasMovesPlayed && (
+        <AiAnalysisModal
+          isLoading={aiLoading === activeModalType}
+          aiAnalysis={analysisCache[activeModalType] ?? null}
+          onClose={() => {
+            setActiveModalType(null);
+          }}
+          onRegenerate={() => {
+            handleAiAnalysis(activeModalType);
+          }}
+        />
+      )}
       <div className="game-id-container">
         <h2 className="game-id">Game: {gameId}</h2>
 
@@ -852,7 +883,7 @@ export const Game: React.FC<GameProps> = ({
                   <button
                     key={type}
                     className={`ai-analysis-button${
-                      aiAnalysis?.analysisType === type
+                      activeModalType === type
                         ? " ai-analysis-button--active"
                         : ""
                     }${
@@ -876,44 +907,6 @@ export const Game: React.FC<GameProps> = ({
               </div>
             )}
           </div>
-
-          {hasMovesPlayed && (aiLoading ?? aiAnalysis) && (
-            <div className="ai-analysis-result">
-              {aiAnalysis && (
-                <button
-                  className="ai-analysis-clear"
-                  onClick={() => {
-                    onClearAiAnalysis(gameId);
-                  }}
-                  aria-label="Clear analysis"
-                >
-                  ✕
-                </button>
-              )}
-              {aiLoading && !aiAnalysis && (
-                <div className="ai-analysis-skeleton">
-                  <div
-                    className="ai-analysis-skeleton__line
-                      ai-analysis-skeleton__line--wide"
-                  />
-                  <div className="ai-analysis-skeleton__line" />
-                  <div
-                    className="ai-analysis-skeleton__line
-                      ai-analysis-skeleton__line--medium"
-                  />
-                  <div
-                    className="ai-analysis-skeleton__line
-                      ai-analysis-skeleton__line--narrow"
-                  />
-                </div>
-              )}
-              {aiAnalysis && (
-                <div className="ai-analysis-text">
-                  <Markdown>{aiAnalysis.text}</Markdown>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>
