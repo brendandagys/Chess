@@ -131,7 +131,10 @@ impl Bitboards {
     pub fn to_compact_bytes(&self) -> Vec<u8> {
         let num_squares = self.rank_count * self.file_count;
 
-        let get_nibble = |idx| {
+        let get_nibble = |idx: usize| -> u8 {
+            if idx >= num_squares {
+                return 0xF;
+            }
             let rank = idx / self.file_count;
             let file = idx % self.file_count;
             self.get_piece(rank, file)

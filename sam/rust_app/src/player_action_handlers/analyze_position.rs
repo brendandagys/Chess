@@ -50,6 +50,17 @@ pub async fn analyze_position(
         .last()
         .expect("Game history should not be empty");
 
+    if !current_state.board.is_standard_board() {
+        return build_response(
+            StatusCode::BAD_REQUEST,
+            Some(connection_id.to_string()),
+            Some(vec![
+                "Position analysis is only supported for standard 8x8 boards".into(),
+            ]),
+            None::<()>,
+        );
+    }
+
     info!(
         game_id,
         analysis_type = ?analysis_type,
