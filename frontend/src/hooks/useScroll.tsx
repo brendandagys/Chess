@@ -1,7 +1,5 @@
-import { useCallback } from "react";
-
 export const useScroll = () => {
-  const scrollTo = useCallback((targetId: string, offset = 0) => {
+  const scrollTo = (targetId: string, offset = 0) => {
     const targetElement = document.getElementById(targetId);
 
     if (targetElement) {
@@ -10,7 +8,7 @@ export const useScroll = () => {
 
       window.scrollTo({ top: yPosition, behavior: "smooth" });
     }
-  }, []);
+  };
 
   return scrollTo;
 };
