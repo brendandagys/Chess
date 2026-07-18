@@ -8,4 +8,5 @@ pub mod leave_game;
 pub mod lose_via_out_of_time;
 pub mod move_piece;
 pub mod offer_draw;
+pub mod play_again;
 pub mod resign;

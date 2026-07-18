@@ -174,6 +174,10 @@ export const App: React.FC = () => {
 
       if (gameRecord) {
         const playAgainIndex = pendingPlayAgainIndexRef.current;
+        const replacesGameId =
+          "replacesGameId" in response
+            ? (response as ApiResponse<GameRecord>).replacesGameId
+            : undefined;
 
         if (playAgainIndex !== null) {
           pendingPlayAgainIndexRef.current = null;
@@ -243,6 +247,21 @@ export const App: React.FC = () => {
                 return newGames;
               }
 
+              // Opponent receiving a rematch — replace the old game in-place
+              if (replacesGameId) {
+                const oldIndex = old.findIndex(
+                  (game) => game.game_id === replacesGameId,
+                );
+
+                if (oldIndex !== -1) {
+                  removeGameId(replacesGameId);
+                  addGameIdToURL(gameRecord.game_id);
+                  const newGames = [...old];
+                  newGames[oldIndex] = gameRecord;
+                  return newGames;
+                }
+              }
+
               setTimeout(() => {
                 scrollTo(`game-${gameRecord.game_id}`);
               }, 100);
@@ -294,7 +313,7 @@ export const App: React.FC = () => {
         ]);
       }
     },
-    [removeGameId, scrollTo, setGameMessages, setAppMessages],
+    [addGameIdToURL, removeGameId, scrollTo, setGameMessages, setAppMessages],
   );
 
   const [connectionId, sendWebSocketMessage, isWebsocketOpen] = useWebSocket(

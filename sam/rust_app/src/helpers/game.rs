@@ -231,6 +231,7 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                                 format!("{username} has disconnected from the game").into()
                             ],
                             data: Some(&game),
+                            replaces_game_id: None,
                         },
                     )
                     .await?)
@@ -260,6 +261,7 @@ pub async fn mark_user_as_disconnected_and_notify_other_player(
                                 format!("{username} has disconnected from the game").into()
                             ],
                             data: Some(&game),
+                            replaces_game_id: None,
                         },
                     )
                     .await?)
@@ -310,6 +312,7 @@ pub async fn notify_player_about_game_update(
                     connection_id: Some(white_connection_id.clone()),
                     messages: messages.clone().unwrap_or_default(),
                     data: Some(game),
+                    replaces_game_id: None,
                 },
             )
             .await?)
@@ -331,6 +334,7 @@ pub async fn notify_player_about_game_update(
                     connection_id: Some(black_connection_id.clone()),
                     messages: messages.unwrap_or_default(),
                     data: Some(game),
+                    replaces_game_id: None,
                 },
             )
             .await?)

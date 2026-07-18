@@ -364,4 +364,8 @@ pub enum PlayerAction {
     GetPgn {
         game_id: String,
     },
+    #[serde(rename_all = "camelCase")]
+    PlayAgain {
+        game_id: String,
+    },
 }

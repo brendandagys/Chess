@@ -454,26 +454,39 @@ export const Game: React.FC<GameProps> = ({
   };
 
   const handlePlayAgain = useCallback(() => {
-    const username =
-      playerColor === Color.White
-        ? gameRecord.white_username
-        : gameRecord.black_username;
+    if (gameRecord.engine_difficulty) {
+      // Engine games: create a new game with the same settings
+      const username =
+        playerColor === Color.White
+          ? gameRecord.white_username
+          : gameRecord.black_username;
 
-    if (!username) return;
+      if (!username) return;
 
-    sendWebSocketMessage({
-      route: API_ROUTE,
-      data: {
-        [PlayerActionName.CreateGame]: {
-          username,
-          gameId: null,
-          boardSetup: gameRecord.board_setup,
-          colorPreference: gameRecord.color_preference,
-          secondsPerPlayer: gameRecord.seconds_per_player,
-          engineDifficulty: gameRecord.engine_difficulty,
+      sendWebSocketMessage({
+        route: API_ROUTE,
+        data: {
+          [PlayerActionName.CreateGame]: {
+            username,
+            gameId: null,
+            boardSetup: gameRecord.board_setup,
+            colorPreference: gameRecord.color_preference,
+            secondsPerPlayer: gameRecord.seconds_per_player,
+            engineDifficulty: gameRecord.engine_difficulty,
+          },
         },
-      },
-    });
+      });
+    } else {
+      // Human games: rematch — auto-joins both players
+      sendWebSocketMessage({
+        route: API_ROUTE,
+        data: {
+          [PlayerActionName.PlayAgain]: {
+            gameId,
+          },
+        },
+      });
+    }
 
     onPlayAgain(gameId);
   }, [

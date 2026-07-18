@@ -49,4 +49,6 @@ pub struct ApiResponse<T> {
     pub connection_id: Option<String>,
     pub messages: Vec<ApiMessage>,
     pub data: Option<T>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub replaces_game_id: Option<String>,
 }

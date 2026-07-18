@@ -174,6 +174,7 @@ export enum PlayerActionName {
   Resign = 'resign',
   OfferDraw = 'offer-draw',
   AnalyzePosition = 'analyze-position',
+  PlayAgain = 'play-again',
 }
 
 interface PlayerActionCreateGame {
@@ -253,6 +254,12 @@ interface PlayerActionAnalyzePosition {
   };
 }
 
+interface PlayerActionPlayAgain {
+  [PlayerActionName.PlayAgain]: {
+    gameId: string;
+  };
+}
+
 export type PlayerAction =
   | PlayerActionCreateGame
   | PlayerActionJoinGame
@@ -264,7 +271,8 @@ export type PlayerAction =
   | PlayerActionHeartbeat
   | PlayerActionLoseViaOutOfTime
   | PlayerActionResign
-  | PlayerActionAnalyzePosition;
+  | PlayerActionAnalyzePosition
+  | PlayerActionPlayAgain;
 // | PlayerActionOfferDraw;
 
 export interface GameRecord {

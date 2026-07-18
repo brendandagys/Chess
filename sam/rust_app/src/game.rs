@@ -194,6 +194,18 @@ async fn function_handler(
             )
             .await
         }
+        PlayerAction::PlayAgain { game_id } => {
+            player_action_handlers::play_again::play_again(
+                sdk_config,
+                &request_context,
+                dynamo_db_client,
+                &game_table,
+                &user_table,
+                connection_id,
+                game_id.trim(),
+            )
+            .await
+        }
     }
 }
 

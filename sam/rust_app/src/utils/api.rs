@@ -18,6 +18,7 @@ pub fn build_response<T: Serialize>(
         connection_id,
         messages: messages.unwrap_or_default(),
         data,
+        replaces_game_id: None,
     })?;
 
     let mut response = ApiGatewayProxyResponse::default();

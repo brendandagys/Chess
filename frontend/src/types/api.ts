@@ -28,6 +28,7 @@ export interface ApiResponse<T> {
   connectionId: string | null;
   messages: ApiMessage[];
   data: T;
+  replacesGameId?: string;
 }
 
 export function isApiRunTimeError(
