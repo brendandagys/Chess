@@ -30,6 +30,16 @@ pub async fn use_engine(
     request_context: &ApiGatewayWebsocketProxyRequestContext,
     connection_id: &str,
 ) -> Result<(), Error> {
+    // Engine/AI only supports standard 8x8 boards
+    let current_state = game
+        .game_state
+        .history
+        .last()
+        .expect("Game history should not be empty");
+    if !current_state.board.is_standard_board() {
+        return Ok(());
+    }
+
     let mut engine = get_engine(game);
 
     if game.engine_difficulty.is_none() || !is_engine_turn(game) {

@@ -189,9 +189,12 @@ pub fn game_state_to_fen(game_state: &GameStateAtPointInTime) -> String {
     let board = &game_state.board;
 
     // Validate 8x8 board
-    if board.squares.len() != 8 || board.squares[0].len() != 8 {
-        panic!("FEN generation is only supported for 8x8 boards");
-    }
+    assert!(
+        board.is_standard_board(),
+        "FEN generation is only supported for 8x8 boards (got {}x{})",
+        board.squares.len(),
+        board.squares.first().map_or(0, |r| r.len())
+    );
 
     let mut fen_parts = Vec::new();
 

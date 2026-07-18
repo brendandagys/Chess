@@ -890,35 +890,36 @@ export const Game: React.FC<GameProps> = ({
               )}
             </div>
 
-            {hasMovesPlayed && (
-              <div className="game-analysis-actions__button-group">
-                {AI_BUTTONS.map(({ type, label }) => (
-                  <button
-                    key={type}
-                    className={`ai-analysis-button${
-                      activeModalType === type
-                        ? " ai-analysis-button--active"
-                        : ""
-                    }${
-                      aiLoading === type ? " ai-analysis-button--loading" : ""
-                    }`}
-                    disabled={aiLoading !== null}
-                    onClick={() => {
-                      handleAiAnalysis(type);
-                    }}
-                  >
-                    {aiLoading === type ? (
-                      <>
-                        <span className="ai-analysis-spinner" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      label
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+            {hasMovesPlayed &&
+              gameRecord.board_setup === BoardSetupName.Standard && (
+                <div className="game-analysis-actions__button-group">
+                  {AI_BUTTONS.map(({ type, label }) => (
+                    <button
+                      key={type}
+                      className={`ai-analysis-button${
+                        activeModalType === type
+                          ? " ai-analysis-button--active"
+                          : ""
+                      }${
+                        aiLoading === type ? " ai-analysis-button--loading" : ""
+                      }`}
+                      disabled={aiLoading !== null}
+                      onClick={() => {
+                        handleAiAnalysis(type);
+                      }}
+                    >
+                      {aiLoading === type ? (
+                        <>
+                          <span className="ai-analysis-spinner" />
+                          Analyzing...
+                        </>
+                      ) : (
+                        label
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
           </div>
         </div>
       </div>
