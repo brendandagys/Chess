@@ -3,6 +3,7 @@ use aws_sdk_dynamodb::Client;
 use lambda_http::{http::StatusCode, Body};
 use lambda_runtime::Error;
 
+use chess::helpers::engine::use_engine;
 use chess::helpers::game::{
     assign_player_to_existing_or_remaining_slot, check_if_both_players_just_joined, create_game,
     get_game, is_game_over, save_game,
@@ -130,6 +131,9 @@ pub async fn play_again(
 
     // Both players present — start the game
     check_if_both_players_just_joined(&mut new_game);
+
+    // Populate legal moves for the initial board state so the rematch is immediately playable.
+    use_engine(&mut new_game, sdk_config, request_context, connection_id).await?;
 
     save_game(dynamo_db_client, game_table, &new_game).await?;
 
