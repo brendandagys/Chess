@@ -22,6 +22,13 @@ export const useWebSocket = (
   const isIntentionallyClosed = useRef(false);
   const heartbeatInterval = useRef<number | null>(null);
 
+  // Store onMessage in a ref so the connection lifecycle doesn't depend on it.
+  // This prevents WebSocket reconnections when the callback identity changes.
+  const onMessageRef = useRef(onMessage);
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
+
   const connect = useCallback(() => {
     if (
       websocket.current?.readyState === WebSocket.OPEN ||
@@ -45,7 +52,7 @@ export const useWebSocket = (
       ) as ApiResponse<GameRecord | null>;
       console.debug("Received message:", response);
       setConnectionId(response.connectionId);
-      onMessage(response);
+      onMessageRef.current(response);
     };
 
     websocket.current.onerror = (error) => {
@@ -87,7 +94,7 @@ export const useWebSocket = (
         }
       }
     };
-  }, [url, onMessage]);
+  }, [url]);
 
   useEffect(() => {
     isIntentionallyClosed.current = false;
