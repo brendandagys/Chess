@@ -3,6 +3,7 @@ import {
   SetStateAction,
   useCallback,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -19,8 +20,12 @@ export const useDrag = (
   onPointerUp: (action: GameRequest) => void,
   disabled = false,
   selectedPieceDestinations: string[],
-  setMoveFrom: Dispatch<SetStateAction<Position | null>>
+  setMoveFrom: Dispatch<SetStateAction<Position | null>>,
+  onMoveComplete?: (from: Position, to: Position, piece: Piece) => void,
 ) => {
+  const onMoveCompleteRef = useRef(onMoveComplete);
+  onMoveCompleteRef.current = onMoveComplete;
+
   const [draggingPiece, setDraggingPiece] = useState<{
     piece: Piece;
     x: number;
@@ -35,7 +40,7 @@ export const useDrag = (
       | React.TouchEvent<HTMLImageElement>,
     piece: Piece,
     setSelectedSquare: Dispatch<SetStateAction<Position | null>>,
-    setMoveFrom: Dispatch<SetStateAction<Position | null>>
+    setMoveFrom: Dispatch<SetStateAction<Position | null>>,
   ) => {
     if (disabled) {
       return;
@@ -91,11 +96,11 @@ export const useDrag = (
                 x: event.clientX,
                 y: event.clientY,
               }
-            : null
+            : null,
         );
       }
     },
-    [draggingPiece, disabled]
+    [draggingPiece, disabled],
   );
 
   const getPieceFromElement = (element: HTMLElement): HTMLElement | null => {
@@ -117,7 +122,7 @@ export const useDrag = (
     if (draggingPiece && !disabled) {
       const elementUnderPointer = document.elementFromPoint(
         draggingPiece.x,
-        draggingPiece.y
+        draggingPiece.y,
       );
 
       let movedPiece = false;
@@ -151,6 +156,12 @@ export const useDrag = (
             });
 
             movedPiece = true;
+
+            onMoveCompleteRef.current?.(
+              from,
+              { rank: toRank, file: toFile },
+              draggingPiece.piece,
+            );
 
             console.info(`Piece placed at rank: ${toRank}, file: ${toFile}`);
           }

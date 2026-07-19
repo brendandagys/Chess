@@ -102,6 +102,23 @@ body:not(.dragging-piece) .square--moveable {
   visibility: hidden;
 }
 
+.piece--sliding {
+  animation: slidePiece 120ms ease-out;
+}
+
+@keyframes slidePiece {
+  from {
+    transform: translate(
+      calc(var(--slide-x) * 100%),
+      calc(var(--slide-y) * 100%)
+    );
+  }
+
+  to {
+    transform: translate(0, 0);
+  }
+}
+
 .square--previous-move-light-square {
   background: #f5f580 !important;
 }

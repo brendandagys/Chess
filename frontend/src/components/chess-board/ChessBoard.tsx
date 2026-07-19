@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { imageMap } from "@src/images";
 import { parseUciMove, rotateMatrix180Degrees } from "@src/utils";
 import { useDrag } from "@src/hooks/useDrag";
@@ -69,6 +69,28 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
 
   const [selectedSquare, setSelectedSquare] = useState<Position | null>(null);
 
+  const [pendingMove, setPendingMove] = useState<{
+    piece: Piece;
+    from: Position;
+    to: Position;
+    isDrag: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    setPendingMove(null);
+  }, [historyIndex]);
+
+  useEffect(() => {
+    if (pendingMove) {
+      const timeout = setTimeout(() => {
+        setPendingMove(null);
+      }, 3000);
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+  }, [pendingMove]);
+
   const prevHistoryIndex = useRef<number | null>(null);
 
   useEffect(() => {
@@ -97,12 +119,20 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
 
   const disableMoving = !isViewingLatestBoard || gameOverMessage !== null;
 
+  const handleDragMoveComplete = useCallback(
+    (from: Position, to: Position, piece: Piece) => {
+      setPendingMove({ piece, from, to, isDrag: true });
+    },
+    [],
+  );
+
   const [draggingPiece, handleDragStart] = useDrag(
     gameId,
     sendWebSocketMessage,
     disableMoving,
     selectedPieceDestinations,
     setMoveFrom,
+    handleDragMoveComplete,
   );
 
   const pieceDiameterClass =
@@ -252,6 +282,18 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
         },
       });
 
+      const movingPiece =
+        viewedBoardStateSquares[numRanks - old.rank][old.file - 1];
+
+      if (movingPiece) {
+        setPendingMove({
+          piece: movingPiece,
+          from: { rank: old.rank, file: old.file },
+          to: { rank: position.rank, file: position.file },
+          isDrag: false,
+        });
+      }
+
       setMoveFrom(null);
       return null;
     });
@@ -367,6 +409,37 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
 
               const { rankLabel, fileLabel } = getPositionLabel(rank, file);
 
+              const isFromSquare =
+                pendingMove?.from.rank === rank &&
+                pendingMove.from.file === file;
+              const isToSquare =
+                pendingMove?.to.rank === rank && pendingMove.to.file === file;
+
+              const effectivePiece = isFromSquare
+                ? null
+                : isToSquare
+                  ? pendingMove.piece
+                  : piece;
+
+              const isSliding = !!(isToSquare && !pendingMove.isDrag);
+
+              let slideStyle: React.CSSProperties | undefined;
+
+              if (isSliding) {
+                let slideX: number, slideY: number;
+                if (shouldRotate) {
+                  slideX = pendingMove.to.file - pendingMove.from.file;
+                  slideY = pendingMove.from.rank - pendingMove.to.rank;
+                } else {
+                  slideX = pendingMove.from.file - pendingMove.to.file;
+                  slideY = pendingMove.to.rank - pendingMove.from.rank;
+                }
+                slideStyle = {
+                  "--slide-x": slideX,
+                  "--slide-y": slideY,
+                } as React.CSSProperties;
+              }
+
               return (
                 <div
                   key={colIndex}
@@ -385,7 +458,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
                         : " square--previous-move-light-square"
                       : ""
                   }${
-                    piece?.color === playerColor && !disableMoving
+                    effectivePiece?.color === playerColor && !disableMoving
                       ? " square--moveable"
                       : ""
                   }${
@@ -419,29 +492,40 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
                       </span>
                     </>
                   }
-                  {piece ? (
+                  {effectivePiece ? (
                     <img
-                      className="piece"
-                      src={imageMap[piece.pieceType][piece.color]}
-                      alt={`${piece.color} ${piece.pieceType}`}
-                      data-piece-color={piece.color}
+                      className={`piece${isSliding ? " piece--sliding" : ""}`}
+                      src={
+                        imageMap[effectivePiece.pieceType][effectivePiece.color]
+                      }
+                      alt={
+                        `${effectivePiece.color} ` + effectivePiece.pieceType
+                      }
+                      data-piece-color={effectivePiece.color}
                       data-rank={rank}
                       data-file={file}
+                      style={slideStyle}
                       onDragStart={(e) => {
-                        if (piece.color === playerColor) {
+                        if (
+                          effectivePiece.color === playerColor &&
+                          !isToSquare
+                        ) {
                           handleDragStart(
                             e,
-                            piece,
+                            effectivePiece,
                             setSelectedSquare,
                             setMoveFrom,
                           );
                         }
                       }}
                       onTouchMove={(e) => {
-                        if (piece.color === playerColor) {
+                        if (
+                          effectivePiece.color === playerColor &&
+                          !isToSquare
+                        ) {
                           handleDragStart(
                             e,
-                            piece,
+                            effectivePiece,
                             setSelectedSquare,
                             setMoveFrom,
                           );
@@ -451,7 +535,7 @@ export const ChessBoard: React.FC<ChessBoardProps> = memo(function ChessBoard({
                   ) : (
                     <img
                       className="hidden-piece"
-                      width="150" // Same size as the piece PNGs
+                      width="150"
                       height="150"
                       data-rank={rank}
                       data-file={file}
