@@ -99,6 +99,8 @@ export const Game: React.FC<GameProps> = ({
 
   const previousIsTurnRef = useRef<boolean | null>(null);
   const [showResignConfirm, setShowResignConfirm] = useState(false);
+  const [showDrawDeclined, setShowDrawDeclined] = useState(false);
+  const previousDrawOfferedByRef = useRef(gameRecord.draw_offered_by);
 
   const [aiLoading, setAiLoading] = useState<AnalysisType | null>(null);
   const [activeModalType, setActiveModalType] = useState<AnalysisType | null>(
@@ -358,8 +360,27 @@ export const Game: React.FC<GameProps> = ({
           setHistoryIndex(numStates - 1);
         }
       }
+
+      if (gameEnding === GameEndingType.DrawByMutualAgreement) {
+        setHistoryIndex(numStates - 1);
+      }
     }
   }, [gameStateType, numStates]);
+
+  useEffect(() => {
+    const prev = previousDrawOfferedByRef.current;
+    previousDrawOfferedByRef.current = gameRecord.draw_offered_by;
+
+    if (prev && !gameRecord.draw_offered_by && gameIsInProgress) {
+      setShowDrawDeclined(true);
+      const timer = setTimeout(() => {
+        setShowDrawDeclined(false);
+      }, 3000);
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [gameRecord.draw_offered_by, gameIsInProgress]);
 
   const stateOfGame = useMemo(() => {
     if (gameIsInProgress) {
@@ -419,6 +440,26 @@ export const Game: React.FC<GameProps> = ({
               "red",
             ];
       }
+    }
+
+    if (gameEnding === GameEndingType.Stalemate) {
+      return ["Stalemate — draw!", "gray"];
+    }
+
+    if (gameEnding === GameEndingType.DrawByMutualAgreement) {
+      return ["Draw by agreement", "gray"];
+    }
+
+    if (gameEnding === GameEndingType.DrawByThreefoldRepetition) {
+      return ["Draw by threefold repetition", "gray"];
+    }
+
+    if (gameEnding === GameEndingType.DrawByFiftyMoveRule) {
+      return ["Draw by fifty-move rule", "gray"];
+    }
+
+    if (gameEnding === GameEndingType.DrawByInsufficientMaterial) {
+      return ["Draw by insufficient material", "gray"];
     }
 
     return ["Game over", "gray"];
@@ -662,8 +703,13 @@ export const Game: React.FC<GameProps> = ({
             <>
               {!gameRecord.engine_difficulty && (
                 <button
-                  className="offer-draw-button"
-                  disabled={gameRecord.draw_offered_by !== null}
+                  className={`offer-draw-button${
+                    showDrawDeclined ? " draw-declined" : ""
+                  }`}
+                  disabled={
+                    gameRecord.draw_offered_by === playerColor ||
+                    showDrawDeclined
+                  }
                   onClick={() => {
                     sendWebSocketMessage({
                       route: API_ROUTE,
@@ -675,9 +721,11 @@ export const Game: React.FC<GameProps> = ({
                     });
                   }}
                 >
-                  {gameRecord.draw_offered_by === playerColor
-                    ? "Draw offered"
-                    : "Offer draw"}
+                  {showDrawDeclined
+                    ? "Draw declined"
+                    : gameRecord.draw_offered_by === playerColor
+                      ? "Draw offered"
+                      : "Offer draw"}
                 </button>
               )}
               <button
@@ -723,39 +771,41 @@ export const Game: React.FC<GameProps> = ({
       )}
 
       {gameRecord.draw_offered_by === opponentColor && (
-        <div className="draw-offer-banner">
-          <p>Your opponent offers a draw</p>
-          <div className="draw-offer-buttons">
-            <button
-              className="draw-offer-decline"
-              onClick={() => {
-                sendWebSocketMessage({
-                  route: API_ROUTE,
-                  data: {
-                    [PlayerActionName.DeclineDraw]: {
-                      gameId,
+        <div className="draw-offer-wrapper">
+          <div className="draw-offer-banner status-container">
+            <p>Your opponent offers a draw...</p>
+            <div className="draw-offer-buttons">
+              <button
+                className="draw-offer-decline"
+                onClick={() => {
+                  sendWebSocketMessage({
+                    route: API_ROUTE,
+                    data: {
+                      [PlayerActionName.DeclineDraw]: {
+                        gameId,
+                      },
                     },
-                  },
-                });
-              }}
-            >
-              Decline
-            </button>
-            <button
-              className="draw-offer-accept"
-              onClick={() => {
-                sendWebSocketMessage({
-                  route: API_ROUTE,
-                  data: {
-                    [PlayerActionName.AcceptDraw]: {
-                      gameId,
+                  });
+                }}
+              >
+                Decline
+              </button>
+              <button
+                className="draw-offer-accept"
+                onClick={() => {
+                  sendWebSocketMessage({
+                    route: API_ROUTE,
+                    data: {
+                      [PlayerActionName.AcceptDraw]: {
+                        gameId,
+                      },
                     },
-                  },
-                });
-              }}
-            >
-              Accept
-            </button>
+                  });
+                }}
+              >
+                Accept
+              </button>
+            </div>
           </div>
         </div>
       )}
