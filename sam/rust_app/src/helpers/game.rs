@@ -202,6 +202,7 @@ pub fn create_game(
         engine_difficulty,
         game_state,
         created: chrono::Utc::now().to_rfc3339(),
+        draw_offered_by: None,
     }
 }
 
@@ -701,6 +702,27 @@ pub async fn handle_if_game_is_finished(
                         });
 
                 user_game.winner = winner.clone();
+                save_user_record(dynamo_db_client, user_table, &user_game).await?;
+            }
+        }
+        State::Finished(_) => {
+            let usernames = match opponent_username {
+                Some(opponent) => vec![username, opponent],
+                None => vec![username],
+            };
+
+            for username in usernames {
+                let mut user_game =
+                    get_user_game(dynamo_db_client, user_table, username, &game_state.game_id)
+                        .await?
+                        .unwrap_or_else(|| {
+                            panic!(
+                                "User game should exist for user {username} and game ID {}",
+                                game_state.game_id
+                            )
+                        });
+
+                user_game.winner = Some("draw".to_string());
                 save_user_record(dynamo_db_client, user_table, &user_game).await?;
             }
         }

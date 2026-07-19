@@ -351,6 +351,14 @@ pub enum PlayerAction {
         game_id: String,
     },
     #[serde(rename_all = "camelCase")]
+    AcceptDraw {
+        game_id: String,
+    },
+    #[serde(rename_all = "camelCase")]
+    DeclineDraw {
+        game_id: String,
+    },
+    #[serde(rename_all = "camelCase")]
     AnalyzePosition {
         game_id: String,
         analysis_type: AnalysisType,

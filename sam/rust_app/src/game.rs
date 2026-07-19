@@ -9,9 +9,9 @@ mod player_action_handlers;
 
 use chess::types::game::PlayerAction;
 use player_action_handlers::{
-    analyze_position::analyze_position, create_new_game::create_new_game,
-    get_game_state::get_game_state, join_game::join_game, move_piece::move_piece,
-    offer_draw::offer_draw,
+    accept_draw::accept_draw, analyze_position::analyze_position, create_new_game::create_new_game,
+    decline_draw::decline_draw, get_game_state::get_game_state, join_game::join_game,
+    move_piece::move_piece, offer_draw::offer_draw,
 };
 
 async fn function_handler(
@@ -156,7 +156,40 @@ async fn function_handler(
             )
             .await
         }
-        PlayerAction::OfferDraw { game_id } => offer_draw(&game_id),
+        PlayerAction::OfferDraw { game_id } => {
+            offer_draw(
+                sdk_config,
+                &request_context,
+                dynamo_db_client,
+                connection_id,
+                &game_table,
+                &game_id,
+            )
+            .await
+        }
+        PlayerAction::AcceptDraw { game_id } => {
+            accept_draw(
+                sdk_config,
+                &request_context,
+                dynamo_db_client,
+                connection_id,
+                &game_table,
+                &user_table,
+                &game_id,
+            )
+            .await
+        }
+        PlayerAction::DeclineDraw { game_id } => {
+            decline_draw(
+                sdk_config,
+                &request_context,
+                dynamo_db_client,
+                connection_id,
+                &game_table,
+                &game_id,
+            )
+            .await
+        }
         PlayerAction::AnalyzePosition {
             game_id,
             analysis_type,

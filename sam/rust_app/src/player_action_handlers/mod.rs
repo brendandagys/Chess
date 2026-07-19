@@ -1,5 +1,7 @@
+pub mod accept_draw;
 pub mod analyze_position;
 pub mod create_new_game;
+pub mod decline_draw;
 pub mod get_fen;
 pub mod get_game_state;
 pub mod get_pgn;

@@ -173,6 +173,8 @@ export enum PlayerActionName {
   LoseViaOutOfTime = 'lose-via-out-of-time',
   Resign = 'resign',
   OfferDraw = 'offer-draw',
+  AcceptDraw = 'accept-draw',
+  DeclineDraw = 'decline-draw',
   AnalyzePosition = 'analyze-position',
   PlayAgain = 'play-again',
 }
@@ -241,11 +243,23 @@ interface PlayerActionResign {
   };
 }
 
-// interface PlayerActionOfferDraw {
-//   [PlayerActionName.OfferDraw]: {
-//     gameId: string;
-//   };
-// }
+interface PlayerActionOfferDraw {
+  [PlayerActionName.OfferDraw]: {
+    gameId: string;
+  };
+}
+
+interface PlayerActionAcceptDraw {
+  [PlayerActionName.AcceptDraw]: {
+    gameId: string;
+  };
+}
+
+interface PlayerActionDeclineDraw {
+  [PlayerActionName.DeclineDraw]: {
+    gameId: string;
+  };
+}
 
 interface PlayerActionAnalyzePosition {
   [PlayerActionName.AnalyzePosition]: {
@@ -271,9 +285,11 @@ export type PlayerAction =
   | PlayerActionHeartbeat
   | PlayerActionLoseViaOutOfTime
   | PlayerActionResign
+  | PlayerActionOfferDraw
+  | PlayerActionAcceptDraw
+  | PlayerActionDeclineDraw
   | PlayerActionAnalyzePosition
   | PlayerActionPlayAgain;
-// | PlayerActionOfferDraw;
 
 export interface GameRecord {
   game_id: string;
@@ -287,4 +303,5 @@ export interface GameRecord {
   engine_difficulty: EngineDifficulty | null;
   game_state: GameState;
   created: string;
+  draw_offered_by: Color | null;
 }

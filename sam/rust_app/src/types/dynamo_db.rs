@@ -1,5 +1,6 @@
 use crate::types::board::BoardSetup;
 use crate::types::game::{ColorPreference, EngineDifficulty, GameState};
+use crate::types::piece::Color;
 
 use serde::{Deserialize, Serialize};
 
@@ -16,6 +17,8 @@ pub struct GameRecord {
     pub engine_difficulty: Option<EngineDifficulty>,
     pub game_state: GameState,
     pub created: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub draw_offered_by: Option<Color>,
 }
 
 #[derive(Serialize, Deserialize)]

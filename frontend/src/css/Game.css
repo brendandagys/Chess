@@ -72,6 +72,77 @@
   background-color: rgb(216, 1, 1);
 }
 
+.game-container .offer-draw-button {
+  color: white;
+  background-color: #5c6bc0;
+  border: none;
+  border-radius: 5px;
+  padding: 2px 9px;
+  padding-bottom: 3px;
+  cursor: pointer;
+  height: 100%;
+}
+
+.game-container .offer-draw-button:hover:not(:disabled) {
+  background-color: #3f51b5;
+}
+
+.game-container .offer-draw-button:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.game-container .draw-offer-banner {
+  background-color: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.game-container .draw-offer-banner p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #e65100;
+}
+
+.game-container .draw-offer-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.game-container .draw-offer-accept,
+.game-container .draw-offer-decline {
+  padding: 5px 14px;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  color: white;
+}
+
+.game-container .draw-offer-accept {
+  background-color: #43a047;
+}
+
+.game-container .draw-offer-accept:hover {
+  background-color: #2e7d32;
+}
+
+.game-container .draw-offer-decline {
+  background-color: #e53935;
+}
+
+.game-container .draw-offer-decline:hover {
+  background-color: #c62828;
+}
+
 .game-container .resign-confirm {
   position: fixed;
   top: 0;

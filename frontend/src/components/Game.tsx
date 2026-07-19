@@ -659,14 +659,36 @@ export const Game: React.FC<GameProps> = ({
 
         <div className="game-buttons">
           {gameIsInProgress && bothPlayersReady && !gameIsFinished && (
-            <button
-              className="resign-button"
-              onClick={() => {
-                setShowResignConfirm(true);
-              }}
-            >
-              Resign
-            </button>
+            <>
+              {!gameRecord.engine_difficulty && (
+                <button
+                  className="offer-draw-button"
+                  disabled={gameRecord.draw_offered_by !== null}
+                  onClick={() => {
+                    sendWebSocketMessage({
+                      route: API_ROUTE,
+                      data: {
+                        [PlayerActionName.OfferDraw]: {
+                          gameId,
+                        },
+                      },
+                    });
+                  }}
+                >
+                  {gameRecord.draw_offered_by === playerColor
+                    ? "Draw offered"
+                    : "Offer draw"}
+                </button>
+              )}
+              <button
+                className="resign-button"
+                onClick={() => {
+                  setShowResignConfirm(true);
+                }}
+              >
+                Resign
+              </button>
+            </>
           )}
           <button
             className="leave-game-button"
@@ -696,6 +718,44 @@ export const Game: React.FC<GameProps> = ({
                 Yes, resign
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {gameRecord.draw_offered_by === opponentColor && (
+        <div className="draw-offer-banner">
+          <p>Your opponent offers a draw</p>
+          <div className="draw-offer-buttons">
+            <button
+              className="draw-offer-decline"
+              onClick={() => {
+                sendWebSocketMessage({
+                  route: API_ROUTE,
+                  data: {
+                    [PlayerActionName.DeclineDraw]: {
+                      gameId,
+                    },
+                  },
+                });
+              }}
+            >
+              Decline
+            </button>
+            <button
+              className="draw-offer-accept"
+              onClick={() => {
+                sendWebSocketMessage({
+                  route: API_ROUTE,
+                  data: {
+                    [PlayerActionName.AcceptDraw]: {
+                      gameId,
+                    },
+                  },
+                });
+              }}
+            >
+              Accept
+            </button>
           </div>
         </div>
       )}
